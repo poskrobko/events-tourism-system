@@ -5,6 +5,8 @@ import com.example.library.model.Book;
 import com.example.library.repository.BookRepository;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +33,25 @@ public class BookService {
                         pageable)
                 : bookRepository.findAll(pageable);
         return books.map(this::toResponse);
+    }
+
+
+    @Transactional(readOnly = true)
+    public BookDtos.CatalogMetaResponse getCatalogMeta() {
+        List<String> authors = bookRepository.findDistinctAuthors();
+
+        Set<String> genres = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        for (String csv : bookRepository.findDistinctGenresCsv()) {
+            if (csv == null || csv.isBlank()) {
+                continue;
+            }
+            Arrays.stream(csv.split(","))
+                    .map(String::trim)
+                    .filter(value -> !value.isBlank())
+                    .forEach(genres::add);
+        }
+
+        return new BookDtos.CatalogMetaResponse(authors, List.copyOf(genres));
     }
 
     @Transactional(readOnly = true)

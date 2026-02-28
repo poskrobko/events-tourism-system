@@ -16,5 +16,5 @@ public class FeedbackDtos {
                                  String text,
                                  Instant createdAt) {}
 
-    public record PreferencesRequest(String preferredGenresCsv) {}
+    public record PreferencesRequest(String preferredGenresCsv, String favoriteAuthorsCsv) {}
 }

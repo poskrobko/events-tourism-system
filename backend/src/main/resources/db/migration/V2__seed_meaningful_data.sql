@@ -27,27 +27,27 @@ where not exists (
 
 -- Roles
 insert into user_roles (user_id, role)
-select u.id, 'READER'
+select u.id, 'ROLE_USER'
 from users u
 where u.email in ('anna.reader@library.local', 'boris.reader@library.local')
 and not exists (
-    select 1 from user_roles ur where ur.user_id = u.id and ur.role = 'READER'
+    select 1 from user_roles ur where ur.user_id = u.id and ur.role = 'ROLE_USER'
 );
 
 insert into user_roles (user_id, role)
-select u.id, 'LIBRARIAN'
+select u.id, 'ROLE_LIBRARIAN'
 from users u
 where u.email = 'librarian@library.local'
 and not exists (
-    select 1 from user_roles ur where ur.user_id = u.id and ur.role = 'LIBRARIAN'
+    select 1 from user_roles ur where ur.user_id = u.id and ur.role = 'ROLE_LIBRARIAN'
 );
 
 insert into user_roles (user_id, role)
-select u.id, 'ADMIN'
+select u.id, 'ROLE_ADMIN'
 from users u
 where u.email = 'admin@library.local'
 and not exists (
-    select 1 from user_roles ur where ur.user_id = u.id and ur.role = 'ADMIN'
+    select 1 from user_roles ur where ur.user_id = u.id and ur.role = 'ROLE_ADMIN'
 );
 
 -- Books
@@ -171,7 +171,7 @@ where u.email = 'boris.reader@library.local'
 
 -- Reservations: "The Hobbit" unavailable -> waiting queue example
 insert into reservations (user_id, book_id, status, created_at, notified_at, expires_at, cancelled_at)
-select u.id, b.id, 'WAITING', current_timestamp - interval '5 hour', null, null, null
+select u.id, b.id, 'WAITING', current_timestamp - interval '5' hour, null, null, null
 from users u, books b
 where u.email = 'anna.reader@library.local'
   and b.title = 'The Hobbit'
@@ -183,7 +183,7 @@ where u.email = 'anna.reader@library.local'
   );
 
 insert into reservations (user_id, book_id, status, created_at, notified_at, expires_at, cancelled_at)
-select u.id, b.id, 'NOTIFIED', current_timestamp - interval '1 day', current_timestamp - interval '2 hour', current_timestamp + interval '22 hour', null
+select u.id, b.id, 'NOTIFIED', current_timestamp - interval '1' day, current_timestamp - interval '2' hour, current_timestamp + interval '22' hour, null
 from users u, books b
 where u.email = 'boris.reader@library.local'
   and b.title = 'The Hobbit'

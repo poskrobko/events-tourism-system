@@ -85,6 +85,7 @@ public class FeedbackService {
         RecommendationProfile profile = profileRepository.findByUserId(userId).orElseGet(RecommendationProfile::new);
         profile.setUser(user);
         profile.setPreferredGenresCsv(request.preferredGenresCsv());
+        profile.setFavoriteAuthorsCsv(request.favoriteAuthorsCsv());
         profileRepository.save(profile);
     }
 }

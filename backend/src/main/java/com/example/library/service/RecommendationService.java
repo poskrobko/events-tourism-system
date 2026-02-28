@@ -33,17 +33,27 @@ public class RecommendationService {
         currentUserService.requireSameUserOrAdmin(userId);
 
         RecommendationProfile profile = profileRepository.findByUserId(userId).orElse(null);
-        if (profile == null || profile.getPreferredGenresCsv() == null || profile.getPreferredGenresCsv().isBlank()) {
+        if (profile == null) {
             return bookRepository.findAll(PageRequest.of(page, size)).map(book -> bookService.getById(book.getId()));
         }
 
-        List<String> genres = Arrays.stream(profile.getPreferredGenresCsv().split(","))
+        List<String> genres = profile.getPreferredGenresCsv() == null ? List.of() : Arrays.stream(profile.getPreferredGenresCsv().split(","))
                 .map(String::trim)
                 .filter(s -> !s.isBlank())
                 .toList();
         String primaryGenre = genres.isEmpty() ? "" : genres.getFirst();
 
-        return bookRepository.findByGenresCsvContainingIgnoreCaseAndAuthorContainingIgnoreCase(primaryGenre, "", PageRequest.of(page, size))
+        List<String> authors = profile.getFavoriteAuthorsCsv() == null ? List.of() : Arrays.stream(profile.getFavoriteAuthorsCsv().split(","))
+                .map(String::trim)
+                .filter(s -> !s.isBlank())
+                .toList();
+        String primaryAuthor = authors.isEmpty() ? "" : authors.getFirst();
+
+        if (primaryGenre.isBlank() && primaryAuthor.isBlank()) {
+            return bookRepository.findAll(PageRequest.of(page, size)).map(book -> bookService.getById(book.getId()));
+        }
+
+        return bookRepository.findByGenresCsvContainingIgnoreCaseAndAuthorContainingIgnoreCase(primaryGenre, primaryAuthor, PageRequest.of(page, size))
                 .map(book -> bookService.getById(book.getId()));
     }
 }

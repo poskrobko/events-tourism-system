@@ -1,28 +1,6 @@
 # Frontend (React + TypeScript + Vite)
 
-Обновлённый SPA интерфейс для `Library Preferences System` с явным применением библиотек из стека проекта.
-
-## Используемые библиотеки
-
-- React 18
-- TypeScript 5.3
-- Vite 5
-- TanStack Query 5
-- Redux Toolkit
-- React Router DOM 6
-- Axios
-- Tailwind CSS 3.4
-- React Hook Form 7
-- Zod 3
-
-## Что реализовано
-
-- Авторизация (login/register) с React Hook Form + Zod валидацией.
-- Каталог книг с фильтрами, хранением фильтров в Redux Toolkit и загрузкой/мутациями через TanStack Query.
-- Рекомендации и обновление предпочтений через формы (RHF+Zod) и TanStack Query mutations.
-- Профиль с историей выдач (TanStack Query).
-- Axios API client с Bearer-токеном из Redux state.
-- Tailwind CSS utility-first стили вместо кастомной CSS-верстки.
+Обновлённый SPA интерфейс для `Library Preferences System`.
 
 ## Запуск
 
@@ -32,4 +10,15 @@ npm install
 npm run dev
 ```
 
-Dev server проксирует `/api` на `http://localhost:8080`.
+Dev server поднимается на `http://localhost:5173` и проксирует `/api` на `http://localhost:8080`.
+
+## Что теперь покрыто из use-cases
+
+- Стартовая страница — логин (`/login`), логин не находится в основном меню.
+- Гость может просматривать каталог, но при попытке взять книгу отправляется на страницу логина.
+- В каталоге рекомендованные книги для текущего пользователя помечаются бейджем `рекомендация`.
+- Профиль позволяет редактировать имя/email и просматривать свои займы.
+- Возврат книги доступен из профиля кнопкой `Return` для `ACTIVE` займов.
+- Поле просмотра по `userId` доступно только администратору.
+- Фильтры жанров/авторов и предпочтения реализованы через `select` c подгрузкой опций из БД (`/books/meta`).
+- UI учитывает роль пользователя (`GUEST` / `USER` / `ADMIN`).

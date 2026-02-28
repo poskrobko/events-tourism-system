@@ -40,6 +40,7 @@ public class AuthService {
         User user = new User();
         user.setEmail(request.email());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
+        user.setFullName(request.email().split("@")[0]);
         user.setRoles(Set.of(Role.ROLE_USER));
         userRepository.save(user);
         return issueTokens(user);

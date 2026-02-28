@@ -13,4 +13,6 @@ public class BookDtos {
 
     public record BookResponse(Long id, String title, String author, Integer publicationYear,
                                List<String> genres, Integer totalCopies, Integer availableCopies) {}
+
+    public record CatalogMetaResponse(List<String> authors, List<String> genres) {}
 }

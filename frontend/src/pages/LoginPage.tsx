@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { login, register } from '../api/libraryApi';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { setTokens } from '../features/auth/authSlice';
@@ -8,6 +9,7 @@ import { authSchema, type AuthFormValues } from '../lib/schemas';
 
 export function LoginPage() {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const accessToken = useAppSelector((state) => state.auth.accessToken);
 
   const {
@@ -17,19 +19,25 @@ export function LoginPage() {
   } = useForm<AuthFormValues>({
     resolver: zodResolver(authSchema),
     defaultValues: {
-      email: 'reader@example.com',
-      password: 'reader123',
+      email: 'anna.reader@library.local',
+      password: 'secret123',
     },
   });
 
   const loginMutation = useMutation({
     mutationFn: (payload: AuthFormValues) => login(payload.email, payload.password),
-    onSuccess: (data) => dispatch(setTokens(data)),
+    onSuccess: (data) => {
+      dispatch(setTokens(data));
+      navigate('/catalog', { replace: true });
+    },
   });
 
   const registerMutation = useMutation({
     mutationFn: (payload: AuthFormValues) => register(payload.email, payload.password),
-    onSuccess: (data) => dispatch(setTokens(data)),
+    onSuccess: (data) => {
+      dispatch(setTokens(data));
+      navigate('/catalog', { replace: true });
+    },
   });
 
   return (
@@ -73,7 +81,7 @@ export function LoginPage() {
         </div>
       </form>
 
-      {accessToken && <p className="mt-3 text-sm text-green-700">Успешная авторизация, токен сохранён в Redux Toolkit.</p>}
+      {accessToken && <p className="mt-3 text-sm text-green-700">Успешная авторизация.</p>}
       {loginMutation.error && <p className="mt-2 text-sm text-red-700">Ошибка входа.</p>}
       {registerMutation.error && <p className="mt-2 text-sm text-red-700">Ошибка регистрации.</p>}
     </section>

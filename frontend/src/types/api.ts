@@ -35,3 +35,15 @@ export type PreferencesPayload = {
   preferredGenres: string[];
   favoriteAuthors: string[];
 };
+
+export type CatalogMeta = {
+  authors: string[];
+  genres: string[];
+};
+
+export type UserProfile = {
+  id: number;
+  email: string;
+  fullName: string;
+  roles: string[];
+};

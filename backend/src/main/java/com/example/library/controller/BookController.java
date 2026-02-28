@@ -25,6 +25,9 @@ public class BookController {
         return bookService.findAll(page, size, sort, direction, genre, author);
     }
 
+    @GetMapping("/meta")
+    public BookDtos.CatalogMetaResponse meta() { return bookService.getCatalogMeta(); }
+
     @GetMapping("/{id}")
     public BookDtos.BookResponse get(@PathVariable Long id) { return bookService.getById(id); }
 

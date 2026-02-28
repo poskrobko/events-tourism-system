@@ -3,12 +3,20 @@ import type { Book } from '../types/api';
 type BookCardProps = {
   book: Book;
   onBorrow?: (bookId: number) => void;
+  isRecommended?: boolean;
 };
 
-export function BookCard({ book, onBorrow }: BookCardProps) {
+export function BookCard({ book, onBorrow, isRecommended }: BookCardProps) {
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <h3 className="mb-2 text-lg font-semibold">{book.title}</h3>
+      <h3 className="mb-2 text-lg font-semibold">
+        {book.title}
+        {isRecommended && (
+          <span className="ml-2 rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">
+            рекомендация
+          </span>
+        )}
+      </h3>
       <p className="text-sm text-slate-700">
         <span className="font-semibold">Author:</span> {book.author}
       </p>
