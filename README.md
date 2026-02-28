@@ -22,6 +22,7 @@
 # 1) поднять инфраструктуру
 
 docker compose up -d postgres redis
+# если 5432 занят: POSTGRES_PORT=5433 docker compose up -d postgres redis
 
 # 2) backend
 cd backend && mvn spring-boot:run
