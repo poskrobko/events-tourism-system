@@ -36,6 +36,15 @@ export function ProfilePage() {
     values: {
       fullName: meQuery.data?.fullName ?? '',
       email: meQuery.data?.email ?? '',
+      firstName: meQuery.data?.firstName ?? '',
+      lastName: meQuery.data?.lastName ?? '',
+      birthDate: meQuery.data?.birthDate ?? '',
+      country: meQuery.data?.country ?? '',
+      city: meQuery.data?.city ?? '',
+      postalCode: meQuery.data?.postalCode ?? '',
+      street: meQuery.data?.street ?? '',
+      houseNumber: meQuery.data?.houseNumber ?? '',
+      phoneNumber: meQuery.data?.phoneNumber ?? '',
     },
   });
 
@@ -64,10 +73,57 @@ export function ProfilePage() {
           {errors.email && <span className="text-sm text-red-700">{errors.email.message}</span>}
         </label>
 
+        <label className="grid gap-1 text-sm font-medium">
+          Имя
+          <input className="rounded-md border border-slate-300 px-3 py-2" {...register('firstName')} />
+        </label>
+
+        <label className="grid gap-1 text-sm font-medium">
+          Фамилия
+          <input className="rounded-md border border-slate-300 px-3 py-2" {...register('lastName')} />
+        </label>
+
+        <label className="grid gap-1 text-sm font-medium">
+          Дата рождения
+          <input className="rounded-md border border-slate-300 px-3 py-2" type="date" {...register('birthDate')} />
+        </label>
+
+        <label className="grid gap-1 text-sm font-medium">
+          Страна проживания
+          <input className="rounded-md border border-slate-300 px-3 py-2" {...register('country')} />
+        </label>
+
+        <label className="grid gap-1 text-sm font-medium">
+          Город
+          <input className="rounded-md border border-slate-300 px-3 py-2" {...register('city')} />
+        </label>
+
+        <label className="grid gap-1 text-sm font-medium">
+          Почтовый индекс
+          <input className="rounded-md border border-slate-300 px-3 py-2" {...register('postalCode')} />
+        </label>
+
+        <label className="grid gap-1 text-sm font-medium">
+          Улица
+          <input className="rounded-md border border-slate-300 px-3 py-2" {...register('street')} />
+        </label>
+
+        <label className="grid gap-1 text-sm font-medium">
+          Номер дома
+          <input className="rounded-md border border-slate-300 px-3 py-2" {...register('houseNumber')} />
+        </label>
+
+        <label className="grid gap-1 text-sm font-medium md:col-span-2">
+          Контактный телефон
+          <input className="rounded-md border border-slate-300 px-3 py-2" {...register('phoneNumber')} />
+          {errors.phoneNumber && <span className="text-sm text-red-700">{errors.phoneNumber.message}</span>}
+        </label>
+
         <button className="w-fit rounded-md bg-indigo-600 px-4 py-2 text-white" type="submit">
           Save profile
         </button>
       </form>
+
 
       {isAdmin && (
         <div className="mb-4 max-w-xs">

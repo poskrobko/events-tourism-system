@@ -39,10 +39,42 @@ public class UserProfileService {
         }
 
         if (request.fullName() != null && !request.fullName().isBlank()) {
-            user.setFullName(request.fullName());
+            user.setFullName(request.fullName().trim());
+        }
+        if (request.firstName() != null) {
+            user.setFirstName(normalize(request.firstName()));
+        }
+        if (request.lastName() != null) {
+            user.setLastName(normalize(request.lastName()));
+        }
+        if (request.birthDate() != null) {
+            user.setBirthDate(request.birthDate());
+        }
+        if (request.country() != null) {
+            user.setCountry(normalize(request.country()));
+        }
+        if (request.city() != null) {
+            user.setCity(normalize(request.city()));
+        }
+        if (request.postalCode() != null) {
+            user.setPostalCode(normalize(request.postalCode()));
+        }
+        if (request.street() != null) {
+            user.setStreet(normalize(request.street()));
+        }
+        if (request.houseNumber() != null) {
+            user.setHouseNumber(normalize(request.houseNumber()));
+        }
+        if (request.phoneNumber() != null) {
+            user.setPhoneNumber(normalize(request.phoneNumber()));
         }
 
         return toResponse(userRepository.save(user));
+    }
+
+    private String normalize(String value) {
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private UserDtos.UserProfileResponse toResponse(User user) {
@@ -50,6 +82,15 @@ public class UserProfileService {
                 user.getId(),
                 user.getEmail(),
                 user.getFullName(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getBirthDate(),
+                user.getCountry(),
+                user.getCity(),
+                user.getPostalCode(),
+                user.getStreet(),
+                user.getHouseNumber(),
+                user.getPhoneNumber(),
                 user.getRoles().stream().map(Enum::name).collect(Collectors.toSet())
         );
     }

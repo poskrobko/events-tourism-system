@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { AuthResponse, Book, CatalogMeta, Loan, Page, PreferencesPayload, UserProfile } from '../types/api';
+import type { AuthResponse, Book, BookSearchParams, CatalogMeta, Loan, Page, PreferencesPayload, UserProfile } from '../types/api';
 
 export async function login(email: string, password: string): Promise<AuthResponse> {
   const { data } = await apiClient.post<AuthResponse>('/auth/login', { email, password });
@@ -11,12 +11,7 @@ export async function register(email: string, password: string): Promise<AuthRes
   return data;
 }
 
-export async function fetchBooks(params: {
-  page: number;
-  size: number;
-  genre?: string;
-  author?: string;
-}): Promise<Page<Book>> {
+export async function fetchBooks(params: BookSearchParams): Promise<Page<Book>> {
   const { data } = await apiClient.get<Page<Book>>('/books', { params });
   return data;
 }
@@ -51,12 +46,66 @@ export async function fetchLoans(userId: number): Promise<Loan[]> {
   return data;
 }
 
+export function getBookCoverUrl(bookId: number): string {
+  return `${apiClient.defaults.baseURL}/books/${bookId}/cover`;
+}
+
+export function getBookDownloadUrl(bookId: number): string {
+  return `${apiClient.defaults.baseURL}/books/${bookId}/download`;
+}
+
+export async function createBookWithUpload(payload: {
+  title: string;
+  author: string;
+  publicationYear: number;
+  copies: number;
+  genres: string[];
+  isbn?: string;
+  publisher?: string;
+  language?: string;
+  pageCount?: number;
+  description?: string;
+  file?: File | null;
+  cover?: File | null;
+}): Promise<Book> {
+  const formData = new FormData();
+  formData.append('title', payload.title);
+  formData.append('author', payload.author);
+  formData.append('publicationYear', String(payload.publicationYear));
+  formData.append('copies', String(payload.copies));
+  payload.genres.filter(Boolean).forEach((genre) => formData.append('genres', genre));
+  if (payload.isbn) formData.append('isbn', payload.isbn);
+  if (payload.publisher) formData.append('publisher', payload.publisher);
+  if (payload.language) formData.append('language', payload.language);
+  if (payload.pageCount) formData.append('pageCount', String(payload.pageCount));
+  if (payload.description) formData.append('description', payload.description);
+  if (payload.file) formData.append('file', payload.file);
+  if (payload.cover) formData.append('cover', payload.cover);
+
+  const { data } = await apiClient.post<Book>('/books/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return data;
+}
+
 export async function fetchMe(): Promise<UserProfile> {
   const { data } = await apiClient.get<UserProfile>('/users/me');
   return data;
 }
 
-export async function updateMe(payload: { fullName: string; email: string }): Promise<UserProfile> {
+export async function updateMe(payload: {
+  fullName: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  birthDate?: string;
+  country?: string;
+  city?: string;
+  postalCode?: string;
+  street?: string;
+  houseNumber?: string;
+  phoneNumber?: string;
+}): Promise<UserProfile> {
   const { data } = await apiClient.patch<UserProfile>('/users/me', payload);
   return data;
 }

@@ -1,0 +1,9 @@
+alter table users add column if not exists first_name varchar(255);
+alter table users add column if not exists last_name varchar(255);
+alter table users add column if not exists birth_date date;
+alter table users add column if not exists country varchar(255);
+alter table users add column if not exists city varchar(255);
+alter table users add column if not exists postal_code varchar(64);
+alter table users add column if not exists street varchar(255);
+alter table users add column if not exists house_number varchar(64);
+alter table users add column if not exists phone_number varchar(64);

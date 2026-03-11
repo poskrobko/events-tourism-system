@@ -1,13 +1,26 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import type { BookAvailability, BookSearchIn } from '../../types/api';
 
 type CatalogFilterState = {
-  genre: string;
+  query: string;
+  searchIn: BookSearchIn;
+  title: string;
   author: string;
+  genre: string;
+  yearFrom: string;
+  yearTo: string;
+  availability: BookAvailability;
 };
 
 const initialState: CatalogFilterState = {
-  genre: '',
+  query: '',
+  searchIn: 'all',
+  title: '',
   author: '',
+  genre: '',
+  yearFrom: '',
+  yearTo: '',
+  availability: 'all',
 };
 
 const booksSlice = createSlice({

@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { borrowBook, fetchBooks, fetchCatalogMeta, returnBook } from '../../api/libraryApi';
+import { borrowBook, createBookWithUpload, fetchBooks, fetchCatalogMeta, returnBook } from '../../api/libraryApi';
+import type { BookSearchParams } from '../../types/api';
 
-export function useBooksQuery(params: { page: number; size: number; genre?: string; author?: string }) {
+export function useBooksQuery(params: BookSearchParams) {
   return useQuery({
     queryKey: ['books', params],
     queryFn: () => fetchBooks(params),
@@ -15,7 +16,7 @@ export function useCatalogMetaQuery() {
   });
 }
 
-export function useBorrowBookMutation(params: { page: number; size: number; genre?: string; author?: string }) {
+export function useBorrowBookMutation(params: BookSearchParams) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -23,6 +24,18 @@ export function useBorrowBookMutation(params: { page: number; size: number; genr
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['books', params] });
       void queryClient.invalidateQueries({ queryKey: ['loans'] });
+    },
+  });
+}
+
+export function useCreateBookMutation(params: BookSearchParams) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createBookWithUpload,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['books', params] });
+      void queryClient.invalidateQueries({ queryKey: ['catalog-meta'] });
     },
   });
 }

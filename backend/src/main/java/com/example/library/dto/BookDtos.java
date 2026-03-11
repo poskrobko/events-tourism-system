@@ -9,10 +9,27 @@ public class BookDtos {
                               @NotBlank String author,
                               @NotNull Integer publicationYear,
                               List<String> genres,
-                              @NotNull Integer copies) {}
+                              @NotNull Integer copies,
+                              String isbn,
+                              String publisher,
+                              String language,
+                              Integer pageCount,
+                              String description) {}
 
-    public record BookResponse(Long id, String title, String author, Integer publicationYear,
-                               List<String> genres, Integer totalCopies, Integer availableCopies) {}
+    public record BookResponse(Long id,
+                               String title,
+                               String author,
+                               Integer publicationYear,
+                               List<String> genres,
+                               Integer totalCopies,
+                               Integer availableCopies,
+                               String isbn,
+                               String publisher,
+                               String language,
+                               Integer pageCount,
+                               String description,
+                               boolean hasFile,
+                               boolean hasCover) {}
 
     public record CatalogMetaResponse(List<String> authors, List<String> genres) {}
 }

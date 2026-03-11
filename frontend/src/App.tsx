@@ -16,6 +16,7 @@ export function App() {
   const payload = parseJwt(accessToken);
   const roles = payload?.roles ?? [];
   const isAdmin = roles.includes('ROLE_ADMIN');
+  const isLibrarian = roles.includes('ROLE_LIBRARIAN');
 
   return (
     <div className="mx-auto max-w-6xl p-6">
@@ -36,7 +37,7 @@ export function App() {
             </>
           )}
           <span className="ml-2 rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
-            {accessToken ? (isAdmin ? 'ADMIN' : 'USER') : 'GUEST'}
+            {accessToken ? (isAdmin ? 'ADMIN' : isLibrarian ? 'LIBRARIAN' : 'USER') : 'GUEST'}
           </span>
           {accessToken ? (
             <button className="rounded-md bg-slate-900 px-3 py-2 text-sm text-white" onClick={() => dispatch(logout())}>
