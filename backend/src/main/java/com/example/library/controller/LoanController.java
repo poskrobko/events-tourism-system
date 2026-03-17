@@ -24,6 +24,9 @@ public class LoanController {
     @PostMapping("/loans/{id}/extend")
     public LoanDtos.LoanResponse extend(@PathVariable Long id) { return loanService.extend(id); }
 
+    @GetMapping("/users/me/loans")
+    public List<LoanDtos.LoanResponse> myLoans() { return loanService.getCurrentUserLoans(); }
+
     @GetMapping("/users/{userId}/loans")
-    public List<LoanDtos.LoanResponse> myLoans(@PathVariable Long userId) { return loanService.getUserLoans(userId); }
+    public List<LoanDtos.LoanResponse> userLoans(@PathVariable Long userId) { return loanService.getUserLoans(userId); }
 }

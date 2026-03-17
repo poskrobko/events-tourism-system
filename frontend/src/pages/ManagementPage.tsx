@@ -1,11 +1,13 @@
-import { useMemo, useState } from 'react';
+import { FormEvent, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { Pagination } from '../components/Pagination';
-import { useDeleteAdminBookMutation, useDeleteAdminUserMutation, useAdminBooksQuery, useAdminLoansQuery, useAdminUsersQuery, useLibrarianLoansQuery, useUpdateAdminUserMutation } from '../features/admin/hooks';
+import { useDeleteAdminBookMutation, useDeleteAdminUserMutation, useAdminBooksQuery, useAdminLoansQuery, useAdminUsersQuery, useInviteLibrarianMutation, useLibrarianLoansQuery, useUpdateAdminUserMutation } from '../features/admin/hooks';
 import { parseJwt } from '../lib/auth';
 import { useAppSelector } from '../app/hooks';
 
 export function ManagementPage() {
+  const navigate = useNavigate();
   const accessToken = useAppSelector((state) => state.auth.accessToken);
   const payload = parseJwt(accessToken);
   const roles = payload?.roles ?? [];
@@ -31,6 +33,8 @@ export function ManagementPage() {
 
   const [confirmUserId, setConfirmUserId] = useState<number | null>(null);
   const [confirmBookId, setConfirmBookId] = useState<number | null>(null);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteNickname, setInviteNickname] = useState('');
 
   const usersQuery = useAdminUsersQuery({ page: userPage, size: userSize, query: userQuery || undefined, role: userRole || undefined }, isAdmin);
   const booksQuery = useAdminBooksQuery({ page: bookPage, size: bookSize, query: bookQuery || undefined, availability: 'all' }, isAdmin);
@@ -48,9 +52,31 @@ export function ManagementPage() {
   const updateUserMutation = useUpdateAdminUserMutation();
   const deleteUserMutation = useDeleteAdminUserMutation();
   const deleteBookMutation = useDeleteAdminBookMutation();
+  const inviteMutation = useInviteLibrarianMutation();
 
   const applyUserRole = (id: number, role: string) => {
     updateUserMutation.mutate({ id, payload: { roles: [role] } });
+  };
+
+  const editUser = (id: number, email: string, nickname: string | null) => {
+    const nextEmail = window.prompt('User email', email)?.trim();
+    if (!nextEmail) return;
+    const nextNickname = window.prompt('User nickname', nickname || '')?.trim();
+    updateUserMutation.mutate({ id, payload: { email: nextEmail, nickname: nextNickname || undefined } });
+  };
+
+  const submitInvite = (event: FormEvent) => {
+    event.preventDefault();
+    if (!inviteEmail.trim()) return;
+    inviteMutation.mutate(
+      { email: inviteEmail.trim(), nickname: inviteNickname.trim() || undefined },
+      {
+        onSuccess: () => {
+          setInviteEmail('');
+          setInviteNickname('');
+        },
+      },
+    );
   };
 
   return (
@@ -66,6 +92,20 @@ export function ManagementPage() {
         )}
         <button className={`rounded-md px-3 py-2 text-sm ${tab === 'loans' ? 'bg-indigo-600 text-white' : 'bg-slate-100'}`} onClick={() => setTab('loans')} type="button">Loans</button>
       </div>
+
+      {isAdmin && (
+        <form className="mb-4 rounded-lg border border-slate-200 p-3" onSubmit={submitInvite}>
+          <p className="mb-2 text-sm font-semibold">Invite librarian</p>
+          <div className="flex flex-wrap gap-2">
+            <input className="rounded-md border border-slate-300 px-3 py-2 text-sm" placeholder="Email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
+            <input className="rounded-md border border-slate-300 px-3 py-2 text-sm" placeholder="Nickname (optional)" value={inviteNickname} onChange={(e) => setInviteNickname(e.target.value)} />
+            <button className="rounded-md bg-indigo-600 px-3 py-2 text-sm text-white" type="submit">Send invite</button>
+          </div>
+          {inviteMutation.data && (
+            <p className="mt-2 text-xs text-emerald-700">Temporary password for {inviteMutation.data.email}: <span className="font-semibold">{inviteMutation.data.temporaryPassword}</span></p>
+          )}
+        </form>
+      )}
 
       {tab === 'users' && isAdmin && (
         <div>
@@ -96,7 +136,7 @@ export function ManagementPage() {
                       </select>
                     </td>
                     <td className="p-2">
-                      <button className="rounded-md bg-rose-600 px-2 py-1 text-xs text-white" onClick={() => setConfirmUserId(user.id)} type="button">Delete</button>
+                      <div className="flex gap-1"><button className="rounded-md border border-slate-300 px-2 py-1 text-xs" onClick={() => editUser(user.id, user.email, user.nickname)} type="button">Edit</button><button className="rounded-md bg-rose-600 px-2 py-1 text-xs text-white" onClick={() => setConfirmUserId(user.id)} type="button">Delete</button></div>
                     </td>
                   </tr>
                 ))}
@@ -125,7 +165,7 @@ export function ManagementPage() {
                     <td className="p-2">{book.author}</td>
                     <td className="p-2">{book.availableCopies}/{book.totalCopies}</td>
                     <td className="p-2">
-                      <button className="rounded-md bg-rose-600 px-2 py-1 text-xs text-white" onClick={() => setConfirmBookId(book.id)} type="button">Delete</button>
+                      <div className="flex gap-1"><button className="rounded-md border border-slate-300 px-2 py-1 text-xs" onClick={() => navigate(`/books/${book.id}?edit=1`)} type="button">Edit</button><button className="rounded-md bg-rose-600 px-2 py-1 text-xs text-white" onClick={() => setConfirmBookId(book.id)} type="button">Delete</button></div>
                     </td>
                   </tr>
                 ))}

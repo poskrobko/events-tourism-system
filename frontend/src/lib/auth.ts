@@ -4,6 +4,12 @@ export type TokenPayload = {
   sub?: string;
 };
 
+function decodeBase64Url(value: string): string {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), '=');
+  return atob(padded);
+}
+
 export function parseJwt(token: string | null): TokenPayload | null {
   if (!token) {
     return null;
@@ -13,7 +19,7 @@ export function parseJwt(token: string | null): TokenPayload | null {
     return null;
   }
   try {
-    const decoded = JSON.parse(atob(parts[1]));
+    const decoded = JSON.parse(decodeBase64Url(parts[1]));
     return decoded as TokenPayload;
   } catch {
     return null;

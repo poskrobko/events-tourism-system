@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { borrowBook, createBookWithUpload, deleteBook, fetchBookDetails, fetchBookReviews, fetchBooks, fetchCatalogMeta, rateBook, returnBook, reviewBook } from '../../api/libraryApi';
+import { borrowBook, createBookWithUpload, deleteBook, fetchBookDetails, fetchBookReviews, fetchBooks, fetchCatalogMeta, rateBook, returnBook, reviewBook, updateBook } from '../../api/libraryApi';
 import type { BookSearchParams } from '../../types/api';
 
 export function useBooksQuery(params: BookSearchParams) {
@@ -60,6 +60,30 @@ export function useReturnBookWithFeedbackMutation() {
   });
 }
 
+
+
+export function useUpdateBookMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: number; payload: {
+      title?: string;
+      author?: string;
+      publicationYear?: number;
+      genres?: string[];
+      copies?: number;
+      isbn?: string | null;
+      publisher?: string | null;
+      language?: string | null;
+      pageCount?: number | null;
+      description?: string | null;
+    } }) => updateBook(id, payload),
+    onSuccess: (_, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ['book-details', variables.id] });
+      void queryClient.invalidateQueries({ queryKey: ['books'] });
+      void queryClient.invalidateQueries({ queryKey: ['admin-books'] });
+    },
+  });
+}
 
 export function useBookDetailsQuery(bookId: number | null) {
   return useQuery({

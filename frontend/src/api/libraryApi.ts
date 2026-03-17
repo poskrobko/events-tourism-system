@@ -46,6 +46,22 @@ export async function fetchBookReviews(bookId: number, page = 0, size = 10): Pro
 export async function deleteBook(id: number): Promise<void> {
   await apiClient.delete(`/books/${id}`);
 }
+
+export async function updateBook(id: number, payload: {
+  title?: string;
+  author?: string;
+  publicationYear?: number;
+  genres?: string[];
+  copies?: number;
+  isbn?: string | null;
+  publisher?: string | null;
+  language?: string | null;
+  pageCount?: number | null;
+  description?: string | null;
+}): Promise<Book> {
+  const { data } = await apiClient.patch<Book>(`/books/${id}`, payload);
+  return data;
+}
 export async function fetchCatalogMeta(): Promise<CatalogMeta> {
   const { data } = await apiClient.get<CatalogMeta>('/books/meta');
   return data;
@@ -84,8 +100,9 @@ export async function reviewBook(bookId: number, userId: number, text: string): 
   await apiClient.post(`/books/${bookId}/reviews`, { text, userId });
 }
 
-export async function fetchLoans(userId: number): Promise<Loan[]> {
-  const { data } = await apiClient.get<Loan[]>(`/users/${userId}/loans`);
+export async function fetchLoans(userId?: number | null): Promise<Loan[]> {
+  const path = userId ? `/users/${userId}/loans` : '/users/me/loans';
+  const { data } = await apiClient.get<Loan[]>(path);
   return data;
 }
 
@@ -189,6 +206,11 @@ export async function fetchAdminBooks(params: BookSearchParams): Promise<Page<Bo
 
 export async function deleteAdminBook(id: number): Promise<void> {
   await apiClient.delete(`/admin/books/${id}`);
+}
+
+export async function inviteLibrarian(payload: { email: string; nickname?: string }): Promise<{ invitedUserId: number; email: string; temporaryPassword: string }> {
+  const { data } = await apiClient.post<{ invitedUserId: number; email: string; temporaryPassword: string }>('/admin/librarians/invite', payload);
+  return data;
 }
 
 export async function fetchAdminLoans(params: { page: number; size: number; userQuery?: string; bookQuery?: string; status?: string }): Promise<Page<AdminLoan>> {

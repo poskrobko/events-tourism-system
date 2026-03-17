@@ -31,7 +31,7 @@ export function ProfilePage() {
 
   const meQuery = useMeQuery(Boolean(currentUserId));
   const updateMeMutation = useUpdateMeMutation();
-  const loansQuery = useLoansQuery(selectedUserId);
+  const loansQuery = useLoansQuery(isAdmin ? selectedUserId : null);
   const returnMutation = useReturnBookWithFeedbackMutation();
 
   const [ratingLoanId, setRatingLoanId] = useState<number | null>(null);

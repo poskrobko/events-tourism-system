@@ -47,11 +47,7 @@ public class DemoUsersBootstrap implements CommandLineRunner {
     }
 
     private void createDemoUserIfMissing(String email, String nickname, Set<Role> roles) {
-        if (userRepository.findByEmail(email).isPresent()) {
-            return;
-        }
-
-        User user = new User();
+        User user = userRepository.findByEmail(email).orElseGet(User::new);
         user.setEmail(email);
         user.setNickname(nickname);
         user.setPasswordHash(passwordEncoder.encode(demoPassword));

@@ -77,6 +77,12 @@ public class LoanService {
     }
 
     @Transactional(readOnly = true)
+    public List<LoanDtos.LoanResponse> getCurrentUserLoans() {
+        Long userId = currentUserService.getCurrentUserId();
+        return loanRepository.findByUserIdOrderByBorrowedAtDesc(userId).stream().map(this::toDto).toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<LoanDtos.LoanResponse> getUserLoans(Long userId) {
         currentUserService.requireSameUserOrAdmin(userId);
         return loanRepository.findByUserIdOrderByBorrowedAtDesc(userId).stream().map(this::toDto).toList();

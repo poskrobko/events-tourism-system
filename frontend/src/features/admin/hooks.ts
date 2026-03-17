@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { deleteAdminBook, deleteAdminUser, fetchAdminBooks, fetchAdminLoans, fetchAdminUsers, fetchLibrarianLoans, updateAdminUser } from '../../api/libraryApi';
+import { deleteAdminBook, deleteAdminUser, fetchAdminBooks, fetchAdminLoans, fetchAdminUsers, fetchLibrarianLoans, inviteLibrarian, updateAdminUser } from '../../api/libraryApi';
 import type { BookSearchParams } from '../../types/api';
 
 export function useAdminUsersQuery(params: { page: number; size: number; query?: string; role?: string }, enabled: boolean) {
@@ -62,5 +62,12 @@ export function useLibrarianLoansQuery(params: { page: number; size: number; use
     queryKey: ['librarian-loans', params],
     queryFn: () => fetchLibrarianLoans(params),
     enabled,
+  });
+}
+
+
+export function useInviteLibrarianMutation() {
+  return useMutation({
+    mutationFn: (payload: { email: string; nickname?: string }) => inviteLibrarian(payload),
   });
 }

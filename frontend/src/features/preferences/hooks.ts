@@ -21,11 +21,11 @@ export function useUpdatePreferencesMutation(userId: number | null) {
   });
 }
 
-export function useLoansQuery(userId: number | null) {
+export function useLoansQuery(userId?: number | null) {
   return useQuery({
-    queryKey: ['loans', userId],
-    queryFn: () => fetchLoans(userId ?? 0),
-    enabled: Boolean(userId),
+    queryKey: ['loans', userId ?? 'me'],
+    queryFn: () => fetchLoans(userId),
+    enabled: userId === undefined || userId === null || Boolean(userId),
   });
 }
 

@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { Pagination } from '../components/Pagination';
-import { getBookCoverUrl } from '../api/libraryApi';
-import { useDeleteBookMutation, useBookDetailsQuery, useBookReviewsQuery } from '../features/catalog/hooks';
+import { getBookCoverUrl, getBookDownloadUrl } from '../api/libraryApi';
+import { useDeleteBookMutation, useBookDetailsQuery, useBookReviewsQuery, useUpdateBookMutation } from '../features/catalog/hooks';
 import { useAppSelector } from '../app/hooks';
 import { parseJwt } from '../lib/auth';
 
@@ -11,6 +11,7 @@ export function BookDetailsPage() {
   const { id } = useParams();
   const bookId = Number(id);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const accessToken = useAppSelector((state) => state.auth.accessToken);
   const payload = parseJwt(accessToken);
@@ -19,10 +20,12 @@ export function BookDetailsPage() {
 
   const [reviewsPage, setReviewsPage] = useState(0);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(searchParams.get('edit') === '1');
 
   const detailsQuery = useBookDetailsQuery(Number.isNaN(bookId) ? null : bookId);
   const reviewsQuery = useBookReviewsQuery(Number.isNaN(bookId) ? null : bookId, reviewsPage, 5);
   const deleteBookMutation = useDeleteBookMutation();
+  const updateBookMutation = useUpdateBookMutation();
 
   const stars = useMemo(() => {
     const avg = detailsQuery.data?.averageRating ?? 0;
@@ -44,6 +47,35 @@ export function BookDetailsPage() {
 
   const { book } = detailsQuery.data;
 
+  const editBook = () => {
+    const title = window.prompt('Title', book.title)?.trim();
+    if (!title) return;
+    const author = window.prompt('Author', book.author)?.trim();
+    if (!author) return;
+    const publicationYearRaw = window.prompt('Publication year', String(book.publicationYear))?.trim();
+    const copiesRaw = window.prompt('Total copies', String(book.totalCopies))?.trim();
+    const publicationYear = Number(publicationYearRaw);
+    const copies = Number(copiesRaw);
+    if (Number.isNaN(publicationYear) || Number.isNaN(copies) || copies < 1) return;
+
+    updateBookMutation.mutate({
+      id: book.id,
+      payload: {
+        title,
+        author,
+        publicationYear,
+        copies,
+        genres: book.genres,
+        isbn: book.isbn ?? null,
+        publisher: book.publisher ?? null,
+        language: book.language ?? null,
+        pageCount: book.pageCount ?? null,
+        description: book.description ?? null,
+      },
+    });
+    setIsEditMode(false);
+  };
+
   return (
     <section className="rounded-xl bg-white p-5 shadow-sm">
       <div className="grid gap-6 md:grid-cols-[260px_1fr]">
@@ -54,8 +86,8 @@ export function BookDetailsPage() {
             <h2 className="text-2xl font-bold text-slate-900">{book.title}</h2>
             {canManageBooks && (
               <div className="flex gap-2">
-                <button className="rounded-md border border-slate-300 px-3 py-1 text-sm" onClick={() => navigate('/management')} type="button">
-                  ✏️ Edit
+                <button className="rounded-md border border-slate-300 px-3 py-1 text-sm" onClick={() => setIsEditMode((prev) => !prev)} type="button">
+                  ✏️ {isEditMode ? 'Cancel edit' : 'Edit'}
                 </button>
                 <button className="rounded-md bg-rose-600 px-3 py-1 text-sm text-white" onClick={() => setConfirmDelete(true)} type="button">
                   🗑 Delete
@@ -72,6 +104,13 @@ export function BookDetailsPage() {
           <p className="text-sm text-slate-700"><span className="font-semibold">Language:</span> {book.language || '—'}</p>
           <p className="text-sm text-slate-700"><span className="font-semibold">Pages:</span> {book.pageCount || '—'}</p>
           <p className="mt-2 text-sm text-slate-700"><span className="font-semibold">Description:</span> {book.description || '—'}</p>
+
+          <div className="mt-3 flex gap-2">
+            {book.hasFile && <a className="rounded-md border border-slate-300 px-3 py-1 text-sm" href={getBookDownloadUrl(book.id)} target="_blank" rel="noreferrer">Download file</a>}
+            {canManageBooks && isEditMode && (
+              <button className="rounded-md bg-indigo-600 px-3 py-1 text-sm text-white" onClick={editBook} type="button">Save changes</button>
+            )}
+          </div>
 
           <div className="mt-4 rounded-lg bg-slate-100 p-3">
             <p className="text-sm font-semibold text-slate-800">Average rating</p>
