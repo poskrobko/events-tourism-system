@@ -17,7 +17,7 @@ public class Loan {
     private Book book;
 
     @Enumerated(EnumType.STRING)
-    private LoanStatus status = LoanStatus.ACTIVE;
+    private LoanStatus status = LoanStatus.REQUESTED;
 
     private LocalDate borrowedAt;
     private LocalDate dueDate;

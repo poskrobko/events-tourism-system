@@ -42,22 +42,44 @@ public class LoanService {
         if (book.getAvailableCopies() <= 0) {
             throw new IllegalStateException("No copies available");
         }
-        book.setAvailableCopies(book.getAvailableCopies() - 1);
 
         Loan loan = new Loan();
         loan.setUser(user);
         loan.setBook(book);
+        loan.setStatus(LoanStatus.REQUESTED);
+        return toDto(loanRepository.save(loan));
+    }
+
+    @Transactional
+    public LoanDtos.LoanResponse issueLoan(Long id) {
+        Loan loan = loanRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Loan not found"));
+        if (loan.getStatus() != LoanStatus.REQUESTED) {
+            throw new IllegalStateException("Only requested loans can be issued");
+        }
+        Book book = loan.getBook();
+        if (book.getAvailableCopies() <= 0) {
+            throw new IllegalStateException("No copies available");
+        }
+        book.setAvailableCopies(book.getAvailableCopies() - 1);
+        loan.setStatus(LoanStatus.ACTIVE);
         loan.setBorrowedAt(LocalDate.now());
         loan.setDueDate(LocalDate.now().plusDays(14));
-        loan.setStatus(LoanStatus.ACTIVE);
         return toDto(loanRepository.save(loan));
     }
 
     @Transactional
     public LoanDtos.LoanResponse returnLoan(Long id) {
+        if (!currentUserService.isLibrarianOrAdmin()) {
+            throw new IllegalArgumentException("Only librarians can mark loans as returned");
+        }
+        return markReturned(id);
+    }
+
+    @Transactional
+    public LoanDtos.LoanResponse markReturned(Long id) {
         Loan loan = loanRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Loan not found"));
         if (loan.getStatus() != LoanStatus.ACTIVE) {
-            throw new IllegalStateException("Loan already closed");
+            throw new IllegalStateException("Only active loans can be returned");
         }
         loan.setStatus(LoanStatus.RETURNED);
         loan.setReturnedAt(LocalDate.now());
