@@ -25,6 +25,22 @@ public class CurrentUserService {
         return user.getId();
     }
 
+    public Long getCurrentUserIdOrNull() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null;
+        }
+
+        String email = authentication.getName();
+        if (email == null || email.isBlank() || "anonymousUser".equals(email)) {
+            return null;
+        }
+
+        return userRepository.findByEmail(email)
+                .map(User::getId)
+                .orElse(null);
+    }
+
     public boolean isAdmin() {
         return hasAnyRole("ROLE_ADMIN");
     }

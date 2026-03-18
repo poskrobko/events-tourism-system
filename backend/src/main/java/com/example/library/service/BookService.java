@@ -21,10 +21,12 @@ import org.springframework.web.multipart.MultipartFile;
 public class BookService {
     private final BookRepository bookRepository;
     private final RatingRepository ratingRepository;
+    private final CurrentUserService currentUserService;
 
-    public BookService(BookRepository bookRepository, RatingRepository ratingRepository) {
+    public BookService(BookRepository bookRepository, RatingRepository ratingRepository, CurrentUserService currentUserService) {
         this.bookRepository = bookRepository;
         this.ratingRepository = ratingRepository;
+        this.currentUserService = currentUserService;
     }
 
     @Transactional(readOnly = true)
@@ -86,7 +88,11 @@ public class BookService {
         BookDtos.BookResponse book = getById(id);
         Double avg = ratingRepository.findAverageScoreByBookId(id);
         Long count = ratingRepository.countByBookId(id);
-        return new BookDtos.BookDetailsResponse(book, avg == null ? 0.0 : Math.round(avg * 100.0) / 100.0, count);
+        Long currentUserId = currentUserService.getCurrentUserIdOrNull();
+        Integer myRating = currentUserId == null
+                ? null
+                : ratingRepository.findByUserIdAndBookId(currentUserId, id).map(rating -> rating.getScore()).orElse(null);
+        return new BookDtos.BookDetailsResponse(book, avg == null ? 0.0 : Math.round(avg * 100.0) / 100.0, count, myRating);
     }
     @Transactional(readOnly = true)
     public Book findEntityById(Long id) {

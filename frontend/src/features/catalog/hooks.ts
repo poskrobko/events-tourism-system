@@ -48,12 +48,8 @@ export function useRateBookWithFeedbackMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ bookId, userId, score, reviewText }: { bookId: number; userId: number; score: number; reviewText?: string }) => {
-      await rateBook(bookId, userId, score);
-      const trimmed = reviewText?.trim();
-      if (trimmed) {
-        await reviewBook(bookId, userId, trimmed);
-      }
+    mutationFn: async ({ loanId }: { loanId: number }) => {
+      await returnBook(loanId);
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['books'] });
@@ -65,6 +61,29 @@ export function useRateBookWithFeedbackMutation() {
     },
   });
 }
+
+export function useSaveBookRatingMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ bookId, userId, score, hasExistingRating }: { bookId: number; userId: number; score: number; hasExistingRating: boolean }) => {
+      if (hasExistingRating) {
+        await updateMyBookRating(bookId, userId, score);
+        return;
+      }
+
+      await createBookRating(bookId, userId, score);
+    },
+    onSuccess: (_, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ['book-details', variables.bookId] });
+      void queryClient.invalidateQueries({ queryKey: ['book-reviews', variables.bookId] });
+      void queryClient.invalidateQueries({ queryKey: ['recommendations'] });
+      void queryClient.invalidateQueries({ queryKey: ['loans'] });
+    },
+  });
+}
+
+
 
 export function useUpdateBookMutation() {
   const queryClient = useQueryClient();

@@ -105,8 +105,12 @@ export async function returnBook(loanId: number): Promise<void> {
   await apiClient.post(`/loans/${loanId}/return`);
 }
 
-export async function rateBook(bookId: number, userId: number, score: number): Promise<void> {
+export async function createBookRating(bookId: number, userId: number, score: number): Promise<void> {
   await apiClient.post(`/books/${bookId}/ratings`, { score, userId });
+}
+
+export async function updateMyBookRating(bookId: number, userId: number, score: number): Promise<void> {
+  await apiClient.put(`/books/${bookId}/ratings/me`, { score, userId });
 }
 
 export async function reviewBook(bookId: number, userId: number, text: string): Promise<void> {

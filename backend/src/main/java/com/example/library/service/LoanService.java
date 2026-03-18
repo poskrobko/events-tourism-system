@@ -7,6 +7,7 @@ import com.example.library.model.LoanStatus;
 import com.example.library.model.User;
 import com.example.library.repository.BookRepository;
 import com.example.library.repository.LoanRepository;
+import com.example.library.repository.RatingRepository;
 import com.example.library.repository.UserRepository;
 import java.time.LocalDate;
 import java.util.List;
@@ -18,17 +19,20 @@ public class LoanService {
     private final LoanRepository loanRepository;
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
+    private final RatingRepository ratingRepository;
     private final ReservationService reservationService;
     private final CurrentUserService currentUserService;
 
     public LoanService(LoanRepository loanRepository,
                        UserRepository userRepository,
                        BookRepository bookRepository,
+                       RatingRepository ratingRepository,
                        ReservationService reservationService,
                        CurrentUserService currentUserService) {
         this.loanRepository = loanRepository;
         this.userRepository = userRepository;
         this.bookRepository = bookRepository;
+        this.ratingRepository = ratingRepository;
         this.reservationService = reservationService;
         this.currentUserService = currentUserService;
     }
@@ -135,13 +139,18 @@ public class LoanService {
     }
 
     private LoanDtos.LoanResponse toDto(Loan loan) {
+        Integer myRating = ratingRepository.findByUserIdAndBookId(loan.getUser().getId(), loan.getBook().getId())
+                .map(rating -> rating.getScore())
+                .orElse(null);
         return new LoanDtos.LoanResponse(
                 loan.getId(),
                 loan.getUser().getId(),
                 loan.getBook().getId(),
                 loan.getStatus(),
+                loan.getBook().getTitle(),
                 loan.getBorrowedAt(),
                 loan.getDueDate(),
-                loan.getReturnedAt());
+                loan.getReturnedAt(),
+                myRating);
     }
 }

@@ -7,6 +7,7 @@ import { useRateBookWithFeedbackMutation } from '../features/catalog/hooks';
 import { useLoansQuery, useMeQuery, useUpdateMeMutation } from '../features/preferences/hooks';
 import { parseJwt } from '../lib/auth';
 import { profileSchema, type ProfileFormValues } from '../lib/schemas';
+import type { Loan } from '../types/api';
 
 const avatarOptions = [
   { label: 'Mage', url: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f9d9.svg' },
@@ -36,7 +37,6 @@ export function ProfilePage() {
 
   const [ratingLoanId, setRatingLoanId] = useState<number | null>(null);
   const [ratingScore, setRatingScore] = useState(5);
-  const [ratingReview, setRatingReview] = useState('');
 
   const defaultAvatar = avatarOptions[0].url;
   const [selectedAvatar, setSelectedAvatar] = useState(defaultAvatar);
@@ -104,13 +104,12 @@ export function ProfilePage() {
         bookId,
         userId: currentUserId,
         score: ratingScore,
-        reviewText: ratingReview,
+        hasExistingRating: loan.myRating != null,
       },
       {
         onSuccess: () => {
           setRatingLoanId(null);
           setRatingScore(5);
-          setRatingReview('');
         },
       },
     );
@@ -120,6 +119,7 @@ export function ProfilePage() {
     () => avatarOptions.find((option) => option.url === selectedAvatar)?.label ?? 'Custom avatar',
     [selectedAvatar],
   );
+  const canManageOwnRatings = !isAdmin || selectedUserId === currentUserId;
 
   return (
     <section className="rounded-xl bg-white p-5 shadow-sm">
@@ -256,6 +256,7 @@ export function ProfilePage() {
             <tr className="border-b border-slate-200 text-left">
               <th className="p-2">Loan ID</th>
               <th className="p-2">Book ID</th>
+              <th className="p-2">Title</th>
               <th className="p-2">Status</th>
               <th className="p-2">Borrowed</th>
               <th className="p-2">Due</th>
@@ -268,6 +269,7 @@ export function ProfilePage() {
               <tr className="border-b border-slate-100" key={loan.id}>
                 <td className="p-2">{loan.id}</td>
                 <td className="p-2">{loan.bookId}</td>
+                <td className="p-2">{loan.bookTitle}</td>
                 <td className="p-2">{loan.status}</td>
                 <td className="p-2">{loan.borrowedAt}</td>
                 <td className="p-2">{loan.dueDate}</td>
@@ -276,7 +278,7 @@ export function ProfilePage() {
                   {loan.status === 'RETURNED' && loan.userId === currentUserId && (
                     <button
                       className="rounded-md bg-slate-900 px-3 py-1 text-xs text-white"
-                      onClick={() => setRatingLoanId(loan.id)}
+                      onClick={() => submitReturn(loan.id)}
                       type="button"
                     >
                       Rate & review
@@ -289,7 +291,58 @@ export function ProfilePage() {
         </table>
       </div>
 
-      {ratingLoanId && (
+      <div className="mt-6 rounded-xl border border-slate-200 p-4">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <div>
+            <h3 className="text-lg font-semibold">My ratings & book history</h3>
+            <p className="text-sm text-slate-600">Для возвращённых книг можно поставить новую оценку или изменить существующую.</p>
+          </div>
+        </div>
+
+        {!canManageOwnRatings ? (
+          <p className="text-sm text-slate-600">Редактирование оценок доступно только для собственного профиля.</p>
+        ) : ratingLoans.length === 0 ? (
+          <p className="text-sm text-slate-600">Пока нет возвращённых книг для оценки.</p>
+        ) : (
+          <div className="overflow-auto">
+            <table className="min-w-full border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-left">
+                  <th className="p-2">Loan ID</th>
+                  <th className="p-2">Book</th>
+                  <th className="p-2">Returned</th>
+                  <th className="p-2">My rating</th>
+                  <th className="p-2">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ratingLoans.map((loan) => (
+                  <tr className="border-b border-slate-100" key={`rating-${loan.id}`}>
+                    <td className="p-2">{loan.id}</td>
+                    <td className="p-2">
+                      <div className="font-medium text-slate-800">{loan.bookTitle}</div>
+                      <div className="text-xs text-slate-500">Book #{loan.bookId}</div>
+                    </td>
+                    <td className="p-2">{loan.returnedAt || '—'}</td>
+                    <td className="p-2">{loan.myRating != null ? `${loan.myRating} / 5` : 'Not rated yet'}</td>
+                    <td className="p-2">
+                      <button
+                        className="rounded-md border border-slate-300 px-3 py-1 text-xs hover:bg-slate-50"
+                        onClick={() => setRatingLoanId(loan.id)}
+                        type="button"
+                      >
+                        {loan.myRating == null ? 'Rate' : 'Edit'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {ratingLoan && (
         <div className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50 p-4">
           <h3 className="mb-2 text-sm font-semibold">Оцените книгу и оставьте комментарий</h3>
           <label className="mb-2 block text-sm">
@@ -301,10 +354,6 @@ export function ProfilePage() {
               <option value={2}>★★☆☆☆ (2)</option>
               <option value={1}>★☆☆☆☆ (1)</option>
             </select>
-          </label>
-          <label className="mb-3 block text-sm">
-            Отзыв (необязательно)
-            <textarea className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" rows={3} value={ratingReview} onChange={(e) => setRatingReview(e.target.value)} />
           </label>
           <div className="flex gap-2">
             <button

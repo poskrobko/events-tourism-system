@@ -34,6 +34,7 @@ export type BookDetails = {
   book: Book;
   averageRating: number;
   ratingsCount: number;
+  myRating?: number | null;
 };
 
 export type Review = {
@@ -53,10 +54,12 @@ export type Loan = {
   id: number;
   userId: number;
   bookId: number;
+  bookTitle: string;
   status: string;
   borrowedAt: string;
   dueDate: string;
   returnedAt?: string | null;
+  myRating?: number | null;
 };
 
 export type Reservation = {

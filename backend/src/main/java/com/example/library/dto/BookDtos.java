@@ -35,5 +35,5 @@ public class BookDtos {
 
     public record RecommendationResponse(BookResponse book, List<String> sourceTags) {}
 
-    public record BookDetailsResponse(BookResponse book, Double averageRating, Long ratingsCount) {}
+    public record BookDetailsResponse(BookResponse book, Double averageRating, Long ratingsCount, Integer myRating) {}
 }
