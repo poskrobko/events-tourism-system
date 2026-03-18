@@ -9,7 +9,15 @@ type BookCardProps = {
   recommendationTags?: Array<'SYSTEM' | 'USER'>;
 };
 
-export function BookCard({ book, onOrder, isRecommended, recommendationTags }: BookCardProps) {
+function compactDescription(description?: string | null): string | null {
+  if (!description?.trim()) return null;
+  return description.length > 140 ? `${description.slice(0, 137).trimEnd()}...` : description;
+}
+
+export function BookCard({ book, onBorrow, isRecommended, recommendationTags }: BookCardProps) {
+  const summary = compactDescription(book.description);
+  const meta = [book.publisher, book.language, book.pageCount ? `${book.pageCount} pp.` : null].filter(Boolean).join(' • ');
+
   return (
     <article className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
       <img className="h-52 w-full object-cover" src={getBookCoverUrl(book.id)} alt={`Обложка: ${book.title}`} />
@@ -32,11 +40,23 @@ export function BookCard({ book, onOrder, isRecommended, recommendationTags }: B
             )}
           </div>
         )}
-        <p className="text-sm text-slate-700"><span className="font-semibold">Author:</span> {book.author}</p>
-        <p className="text-sm text-slate-700"><span className="font-semibold">Year:</span> {book.publicationYear}</p>
-        <p className="text-sm text-slate-700"><span className="font-semibold">Genres:</span> {book.genres?.join(', ') || '—'}</p>
-        <p className="text-sm text-slate-700"><span className="font-semibold">ISBN:</span> {book.isbn || '—'}</p>
-        <p className="text-sm text-slate-700"><span className="font-semibold">Available:</span> {book.availableCopies}/{book.totalCopies}</p>
+        <p className="text-sm text-slate-700">
+          <span className="font-semibold">Author:</span> {book.author}
+        </p>
+        <p className="text-sm text-slate-700">
+          <span className="font-semibold">Year:</span> {book.publicationYear}
+        </p>
+        <p className="text-sm text-slate-700">
+          <span className="font-semibold">Genres:</span> {book.genres.join(', ')}
+        </p>
+        <p className="text-sm text-slate-700">
+          <span className="font-semibold">ISBN:</span> {book.isbn}
+        </p>
+        {meta && <p className="mt-1 text-sm text-slate-600">{meta}</p>}
+        {summary && <p className="mt-2 text-sm leading-6 text-slate-600">{summary}</p>}
+        <p className="mt-2 text-sm text-slate-700">
+          <span className="font-semibold">Available:</span> {book.availableCopies}/{book.totalCopies}
+        </p>
         <div className="mt-3 flex flex-wrap gap-2">
           {onOrder && (
             <button className="rounded-md bg-slate-900 px-3 py-2 text-sm text-white" onClick={() => onOrder(book.id)}>

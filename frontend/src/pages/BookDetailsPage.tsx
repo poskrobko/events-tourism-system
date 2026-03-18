@@ -46,6 +46,15 @@ export function BookDetailsPage() {
   }
 
   const { book } = detailsQuery.data;
+  const detailItems = [
+    ['Author', book.author],
+    ['Year', String(book.publicationYear)],
+    ['Genres', book.genres.join(', ')],
+    ['ISBN', book.isbn],
+    ['Publisher', book.publisher],
+    ['Language', book.language],
+    ['Pages', book.pageCount ? String(book.pageCount) : null],
+  ].filter(([, value]) => Boolean(value));
 
   const editBook = () => {
     const title = window.prompt('Title', book.title)?.trim();
@@ -83,7 +92,10 @@ export function BookDetailsPage() {
 
         <div>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-2xl font-bold text-slate-900">{book.title}</h2>
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900">{book.title}</h2>
+              <p className="mt-2 text-sm text-slate-600">{book.availableCopies} из {book.totalCopies} экземпляров доступны сейчас.</p>
+            </div>
             {canManageBooks && (
               <div className="flex gap-2">
                 <button className="rounded-md border border-slate-300 px-3 py-1 text-sm" onClick={() => setIsEditMode((prev) => !prev)} type="button">
@@ -96,14 +108,21 @@ export function BookDetailsPage() {
             )}
           </div>
 
-          <p className="mt-2 text-sm text-slate-700"><span className="font-semibold">Author:</span> {book.author}</p>
-          <p className="text-sm text-slate-700"><span className="font-semibold">Year:</span> {book.publicationYear}</p>
-          <p className="text-sm text-slate-700"><span className="font-semibold">Genres:</span> {book.genres.join(', ') || '—'}</p>
-          <p className="text-sm text-slate-700"><span className="font-semibold">ISBN:</span> {book.isbn || '—'}</p>
-          <p className="text-sm text-slate-700"><span className="font-semibold">Publisher:</span> {book.publisher || '—'}</p>
-          <p className="text-sm text-slate-700"><span className="font-semibold">Language:</span> {book.language || '—'}</p>
-          <p className="text-sm text-slate-700"><span className="font-semibold">Pages:</span> {book.pageCount || '—'}</p>
-          <p className="mt-2 text-sm text-slate-700"><span className="font-semibold">Description:</span> {book.description || '—'}</p>
+          <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+            {detailItems.map(([label, value]) => (
+              <div className="rounded-lg bg-slate-50 px-4 py-3" key={label}>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</dt>
+                <dd className="mt-1 text-sm text-slate-800">{value}</dd>
+              </div>
+            ))}
+          </dl>
+
+          {book.description && (
+            <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Description</p>
+              <p className="mt-2 text-sm leading-7 text-slate-700">{book.description}</p>
+            </div>
+          )}
 
           <div className="mt-3 flex gap-2">
             {book.hasFile && <a className="rounded-md border border-slate-300 px-3 py-1 text-sm" href={getBookDownloadUrl(book.id)} target="_blank" rel="noreferrer">Download file</a>}

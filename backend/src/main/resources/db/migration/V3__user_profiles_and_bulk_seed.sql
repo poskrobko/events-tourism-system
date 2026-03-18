@@ -51,385 +51,441 @@ where u.email = 'admin.ops@library.local'
 -- Additional catalog seed (around 100 books total)
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 1', 'Neil Gaiman', 1951, 'fantasy,adventure', 3, 2
-where not exists (select 1 from books where title = 'Library Collection Volume 1' and author = 'Neil Gaiman');
+select 'The Hobbit', 'J.R.R. Tolkien', 1937, 'fantasy,adventure', 5, 3
+where not exists (select 1 from books where title = 'The Hobbit' and author = 'J.R.R. Tolkien');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 2', 'Isaac Asimov', 1952, 'science fiction,space', 4, 3
-where not exists (select 1 from books where title = 'Library Collection Volume 2' and author = 'Isaac Asimov');
+select 'Nineteen Eighty-Four', 'George Orwell', 1949, 'dystopian,political fiction', 4, 2
+where not exists (select 1 from books where title = 'Nineteen Eighty-Four' and author = 'George Orwell');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 3', 'Agatha Christie', 1953, 'mystery,thriller', 5, 4
-where not exists (select 1 from books where title = 'Library Collection Volume 3' and author = 'Agatha Christie');
+select 'Pride and Prejudice', 'Jane Austen', 1813, 'classic,romance', 6, 4
+where not exists (select 1 from books where title = 'Pride and Prejudice' and author = 'Jane Austen');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 4', 'Martin Fowler', 1954, 'software engineering,programming', 6, 5
-where not exists (select 1 from books where title = 'Library Collection Volume 4' and author = 'Martin Fowler');
+select 'Dune', 'Frank Herbert', 1965, 'science fiction,epic', 5, 2
+where not exists (select 1 from books where title = 'Dune' and author = 'Frank Herbert');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 5', 'Walter Isaacson', 1955, 'history,biography', 2, 1
-where not exists (select 1 from books where title = 'Library Collection Volume 5' and author = 'Walter Isaacson');
+select 'The Murder of Roger Ackroyd', 'Agatha Christie', 1926, 'mystery,crime', 4, 1
+where not exists (select 1 from books where title = 'The Murder of Roger Ackroyd' and author = 'Agatha Christie');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 6', 'Daniel Kahneman', 1956, 'psychology,self-help', 3, 2
-where not exists (select 1 from books where title = 'Library Collection Volume 6' and author = 'Daniel Kahneman');
+select 'The Left Hand of Darkness', 'Ursula K. Le Guin', 1969, 'science fiction,literary', 3, 2
+where not exists (select 1 from books where title = 'The Left Hand of Darkness' and author = 'Ursula K. Le Guin');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 7', 'Cal Newport', 1957, 'business,career', 4, 3
-where not exists (select 1 from books where title = 'Library Collection Volume 7' and author = 'Cal Newport');
+select 'To Kill a Mockingbird', 'Harper Lee', 1960, 'classic,historical fiction', 5, 3
+where not exists (select 1 from books where title = 'To Kill a Mockingbird' and author = 'Harper Lee');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 8', 'Jane Austen', 1958, 'classic,drama', 5, 4
-where not exists (select 1 from books where title = 'Library Collection Volume 8' and author = 'Jane Austen');
+select 'The Name of the Rose', 'Umberto Eco', 1980, 'historical mystery,literary', 3, 1
+where not exists (select 1 from books where title = 'The Name of the Rose' and author = 'Umberto Eco');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 9', 'Haruki Murakami', 1959, 'romance,contemporary', 6, 5
-where not exists (select 1 from books where title = 'Library Collection Volume 9' and author = 'Haruki Murakami');
+select 'Neuromancer', 'William Gibson', 1984, 'cyberpunk,science fiction', 4, 2
+where not exists (select 1 from books where title = 'Neuromancer' and author = 'William Gibson');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 10', 'Lois Lowry', 1960, 'young adult,adventure', 2, 1
-where not exists (select 1 from books where title = 'Library Collection Volume 10' and author = 'Lois Lowry');
+select 'The Giver', 'Lois Lowry', 1993, 'young adult,dystopian', 5, 4
+where not exists (select 1 from books where title = 'The Giver' and author = 'Lois Lowry');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 11', 'Neil Gaiman', 1961, 'fantasy,adventure', 3, 2
-where not exists (select 1 from books where title = 'Library Collection Volume 11' and author = 'Neil Gaiman');
+select 'American Gods', 'Neil Gaiman', 2001, 'fantasy,mythic fiction', 4, 2
+where not exists (select 1 from books where title = 'American Gods' and author = 'Neil Gaiman');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 12', 'Isaac Asimov', 1962, 'science fiction,space', 4, 3
-where not exists (select 1 from books where title = 'Library Collection Volume 12' and author = 'Isaac Asimov');
+select 'Foundation', 'Isaac Asimov', 1951, 'science fiction,space opera', 5, 3
+where not exists (select 1 from books where title = 'Foundation' and author = 'Isaac Asimov');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 13', 'Agatha Christie', 1963, 'mystery,thriller', 5, 4
-where not exists (select 1 from books where title = 'Library Collection Volume 13' and author = 'Agatha Christie');
+select 'Clean Code', 'Robert C. Martin', 2008, 'software engineering,programming', 6, 5
+where not exists (select 1 from books where title = 'Clean Code' and author = 'Robert C. Martin');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 14', 'Martin Fowler', 1964, 'software engineering,programming', 6, 5
-where not exists (select 1 from books where title = 'Library Collection Volume 14' and author = 'Martin Fowler');
+select 'Steve Jobs', 'Walter Isaacson', 2011, 'biography,business', 3, 2
+where not exists (select 1 from books where title = 'Steve Jobs' and author = 'Walter Isaacson');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 15', 'Walter Isaacson', 1965, 'history,biography', 2, 1
-where not exists (select 1 from books where title = 'Library Collection Volume 15' and author = 'Walter Isaacson');
+select 'Thinking, Fast and Slow', 'Daniel Kahneman', 2011, 'psychology,nonfiction', 4, 3
+where not exists (select 1 from books where title = 'Thinking, Fast and Slow' and author = 'Daniel Kahneman');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 16', 'Daniel Kahneman', 1966, 'psychology,self-help', 3, 2
-where not exists (select 1 from books where title = 'Library Collection Volume 16' and author = 'Daniel Kahneman');
+select 'Deep Work', 'Cal Newport', 2016, 'productivity,career', 5, 4
+where not exists (select 1 from books where title = 'Deep Work' and author = 'Cal Newport');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 17', 'Cal Newport', 1967, 'business,career', 4, 3
-where not exists (select 1 from books where title = 'Library Collection Volume 17' and author = 'Cal Newport');
+select 'Kafka on the Shore', 'Haruki Murakami', 2002, 'magical realism,literary fiction', 4, 2
+where not exists (select 1 from books where title = 'Kafka on the Shore' and author = 'Haruki Murakami');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 18', 'Jane Austen', 1968, 'classic,drama', 5, 4
-where not exists (select 1 from books where title = 'Library Collection Volume 18' and author = 'Jane Austen');
+select 'The Road', 'Cormac McCarthy', 2006, 'post-apocalyptic,literary fiction', 3, 1
+where not exists (select 1 from books where title = 'The Road' and author = 'Cormac McCarthy');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 19', 'Haruki Murakami', 1969, 'romance,contemporary', 6, 5
-where not exists (select 1 from books where title = 'Library Collection Volume 19' and author = 'Haruki Murakami');
+select 'The Book Thief', 'Markus Zusak', 2005, 'historical fiction,young adult', 5, 3
+where not exists (select 1 from books where title = 'The Book Thief' and author = 'Markus Zusak');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 20', 'Lois Lowry', 1970, 'young adult,adventure', 2, 1
-where not exists (select 1 from books where title = 'Library Collection Volume 20' and author = 'Lois Lowry');
+select 'Sapiens', 'Yuval Noah Harari', 2011, 'history,nonfiction', 6, 4
+where not exists (select 1 from books where title = 'Sapiens' and author = 'Yuval Noah Harari');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 21', 'Neil Gaiman', 1971, 'fantasy,adventure', 3, 2
-where not exists (select 1 from books where title = 'Library Collection Volume 21' and author = 'Neil Gaiman');
+select 'Beloved', 'Toni Morrison', 1987, 'historical fiction,literary', 3, 2
+where not exists (select 1 from books where title = 'Beloved' and author = 'Toni Morrison');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 22', 'Isaac Asimov', 1972, 'science fiction,space', 4, 3
-where not exists (select 1 from books where title = 'Library Collection Volume 22' and author = 'Isaac Asimov');
+select 'The Martian', 'Andy Weir', 2011, 'science fiction,thriller', 5, 4
+where not exists (select 1 from books where title = 'The Martian' and author = 'Andy Weir');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 23', 'Agatha Christie', 1973, 'mystery,thriller', 5, 4
-where not exists (select 1 from books where title = 'Library Collection Volume 23' and author = 'Agatha Christie');
+select 'Jane Eyre', 'Charlotte Brontë', 1847, 'classic,gothic', 4, 2
+where not exists (select 1 from books where title = 'Jane Eyre' and author = 'Charlotte Brontë');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 24', 'Martin Fowler', 1974, 'software engineering,programming', 6, 5
-where not exists (select 1 from books where title = 'Library Collection Volume 24' and author = 'Martin Fowler');
+select 'The Shadow of the Wind', 'Carlos Ruiz Zafón', 2001, 'historical mystery,literary', 4, 3
+where not exists (select 1 from books where title = 'The Shadow of the Wind' and author = 'Carlos Ruiz Zafón');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 25', 'Walter Isaacson', 1975, 'history,biography', 2, 1
-where not exists (select 1 from books where title = 'Library Collection Volume 25' and author = 'Walter Isaacson');
+select 'The Alchemist', 'Paulo Coelho', 1988, 'philosophical fiction,adventure', 5, 4
+where not exists (select 1 from books where title = 'The Alchemist' and author = 'Paulo Coelho');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 26', 'Daniel Kahneman', 1976, 'psychology,self-help', 3, 2
-where not exists (select 1 from books where title = 'Library Collection Volume 26' and author = 'Daniel Kahneman');
+select 'Brave New World', 'Aldous Huxley', 1932, 'dystopian,science fiction', 4, 2
+where not exists (select 1 from books where title = 'Brave New World' and author = 'Aldous Huxley');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 27', 'Cal Newport', 1977, 'business,career', 4, 3
-where not exists (select 1 from books where title = 'Library Collection Volume 27' and author = 'Cal Newport');
+select 'Rebecca', 'Daphne du Maurier', 1938, 'gothic,suspense', 3, 1
+where not exists (select 1 from books where title = 'Rebecca' and author = 'Daphne du Maurier');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 28', 'Jane Austen', 1978, 'classic,drama', 5, 4
-where not exists (select 1 from books where title = 'Library Collection Volume 28' and author = 'Jane Austen');
+select 'The Catcher in the Rye', 'J. D. Salinger', 1951, 'classic,coming-of-age', 4, 3
+where not exists (select 1 from books where title = 'The Catcher in the Rye' and author = 'J. D. Salinger');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 29', 'Haruki Murakami', 1979, 'romance,contemporary', 6, 5
-where not exists (select 1 from books where title = 'Library Collection Volume 29' and author = 'Haruki Murakami');
+select 'A Wizard of Earthsea', 'Ursula K. Le Guin', 1968, 'fantasy,coming-of-age', 5, 4
+where not exists (select 1 from books where title = 'A Wizard of Earthsea' and author = 'Ursula K. Le Guin');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 30', 'Lois Lowry', 1980, 'young adult,adventure', 2, 1
-where not exists (select 1 from books where title = 'Library Collection Volume 30' and author = 'Lois Lowry');
+select 'The Handmaid''s Tale', 'Margaret Atwood', 1985, 'dystopian,speculative fiction', 4, 2
+where not exists (select 1 from books where title = 'The Handmaid''s Tale' and author = 'Margaret Atwood');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 31', 'Neil Gaiman', 1981, 'fantasy,adventure', 3, 2
-where not exists (select 1 from books where title = 'Library Collection Volume 31' and author = 'Neil Gaiman');
+select 'The Wind-Up Bird Chronicle', 'Haruki Murakami', 1994, 'literary fiction,magical realism', 3, 2
+where not exists (select 1 from books where title = 'The Wind-Up Bird Chronicle' and author = 'Haruki Murakami');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 32', 'Isaac Asimov', 1982, 'science fiction,space', 4, 3
-where not exists (select 1 from books where title = 'Library Collection Volume 32' and author = 'Isaac Asimov');
+select 'Snow Crash', 'Neal Stephenson', 1992, 'cyberpunk,satire', 4, 2
+where not exists (select 1 from books where title = 'Snow Crash' and author = 'Neal Stephenson');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 33', 'Agatha Christie', 1983, 'mystery,thriller', 5, 4
-where not exists (select 1 from books where title = 'Library Collection Volume 33' and author = 'Agatha Christie');
+select 'The Dispossessed', 'Ursula K. Le Guin', 1974, 'science fiction,political fiction', 3, 2
+where not exists (select 1 from books where title = 'The Dispossessed' and author = 'Ursula K. Le Guin');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 34', 'Martin Fowler', 1984, 'software engineering,programming', 6, 5
-where not exists (select 1 from books where title = 'Library Collection Volume 34' and author = 'Martin Fowler');
+select 'Murder on the Orient Express', 'Agatha Christie', 1934, 'mystery,crime', 5, 3
+where not exists (select 1 from books where title = 'Murder on the Orient Express' and author = 'Agatha Christie');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 35', 'Walter Isaacson', 1985, 'history,biography', 2, 1
-where not exists (select 1 from books where title = 'Library Collection Volume 35' and author = 'Walter Isaacson');
+select 'The Pragmatic Programmer', 'Andrew Hunt & David Thomas', 1999, 'software engineering,programming', 6, 5
+where not exists (select 1 from books where title = 'The Pragmatic Programmer' and author = 'Andrew Hunt & David Thomas');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 36', 'Daniel Kahneman', 1986, 'psychology,self-help', 3, 2
-where not exists (select 1 from books where title = 'Library Collection Volume 36' and author = 'Daniel Kahneman');
+select 'The Design of Everyday Things', 'Don Norman', 1988, 'design,nonfiction', 4, 3
+where not exists (select 1 from books where title = 'The Design of Everyday Things' and author = 'Don Norman');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 37', 'Cal Newport', 1987, 'business,career', 4, 3
-where not exists (select 1 from books where title = 'Library Collection Volume 37' and author = 'Cal Newport');
+select 'The Midnight Library', 'Matt Haig', 2020, 'contemporary,fantasy', 5, 4
+where not exists (select 1 from books where title = 'The Midnight Library' and author = 'Matt Haig');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 38', 'Jane Austen', 1988, 'classic,drama', 5, 4
-where not exists (select 1 from books where title = 'Library Collection Volume 38' and author = 'Jane Austen');
+select 'The Girl with the Dragon Tattoo', 'Stieg Larsson', 2005, 'crime,thriller', 4, 2
+where not exists (select 1 from books where title = 'The Girl with the Dragon Tattoo' and author = 'Stieg Larsson');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 39', 'Haruki Murakami', 1989, 'romance,contemporary', 6, 5
-where not exists (select 1 from books where title = 'Library Collection Volume 39' and author = 'Haruki Murakami');
+select 'The Three-Body Problem', 'Liu Cixin', 2006, 'science fiction,first contact', 4, 3
+where not exists (select 1 from books where title = 'The Three-Body Problem' and author = 'Liu Cixin');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 40', 'Lois Lowry', 1990, 'young adult,adventure', 2, 1
-where not exists (select 1 from books where title = 'Library Collection Volume 40' and author = 'Lois Lowry');
+select 'The Remains of the Day', 'Kazuo Ishiguro', 1989, 'literary fiction,historical', 3, 2
+where not exists (select 1 from books where title = 'The Remains of the Day' and author = 'Kazuo Ishiguro');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 41', 'Neil Gaiman', 1991, 'fantasy,adventure', 3, 2
-where not exists (select 1 from books where title = 'Library Collection Volume 41' and author = 'Neil Gaiman');
+select 'Gone Girl', 'Gillian Flynn', 2012, 'thriller,psychological', 5, 3
+where not exists (select 1 from books where title = 'Gone Girl' and author = 'Gillian Flynn');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 42', 'Isaac Asimov', 1992, 'science fiction,space', 4, 3
-where not exists (select 1 from books where title = 'Library Collection Volume 42' and author = 'Isaac Asimov');
+select 'Station Eleven', 'Emily St. John Mandel', 2014, 'post-apocalyptic,literary fiction', 4, 3
+where not exists (select 1 from books where title = 'Station Eleven' and author = 'Emily St. John Mandel');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 43', 'Agatha Christie', 1993, 'mystery,thriller', 5, 4
-where not exists (select 1 from books where title = 'Library Collection Volume 43' and author = 'Agatha Christie');
+select 'The Night Circus', 'Erin Morgenstern', 2011, 'fantasy,romance', 4, 2
+where not exists (select 1 from books where title = 'The Night Circus' and author = 'Erin Morgenstern');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 44', 'Martin Fowler', 1994, 'software engineering,programming', 6, 5
-where not exists (select 1 from books where title = 'Library Collection Volume 44' and author = 'Martin Fowler');
+select 'The Immortal Life of Henrietta Lacks', 'Rebecca Skloot', 2010, 'science,biography', 3, 2
+where not exists (select 1 from books where title = 'The Immortal Life of Henrietta Lacks' and author = 'Rebecca Skloot');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 45', 'Walter Isaacson', 1995, 'history,biography', 2, 1
-where not exists (select 1 from books where title = 'Library Collection Volume 45' and author = 'Walter Isaacson');
+select 'The Little Prince', 'Antoine de Saint-Exupéry', 1943, 'classic,philosophical fiction', 5, 4
+where not exists (select 1 from books where title = 'The Little Prince' and author = 'Antoine de Saint-Exupéry');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 46', 'Daniel Kahneman', 1996, 'psychology,self-help', 3, 2
-where not exists (select 1 from books where title = 'Library Collection Volume 46' and author = 'Daniel Kahneman');
+select 'Cloud Atlas', 'David Mitchell', 2004, 'literary fiction,science fiction', 3, 2
+where not exists (select 1 from books where title = 'Cloud Atlas' and author = 'David Mitchell');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 47', 'Cal Newport', 1997, 'business,career', 4, 3
-where not exists (select 1 from books where title = 'Library Collection Volume 47' and author = 'Cal Newport');
+select 'The Secret History', 'Donna Tartt', 1992, 'literary fiction,psychological', 4, 2
+where not exists (select 1 from books where title = 'The Secret History' and author = 'Donna Tartt');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 48', 'Jane Austen', 1998, 'classic,drama', 5, 4
-where not exists (select 1 from books where title = 'Library Collection Volume 48' and author = 'Jane Austen');
+select 'Anxious People', 'Fredrik Backman', 2019, 'contemporary,humor', 5, 4
+where not exists (select 1 from books where title = 'Anxious People' and author = 'Fredrik Backman');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 49', 'Haruki Murakami', 1999, 'romance,contemporary', 6, 5
-where not exists (select 1 from books where title = 'Library Collection Volume 49' and author = 'Haruki Murakami');
+select 'All the Light We Cannot See', 'Anthony Doerr', 2014, 'historical fiction,war', 4, 3
+where not exists (select 1 from books where title = 'All the Light We Cannot See' and author = 'Anthony Doerr');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 50', 'Lois Lowry', 2000, 'young adult,adventure', 2, 1
-where not exists (select 1 from books where title = 'Library Collection Volume 50' and author = 'Lois Lowry');
+select 'Never Let Me Go', 'Kazuo Ishiguro', 2005, 'dystopian,literary fiction', 3, 2
+where not exists (select 1 from books where title = 'Never Let Me Go' and author = 'Kazuo Ishiguro');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 51', 'Neil Gaiman', 2001, 'fantasy,adventure', 3, 2
-where not exists (select 1 from books where title = 'Library Collection Volume 51' and author = 'Neil Gaiman');
+select 'The Silent Patient', 'Alex Michaelides', 2019, 'thriller,psychological', 5, 3
+where not exists (select 1 from books where title = 'The Silent Patient' and author = 'Alex Michaelides');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 52', 'Isaac Asimov', 2002, 'science fiction,space', 4, 3
-where not exists (select 1 from books where title = 'Library Collection Volume 52' and author = 'Isaac Asimov');
+select 'Educated', 'Tara Westover', 2018, 'memoir,nonfiction', 4, 3
+where not exists (select 1 from books where title = 'Educated' and author = 'Tara Westover');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 53', 'Agatha Christie', 2003, 'mystery,thriller', 5, 4
-where not exists (select 1 from books where title = 'Library Collection Volume 53' and author = 'Agatha Christie');
+select 'The Song of Achilles', 'Madeline Miller', 2011, 'historical fiction,myth retelling', 4, 2
+where not exists (select 1 from books where title = 'The Song of Achilles' and author = 'Madeline Miller');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 54', 'Martin Fowler', 2004, 'software engineering,programming', 6, 5
-where not exists (select 1 from books where title = 'Library Collection Volume 54' and author = 'Martin Fowler');
+select 'The Goldfinch', 'Donna Tartt', 2013, 'literary fiction,coming-of-age', 3, 1
+where not exists (select 1 from books where title = 'The Goldfinch' and author = 'Donna Tartt');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 55', 'Walter Isaacson', 2005, 'history,biography', 2, 1
-where not exists (select 1 from books where title = 'Library Collection Volume 55' and author = 'Walter Isaacson');
+select 'Project Hail Mary', 'Andy Weir', 2021, 'science fiction,adventure', 5, 4
+where not exists (select 1 from books where title = 'Project Hail Mary' and author = 'Andy Weir');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 56', 'Daniel Kahneman', 2006, 'psychology,self-help', 3, 2
-where not exists (select 1 from books where title = 'Library Collection Volume 56' and author = 'Daniel Kahneman');
+select 'The Pillars of the Earth', 'Ken Follett', 1989, 'historical fiction,epic', 4, 2
+where not exists (select 1 from books where title = 'The Pillars of the Earth' and author = 'Ken Follett');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 57', 'Cal Newport', 2007, 'business,career', 4, 3
-where not exists (select 1 from books where title = 'Library Collection Volume 57' and author = 'Cal Newport');
+select 'The Hitchhiker''s Guide to the Galaxy', 'Douglas Adams', 1979, 'science fiction,comedy', 5, 4
+where not exists (select 1 from books where title = 'The Hitchhiker''s Guide to the Galaxy' and author = 'Douglas Adams');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 58', 'Jane Austen', 2008, 'classic,drama', 5, 4
-where not exists (select 1 from books where title = 'Library Collection Volume 58' and author = 'Jane Austen');
+select 'The Master and Margarita', 'Mikhail Bulgakov', 1967, 'satire,fantasy', 3, 2
+where not exists (select 1 from books where title = 'The Master and Margarita' and author = 'Mikhail Bulgakov');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 59', 'Haruki Murakami', 2009, 'romance,contemporary', 6, 5
-where not exists (select 1 from books where title = 'Library Collection Volume 59' and author = 'Haruki Murakami');
+select 'Fahrenheit 451', 'Ray Bradbury', 1953, 'dystopian,science fiction', 4, 3
+where not exists (select 1 from books where title = 'Fahrenheit 451' and author = 'Ray Bradbury');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 60', 'Lois Lowry', 2010, 'young adult,adventure', 2, 1
-where not exists (select 1 from books where title = 'Library Collection Volume 60' and author = 'Lois Lowry');
+select 'The Picture of Dorian Gray', 'Oscar Wilde', 1890, 'classic,gothic', 4, 2
+where not exists (select 1 from books where title = 'The Picture of Dorian Gray' and author = 'Oscar Wilde');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 61', 'Neil Gaiman', 2011, 'fantasy,adventure', 3, 2
-where not exists (select 1 from books where title = 'Library Collection Volume 61' and author = 'Neil Gaiman');
+select 'The Brothers Karamazov', 'Fyodor Dostoevsky', 1880, 'classic,philosophical', 3, 1
+where not exists (select 1 from books where title = 'The Brothers Karamazov' and author = 'Fyodor Dostoevsky');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 62', 'Isaac Asimov', 2012, 'science fiction,space', 4, 3
-where not exists (select 1 from books where title = 'Library Collection Volume 62' and author = 'Isaac Asimov');
+select 'Frankenstein', 'Mary Shelley', 1818, 'classic,horror', 5, 4
+where not exists (select 1 from books where title = 'Frankenstein' and author = 'Mary Shelley');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 63', 'Agatha Christie', 2013, 'mystery,thriller', 5, 4
-where not exists (select 1 from books where title = 'Library Collection Volume 63' and author = 'Agatha Christie');
+select 'The Queen''s Gambit', 'Walter Tevis', 1983, 'coming-of-age,sports drama', 4, 3
+where not exists (select 1 from books where title = 'The Queen''s Gambit' and author = 'Walter Tevis');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 64', 'Martin Fowler', 2014, 'software engineering,programming', 6, 5
-where not exists (select 1 from books where title = 'Library Collection Volume 64' and author = 'Martin Fowler');
+select 'A Brief History of Time', 'Stephen Hawking', 1988, 'science,nonfiction', 4, 3
+where not exists (select 1 from books where title = 'A Brief History of Time' and author = 'Stephen Hawking');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 65', 'Walter Isaacson', 2015, 'history,biography', 2, 1
-where not exists (select 1 from books where title = 'Library Collection Volume 65' and author = 'Walter Isaacson');
+select 'The Graveyard Book', 'Neil Gaiman', 2008, 'fantasy,young adult', 5, 4
+where not exists (select 1 from books where title = 'The Graveyard Book' and author = 'Neil Gaiman');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 66', 'Daniel Kahneman', 2016, 'psychology,self-help', 3, 2
-where not exists (select 1 from books where title = 'Library Collection Volume 66' and author = 'Daniel Kahneman');
+select 'I, Robot', 'Isaac Asimov', 1950, 'science fiction,short stories', 4, 3
+where not exists (select 1 from books where title = 'I, Robot' and author = 'Isaac Asimov');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 67', 'Cal Newport', 2017, 'business,career', 4, 3
-where not exists (select 1 from books where title = 'Library Collection Volume 67' and author = 'Cal Newport');
+select 'And Then There Were None', 'Agatha Christie', 1939, 'mystery,thriller', 5, 3
+where not exists (select 1 from books where title = 'And Then There Were None' and author = 'Agatha Christie');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 68', 'Jane Austen', 2018, 'classic,drama', 5, 4
-where not exists (select 1 from books where title = 'Library Collection Volume 68' and author = 'Jane Austen');
+select 'Refactoring', 'Martin Fowler', 1999, 'software engineering,programming', 6, 5
+where not exists (select 1 from books where title = 'Refactoring' and author = 'Martin Fowler');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 69', 'Haruki Murakami', 2019, 'romance,contemporary', 6, 5
-where not exists (select 1 from books where title = 'Library Collection Volume 69' and author = 'Haruki Murakami');
+select 'The Code Breaker', 'Walter Isaacson', 2021, 'biography,science', 3, 2
+where not exists (select 1 from books where title = 'The Code Breaker' and author = 'Walter Isaacson');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 70', 'Lois Lowry', 1950, 'young adult,adventure', 2, 1
-where not exists (select 1 from books where title = 'Library Collection Volume 70' and author = 'Lois Lowry');
+select 'Noise', 'Daniel Kahneman, Olivier Sibony & Cass R. Sunstein', 2021, 'psychology,decision-making', 4, 3
+where not exists (select 1 from books where title = 'Noise' and author = 'Daniel Kahneman, Olivier Sibony & Cass R. Sunstein');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 71', 'Neil Gaiman', 1951, 'fantasy,adventure', 3, 2
-where not exists (select 1 from books where title = 'Library Collection Volume 71' and author = 'Neil Gaiman');
+select 'Digital Minimalism', 'Cal Newport', 2019, 'productivity,technology', 5, 4
+where not exists (select 1 from books where title = 'Digital Minimalism' and author = 'Cal Newport');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 72', 'Isaac Asimov', 1952, 'science fiction,space', 4, 3
-where not exists (select 1 from books where title = 'Library Collection Volume 72' and author = 'Isaac Asimov');
+select 'Norwegian Wood', 'Haruki Murakami', 1987, 'literary fiction,romance', 4, 2
+where not exists (select 1 from books where title = 'Norwegian Wood' and author = 'Haruki Murakami');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 73', 'Agatha Christie', 1953, 'mystery,thriller', 5, 4
-where not exists (select 1 from books where title = 'Library Collection Volume 73' and author = 'Agatha Christie');
+select 'The Count of Monte Cristo', 'Alexandre Dumas', 1844, 'classic,adventure', 4, 2
+where not exists (select 1 from books where title = 'The Count of Monte Cristo' and author = 'Alexandre Dumas');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 74', 'Martin Fowler', 1954, 'software engineering,programming', 6, 5
-where not exists (select 1 from books where title = 'Library Collection Volume 74' and author = 'Martin Fowler');
+select 'Life of Pi', 'Yann Martel', 2001, 'adventure,philosophical fiction', 4, 3
+where not exists (select 1 from books where title = 'Life of Pi' and author = 'Yann Martel');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 75', 'Walter Isaacson', 1955, 'history,biography', 2, 1
-where not exists (select 1 from books where title = 'Library Collection Volume 75' and author = 'Walter Isaacson');
+select 'The Paris Library', 'Janet Skeslien Charles', 2021, 'historical fiction,war', 3, 2
+where not exists (select 1 from books where title = 'The Paris Library' and author = 'Janet Skeslien Charles');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 76', 'Daniel Kahneman', 1956, 'psychology,self-help', 3, 2
-where not exists (select 1 from books where title = 'Library Collection Volume 76' and author = 'Daniel Kahneman');
+select 'Good Omens', 'Neil Gaiman & Terry Pratchett', 1990, 'fantasy,comedy', 5, 4
+where not exists (select 1 from books where title = 'Good Omens' and author = 'Neil Gaiman & Terry Pratchett');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 77', 'Cal Newport', 1957, 'business,career', 4, 3
-where not exists (select 1 from books where title = 'Library Collection Volume 77' and author = 'Cal Newport');
+select 'The Caves of Steel', 'Isaac Asimov', 1953, 'science fiction,detective', 4, 2
+where not exists (select 1 from books where title = 'The Caves of Steel' and author = 'Isaac Asimov');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 78', 'Jane Austen', 1958, 'classic,drama', 5, 4
-where not exists (select 1 from books where title = 'Library Collection Volume 78' and author = 'Jane Austen');
+select 'Death on the Nile', 'Agatha Christie', 1937, 'mystery,crime', 5, 3
+where not exists (select 1 from books where title = 'Death on the Nile' and author = 'Agatha Christie');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 79', 'Haruki Murakami', 1959, 'romance,contemporary', 6, 5
-where not exists (select 1 from books where title = 'Library Collection Volume 79' and author = 'Haruki Murakami');
+select 'Patterns of Enterprise Application Architecture', 'Martin Fowler', 2002, 'software engineering,architecture', 5, 4
+where not exists (select 1 from books where title = 'Patterns of Enterprise Application Architecture' and author = 'Martin Fowler');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 80', 'Lois Lowry', 1960, 'young adult,adventure', 2, 1
-where not exists (select 1 from books where title = 'Library Collection Volume 80' and author = 'Lois Lowry');
+select 'Leonardo da Vinci', 'Walter Isaacson', 2017, 'biography,history', 3, 2
+where not exists (select 1 from books where title = 'Leonardo da Vinci' and author = 'Walter Isaacson');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 81', 'Neil Gaiman', 1961, 'fantasy,adventure', 3, 2
-where not exists (select 1 from books where title = 'Library Collection Volume 81' and author = 'Neil Gaiman');
+select 'The Undoing Project', 'Michael Lewis', 2016, 'psychology,biography', 4, 3
+where not exists (select 1 from books where title = 'The Undoing Project' and author = 'Michael Lewis');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 82', 'Isaac Asimov', 1962, 'science fiction,space', 4, 3
-where not exists (select 1 from books where title = 'Library Collection Volume 82' and author = 'Isaac Asimov');
+select 'So Good They Can''t Ignore You', 'Cal Newport', 2012, 'career,self-improvement', 5, 4
+where not exists (select 1 from books where title = 'So Good They Can''t Ignore You' and author = 'Cal Newport');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 83', 'Agatha Christie', 1963, 'mystery,thriller', 5, 4
-where not exists (select 1 from books where title = 'Library Collection Volume 83' and author = 'Agatha Christie');
+select '1Q84', 'Haruki Murakami', 2009, 'magical realism,literary fiction', 3, 1
+where not exists (select 1 from books where title = '1Q84' and author = 'Haruki Murakami');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 84', 'Martin Fowler', 1964, 'software engineering,programming', 6, 5
-where not exists (select 1 from books where title = 'Library Collection Volume 84' and author = 'Martin Fowler');
+select 'The Once and Future King', 'T. H. White', 1958, 'fantasy,classic', 4, 2
+where not exists (select 1 from books where title = 'The Once and Future King' and author = 'T. H. White');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 85', 'Walter Isaacson', 1965, 'history,biography', 2, 1
-where not exists (select 1 from books where title = 'Library Collection Volume 85' and author = 'Walter Isaacson');
+select 'Dracula', 'Bram Stoker', 1897, 'classic,horror', 5, 4
+where not exists (select 1 from books where title = 'Dracula' and author = 'Bram Stoker');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 86', 'Daniel Kahneman', 1966, 'psychology,self-help', 3, 2
-where not exists (select 1 from books where title = 'Library Collection Volume 86' and author = 'Daniel Kahneman');
+select 'The Ocean at the End of the Lane', 'Neil Gaiman', 2013, 'fantasy,literary fiction', 4, 3
+where not exists (select 1 from books where title = 'The Ocean at the End of the Lane' and author = 'Neil Gaiman');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 87', 'Cal Newport', 1967, 'business,career', 4, 3
-where not exists (select 1 from books where title = 'Library Collection Volume 87' and author = 'Cal Newport');
+select 'The Gods Themselves', 'Isaac Asimov', 1972, 'science fiction,hard science fiction', 3, 2
+where not exists (select 1 from books where title = 'The Gods Themselves' and author = 'Isaac Asimov');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 88', 'Jane Austen', 1968, 'classic,drama', 5, 4
-where not exists (select 1 from books where title = 'Library Collection Volume 88' and author = 'Jane Austen');
+select 'Crooked House', 'Agatha Christie', 1949, 'mystery,crime', 4, 2
+where not exists (select 1 from books where title = 'Crooked House' and author = 'Agatha Christie');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 89', 'Haruki Murakami', 1969, 'romance,contemporary', 6, 5
-where not exists (select 1 from books where title = 'Library Collection Volume 89' and author = 'Haruki Murakami');
+select 'Domain-Driven Design', 'Eric Evans', 2003, 'software engineering,architecture', 5, 4
+where not exists (select 1 from books where title = 'Domain-Driven Design' and author = 'Eric Evans');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 90', 'Lois Lowry', 1970, 'young adult,adventure', 2, 1
-where not exists (select 1 from books where title = 'Library Collection Volume 90' and author = 'Lois Lowry');
+select 'Einstein: His Life and Universe', 'Walter Isaacson', 2007, 'biography,science', 3, 2
+where not exists (select 1 from books where title = 'Einstein: His Life and Universe' and author = 'Walter Isaacson');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 91', 'Neil Gaiman', 1971, 'fantasy,adventure', 3, 2
-where not exists (select 1 from books where title = 'Library Collection Volume 91' and author = 'Neil Gaiman');
+select 'Nudge', 'Richard H. Thaler & Cass R. Sunstein', 2008, 'psychology,economics', 4, 3
+where not exists (select 1 from books where title = 'Nudge' and author = 'Richard H. Thaler & Cass R. Sunstein');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 92', 'Isaac Asimov', 1972, 'science fiction,space', 4, 3
-where not exists (select 1 from books where title = 'Library Collection Volume 92' and author = 'Isaac Asimov');
+select 'A Game of Thrones', 'George R. R. Martin', 1996, 'fantasy,epic', 5, 3
+where not exists (select 1 from books where title = 'A Game of Thrones' and author = 'George R. R. Martin');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 93', 'Agatha Christie', 1973, 'mystery,thriller', 5, 4
-where not exists (select 1 from books where title = 'Library Collection Volume 93' and author = 'Agatha Christie');
+select 'The Amazing Adventures of Kavalier & Clay', 'Michael Chabon', 2000, 'historical fiction,literary', 3, 2
+where not exists (select 1 from books where title = 'The Amazing Adventures of Kavalier & Clay' and author = 'Michael Chabon');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 94', 'Martin Fowler', 1974, 'software engineering,programming', 6, 5
-where not exists (select 1 from books where title = 'Library Collection Volume 94' and author = 'Martin Fowler');
+select 'Wolf Hall', 'Hilary Mantel', 2009, 'historical fiction,political', 4, 2
+where not exists (select 1 from books where title = 'Wolf Hall' and author = 'Hilary Mantel');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 95', 'Walter Isaacson', 1975, 'history,biography', 2, 1
-where not exists (select 1 from books where title = 'Library Collection Volume 95' and author = 'Walter Isaacson');
+select 'Pachinko', 'Min Jin Lee', 2017, 'historical fiction,family saga', 4, 3
+where not exists (select 1 from books where title = 'Pachinko' and author = 'Min Jin Lee');
 
 insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
-select 'Library Collection Volume 96', 'Daniel Kahneman', 1976, 'psychology,self-help', 3, 2
-where not exists (select 1 from books where title = 'Library Collection Volume 96' and author = 'Daniel Kahneman');
+select 'The Priory of the Orange Tree', 'Samantha Shannon', 2019, 'fantasy,epic', 4, 2
+where not exists (select 1 from books where title = 'The Priory of the Orange Tree' and author = 'Samantha Shannon');
+
+insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
+select 'The House in the Cerulean Sea', 'TJ Klune', 2020, 'fantasy,feel-good', 5, 4
+where not exists (select 1 from books where title = 'The House in the Cerulean Sea' and author = 'TJ Klune');
+
+insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
+select 'The Lies of Locke Lamora', 'Scott Lynch', 2006, 'fantasy,heist', 4, 3
+where not exists (select 1 from books where title = 'The Lies of Locke Lamora' and author = 'Scott Lynch');
+
+insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
+select 'A Psalm for the Wild-Built', 'Becky Chambers', 2021, 'science fiction,hopepunk', 3, 2
+where not exists (select 1 from books where title = 'A Psalm for the Wild-Built' and author = 'Becky Chambers');
+
+insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
+select 'The Paper Menagerie and Other Stories', 'Ken Liu', 2016, 'science fiction,short stories', 3, 2
+where not exists (select 1 from books where title = 'The Paper Menagerie and Other Stories' and author = 'Ken Liu');
+
+insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
+select 'Circe', 'Madeline Miller', 2018, 'myth retelling,fantasy', 4, 3
+where not exists (select 1 from books where title = 'Circe' and author = 'Madeline Miller');
+
+insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
+select 'The Ministry for the Future', 'Kim Stanley Robinson', 2020, 'science fiction,climate fiction', 3, 2
+where not exists (select 1 from books where title = 'The Ministry for the Future' and author = 'Kim Stanley Robinson');
+
+insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
+select 'A Gentleman in Moscow', 'Amor Towles', 2016, 'historical fiction,literary', 4, 3
+where not exists (select 1 from books where title = 'A Gentleman in Moscow' and author = 'Amor Towles');
+
+insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
+select 'Sea of Tranquility', 'Emily St. John Mandel', 2022, 'science fiction,literary fiction', 3, 2
+where not exists (select 1 from books where title = 'Sea of Tranquility' and author = 'Emily St. John Mandel');
+
+insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
+select 'Tomorrow, and Tomorrow, and Tomorrow', 'Gabrielle Zevin', 2022, 'contemporary,literary fiction', 5, 4
+where not exists (select 1 from books where title = 'Tomorrow, and Tomorrow, and Tomorrow' and author = 'Gabrielle Zevin');
+
+insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
+select 'Yellowface', 'R. F. Kuang', 2023, 'satire,thriller', 4, 3
+where not exists (select 1 from books where title = 'Yellowface' and author = 'R. F. Kuang');
+
+insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
+select 'Demon Copperhead', 'Barbara Kingsolver', 2022, 'literary fiction,coming-of-age', 4, 2
+where not exists (select 1 from books where title = 'Demon Copperhead' and author = 'Barbara Kingsolver');
+
+insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
+select 'Babel', 'R. F. Kuang', 2022, 'historical fantasy,dark academia', 4, 3
+where not exists (select 1 from books where title = 'Babel' and author = 'R. F. Kuang');
+
+insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
+select 'Legends & Lattes', 'Travis Baldree', 2022, 'fantasy,cozy fantasy', 5, 4
+where not exists (select 1 from books where title = 'Legends & Lattes' and author = 'Travis Baldree');
+
+insert into books (title, author, publication_year, genres_csv, total_copies, available_copies)
+select 'Small Things Like These', 'Claire Keegan', 2021, 'historical fiction,literary', 3, 2
+where not exists (select 1 from books where title = 'Small Things Like These' and author = 'Claire Keegan');

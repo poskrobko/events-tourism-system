@@ -25,9 +25,14 @@ import org.springframework.web.multipart.MultipartFile;
 @Validated
 public class BookController {
     private static final byte[] DEFAULT_COVER = (
-            "<svg xmlns='http://www.w3.org/2000/svg' width='300' height='420'>"
-                    + "<rect width='100%' height='100%' fill='#e2e8f0'/>"
-                    + "<text x='50%' y='50%' font-size='22' dominant-baseline='middle' text-anchor='middle' fill='#334155'>No cover</text>"
+            "<svg xmlns='http://www.w3.org/2000/svg' width='420' height='640' viewBox='0 0 420 640'>"
+                    + "<defs><linearGradient id='bg' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='#1e293b'/><stop offset='100%' stop-color='#7c3aed'/></linearGradient></defs>"
+                    + "<rect width='420' height='640' rx='28' fill='url(#bg)'/>"
+                    + "<rect x='28' y='28' width='364' height='584' rx='24' fill='rgba(15,23,42,0.18)'/>"
+                    + "<text x='42' y='92' font-size='18' letter-spacing='3' fill='#f8fafc'>LIBRARY EDITION</text>"
+                    + "<text x='42' y='170' font-size='34' fill='#ffffff'>Curated Selection</text>"
+                    + "<text x='42' y='470' font-size='22' fill='#e2e8f0'>Upload a custom cover</text>"
+                    + "<text x='42' y='565' font-size='16' fill='#f8fafc'>CATALOG</text>"
                     + "</svg>").getBytes(StandardCharsets.UTF_8);
 
     private final BookService bookService;
