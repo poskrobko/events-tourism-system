@@ -1,5 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { deleteAdminBook, deleteAdminUser, fetchAdminBooks, fetchAdminLoans, fetchAdminUsers, fetchLibrarianLoans, inviteLibrarian, issueLibrarianReservation, returnLibrarianLoan, updateAdminUser } from '../../api/libraryApi';
+import {
+  deleteAdminBook,
+  deleteAdminUser,
+  fetchAdminBooks,
+  fetchAdminLoans,
+  fetchAdminUsers,
+  fetchLibrarianReservations,
+  inviteLibrarian,
+  issueLibrarianReservation,
+  returnLibrarianReservation,
+  updateAdminUser,
+} from '../../api/libraryApi';
 import type { BookSearchParams } from '../../types/api';
 
 export function useAdminUsersQuery(params: { page: number; size: number; query?: string; role?: string }, enabled: boolean) {
@@ -17,7 +28,7 @@ export function useUpdateAdminUserMutation() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       void queryClient.invalidateQueries({ queryKey: ['admin-loans'] });
-      void queryClient.invalidateQueries({ queryKey: ['librarian-loans'] });
+      void queryClient.invalidateQueries({ queryKey: ['librarian-reservations'] });
       void queryClient.invalidateQueries({ queryKey: ['loans'] });
     },
   });
@@ -30,7 +41,7 @@ export function useDeleteAdminUserMutation() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       void queryClient.invalidateQueries({ queryKey: ['admin-loans'] });
-      void queryClient.invalidateQueries({ queryKey: ['librarian-loans'] });
+      void queryClient.invalidateQueries({ queryKey: ['librarian-reservations'] });
       void queryClient.invalidateQueries({ queryKey: ['loans'] });
     },
   });
@@ -51,7 +62,7 @@ export function useDeleteAdminBookMutation() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin-books'] });
       void queryClient.invalidateQueries({ queryKey: ['admin-loans'] });
-      void queryClient.invalidateQueries({ queryKey: ['librarian-loans'] });
+      void queryClient.invalidateQueries({ queryKey: ['librarian-reservations'] });
       void queryClient.invalidateQueries({ queryKey: ['books'] });
     },
   });
@@ -74,7 +85,7 @@ export function useLibrarianReservationsQuery(params: { page: number; size: numb
 }
 
 function invalidateLibrarianCirculation(queryClient: ReturnType<typeof useQueryClient>) {
-  void queryClient.invalidateQueries({ queryKey: ['librarian-loans'] });
+  void queryClient.invalidateQueries({ queryKey: ['librarian-reservations'] });
   void queryClient.invalidateQueries({ queryKey: ['admin-loans'] });
   void queryClient.invalidateQueries({ queryKey: ['admin-books'] });
   void queryClient.invalidateQueries({ queryKey: ['books'] });
@@ -89,10 +100,10 @@ export function useIssueLibrarianReservationMutation() {
   });
 }
 
-export function useReturnLibrarianLoanMutation() {
+export function useReturnLibrarianReservationMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => returnLibrarianLoan(id),
+    mutationFn: (id: number) => returnLibrarianReservation(id),
     onSuccess: () => invalidateLibrarianCirculation(queryClient),
   });
 }

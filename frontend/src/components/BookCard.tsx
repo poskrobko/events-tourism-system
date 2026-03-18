@@ -14,7 +14,7 @@ function compactDescription(description?: string | null): string | null {
   return description.length > 140 ? `${description.slice(0, 137).trimEnd()}...` : description;
 }
 
-export function BookCard({ book, onBorrow, isRecommended, recommendationTags }: BookCardProps) {
+export function BookCard({ book, onOrder, isRecommended, recommendationTags }: BookCardProps) {
   const summary = compactDescription(book.description);
   const meta = [book.publisher, book.language, book.pageCount ? `${book.pageCount} pp.` : null].filter(Boolean).join(' • ');
 

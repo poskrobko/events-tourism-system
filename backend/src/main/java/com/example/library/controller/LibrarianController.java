@@ -20,23 +20,23 @@ public class LibrarianController {
         this.librarianService = librarianService;
     }
 
-    @GetMapping("/loans")
-    public Page<AdminDtos.LibrarianCirculationItemResponse> loans(@RequestParam(defaultValue = "0") int page,
-                                                                  @RequestParam(defaultValue = "20") int size,
-                                                                  @RequestParam(required = false) String userQuery,
-                                                                  @RequestParam(required = false) String bookQuery,
-                                                                  @RequestParam(required = false) String status) {
-        return librarianService.getCirculationItems(page, size, userQuery, bookQuery, parseStatus(status));
+    @GetMapping("/reservations")
+    public Page<AdminDtos.AdminReservationResponse> reservations(@RequestParam(defaultValue = "0") int page,
+                                                                 @RequestParam(defaultValue = "20") int size,
+                                                                 @RequestParam(required = false) String userQuery,
+                                                                 @RequestParam(required = false) String bookQuery,
+                                                                 @RequestParam(required = false) String status) {
+        return librarianService.reservations(page, size, userQuery, bookQuery, parseStatus(status));
     }
 
     @PostMapping("/reservations/{id}/issue")
-    public AdminDtos.LibrarianCirculationItemResponse issueReservation(@PathVariable Long id) {
+    public AdminDtos.AdminReservationResponse issueReservation(@PathVariable Long id) {
         return librarianService.issueReservation(id);
     }
 
-    @PostMapping("/loans/{id}/return")
-    public AdminDtos.LibrarianCirculationItemResponse returnLoan(@PathVariable Long id) {
-        return librarianService.returnLoan(id);
+    @PostMapping("/reservations/{id}/return")
+    public AdminDtos.AdminReservationResponse returnReservation(@PathVariable Long id) {
+        return librarianService.returnReservation(id);
     }
 
     private String parseStatus(String value) {

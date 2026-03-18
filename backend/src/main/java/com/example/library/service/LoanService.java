@@ -54,7 +54,7 @@ public class LoanService {
             throw new IllegalStateException("No copies available");
         }
         book.setAvailableCopies(book.getAvailableCopies() - 1);
-        loan.setStatus(LoanStatus.ACTIVE);
+        loan.setStatus(LoanStatus.ISSUED);
         loan.setBorrowedAt(LocalDate.now());
         loan.setDueDate(LocalDate.now().plusDays(14));
         return toDto(loanRepository.save(loan));

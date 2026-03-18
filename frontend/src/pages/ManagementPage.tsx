@@ -2,7 +2,18 @@ import { FormEvent, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { Pagination } from '../components/Pagination';
-import { useDeleteAdminBookMutation, useDeleteAdminUserMutation, useAdminBooksQuery, useAdminLoansQuery, useAdminUsersQuery, useInviteLibrarianMutation, useIssueLibrarianReservationMutation, useLibrarianLoansQuery, useReturnLibrarianLoanMutation, useUpdateAdminUserMutation } from '../features/admin/hooks';
+import {
+  useDeleteAdminBookMutation,
+  useDeleteAdminUserMutation,
+  useAdminBooksQuery,
+  useAdminLoansQuery,
+  useAdminUsersQuery,
+  useInviteLibrarianMutation,
+  useIssueLibrarianReservationMutation,
+  useLibrarianReservationsQuery,
+  useReturnLibrarianReservationMutation,
+  useUpdateAdminUserMutation,
+} from '../features/admin/hooks';
 import { parseJwt } from '../lib/auth';
 import { useAppSelector } from '../app/hooks';
 
@@ -54,7 +65,7 @@ export function ManagementPage() {
   const deleteBookMutation = useDeleteAdminBookMutation();
   const inviteMutation = useInviteLibrarianMutation();
   const issueReservationMutation = useIssueLibrarianReservationMutation();
-  const returnLibrarianLoanMutation = useReturnLibrarianLoanMutation();
+  const returnReservationMutation = useReturnLibrarianReservationMutation();
 
   const applyUserRole = (id: number, role: string) => {
     updateUserMutation.mutate({ id, payload: { roles: [role] } });
@@ -261,7 +272,6 @@ export function ManagementPage() {
               </tbody>
             </table>
           </div>
-
           <Pagination page={loansQuery.data?.number ?? loanPage} totalPages={loansQuery.data?.totalPages ?? 0} onPageChange={setLoanPage} />
         </div>
       )}
@@ -269,24 +279,24 @@ export function ManagementPage() {
       <ConfirmModal
         open={confirmUserId !== null}
         title="Delete user"
-        description="This action will permanently remove the user account."
+        description="This action cannot be undone."
+        confirmLabel="Delete"
         onCancel={() => setConfirmUserId(null)}
         onConfirm={() => {
-          if (confirmUserId !== null) {
-            deleteUserMutation.mutate(confirmUserId, { onSuccess: () => setConfirmUserId(null) });
-          }
+          if (confirmUserId == null) return;
+          deleteUserMutation.mutate(confirmUserId, { onSuccess: () => setConfirmUserId(null) });
         }}
       />
 
       <ConfirmModal
         open={confirmBookId !== null}
         title="Delete book"
-        description="This action will permanently remove the book from catalog."
+        description="This action cannot be undone."
+        confirmLabel="Delete"
         onCancel={() => setConfirmBookId(null)}
         onConfirm={() => {
-          if (confirmBookId !== null) {
-            deleteBookMutation.mutate(confirmBookId, { onSuccess: () => setConfirmBookId(null) });
-          }
+          if (confirmBookId == null) return;
+          deleteBookMutation.mutate(confirmBookId, { onSuccess: () => setConfirmBookId(null) });
         }}
       />
     </section>

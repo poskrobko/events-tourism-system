@@ -2,12 +2,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAppSelector } from '../app/hooks';
-import { useRateBookWithFeedbackMutation } from '../features/catalog/hooks';
+import { useSaveBookRatingMutation } from '../features/catalog/hooks';
 import { useLoansQuery, useMeQuery, useUpdateMeMutation } from '../features/preferences/hooks';
 import { parseJwt } from '../lib/auth';
 import { applyServerFieldErrors, extractApiError } from '../lib/apiErrors';
 import { profileSchema, type ProfileFormValues } from '../lib/schemas';
-import type { Loan } from '../types/api';
 
 const avatarOptions = [
   { label: 'Mage', url: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f9d9.svg' },
@@ -28,7 +27,7 @@ export function ProfilePage() {
   const meQuery = useMeQuery(Boolean(currentUserId));
   const updateMeMutation = useUpdateMeMutation();
   const loansQuery = useLoansQuery(isAdmin ? selectedUserId : null);
-  const ratingMutation = useRateBookWithFeedbackMutation();
+  const ratingMutation = useSaveBookRatingMutation();
 
   const [ratingLoanId, setRatingLoanId] = useState<number | null>(null);
   const [ratingScore, setRatingScore] = useState(5);
@@ -97,15 +96,29 @@ export function ProfilePage() {
     );
   };
 
+  const ratingLoans = useMemo(
+    () => (loansQuery.data ?? []).filter((loan) => loan.status === 'RETURNED' && loan.userId === currentUserId),
+    [currentUserId, loansQuery.data],
+  );
 
-  const submitRatingWithFeedback = (bookId: number) => {
-    if (!currentUserId) return;
+  const ratingLoan = useMemo(
+    () => ratingLoans.find((loan) => loan.id === ratingLoanId) ?? null,
+    [ratingLoanId, ratingLoans],
+  );
+
+  useEffect(() => {
+    if (!ratingLoan) return;
+    setRatingScore(ratingLoan.myRating ?? 5);
+  }, [ratingLoan]);
+
+  const submitRating = () => {
+    if (!currentUserId || !ratingLoan) return;
     ratingMutation.mutate(
       {
-        bookId,
+        bookId: ratingLoan.bookId,
         userId: currentUserId,
         score: ratingScore,
-        hasExistingRating: loan.myRating != null,
+        hasExistingRating: ratingLoan.myRating != null,
       },
       {
         onSuccess: () => {
@@ -255,8 +268,8 @@ export function ProfilePage() {
 
       {loansQuery.isLoading && <p className="text-sm text-slate-600">Loading loans...</p>}
       {loansQuery.error && <p className="text-sm text-red-700">{extractApiError(loansQuery.error, 'Ошибка загрузки займов.')}</p>}
-      {ratingMutation.error && <p className="text-sm text-red-700">{extractApiError(ratingMutation.error, 'Не удалось сохранить оценку и отзыв.')}</p>}
-      {ratingMutation.isSuccess && <p className="text-sm text-green-700">Оценка и отзыв сохранены.</p>}
+      {ratingMutation.error && <p className="text-sm text-red-700">{extractApiError(ratingMutation.error, 'Не удалось сохранить оценку.')}</p>}
+      {ratingMutation.isSuccess && <p className="text-sm text-green-700">Оценка сохранена.</p>}
 
       <div className="overflow-auto">
         <table className="min-w-full border-collapse text-sm">
@@ -269,7 +282,6 @@ export function ProfilePage() {
               <th className="p-2">Borrowed</th>
               <th className="p-2">Due</th>
               <th className="p-2">Returned</th>
-              <th className="p-2">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -282,17 +294,6 @@ export function ProfilePage() {
                 <td className="p-2">{loan.borrowedAt}</td>
                 <td className="p-2">{loan.dueDate}</td>
                 <td className="p-2">{loan.returnedAt || '—'}</td>
-                <td className="p-2">
-                  {loan.status === 'RETURNED' && loan.userId === currentUserId && (
-                    <button
-                      className="rounded-md bg-slate-900 px-3 py-1 text-xs text-white"
-                      onClick={() => submitReturn(loan.id)}
-                      type="button"
-                    >
-                      Rate & review
-                    </button>
-                  )}
-                </td>
               </tr>
             ))}
           </tbody>
@@ -352,7 +353,8 @@ export function ProfilePage() {
 
       {ratingLoan && (
         <div className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50 p-4">
-          <h3 className="mb-2 text-sm font-semibold">Оцените книгу и оставьте комментарий</h3>
+          <h3 className="mb-2 text-sm font-semibold">Оцените книгу</h3>
+          <p className="mb-3 text-sm text-slate-700">{ratingLoan.bookTitle}</p>
           <label className="mb-2 block text-sm">
             Оценка
             <select className="ml-2 rounded-md border border-slate-300 px-2 py-1" value={ratingScore} onChange={(e) => setRatingScore(Number(e.target.value))}>
@@ -367,13 +369,9 @@ export function ProfilePage() {
             <button
               className="rounded-md bg-indigo-600 px-3 py-2 text-xs text-white"
               type="button"
-              onClick={() => {
-                const loan = loansQuery.data?.find((item) => item.id === ratingLoanId);
-                if (!loan) return;
-                submitRatingWithFeedback(loan.bookId);
-              }}
+              onClick={submitRating}
             >
-              Save feedback
+              Save rating
             </button>
             <button className="rounded-md border border-slate-300 px-3 py-2 text-xs" type="button" onClick={() => setRatingLoanId(null)}>
               Cancel
@@ -381,7 +379,6 @@ export function ProfilePage() {
           </div>
         </div>
       )}
-
     </section>
   );
 }
