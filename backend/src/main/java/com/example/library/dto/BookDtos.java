@@ -43,7 +43,7 @@ public class BookDtos {
                                boolean hasFile,
                                boolean hasCover) {}
 
-    public record CatalogMetaResponse(List<String> authors, List<String> genres) {}
+    public record CatalogMetaResponse(List<String> authors, List<String> genres, List<String> publishers, List<String> languages) {}
 
     public record RecommendationResponse(BookResponse book, List<String> sourceTags) {}
 

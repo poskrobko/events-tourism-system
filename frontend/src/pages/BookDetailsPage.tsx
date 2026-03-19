@@ -40,6 +40,8 @@ export function BookDetailsPage() {
 
   const detailsQuery = useBookDetailsQuery(Number.isNaN(bookId) ? null : bookId);
   const reviewsQuery = useBookReviewsQuery(Number.isNaN(bookId) ? null : bookId, reviewsPage, 5);
+
+  const renderStars = (score?: number | null) => (score == null ? '☆☆☆☆☆' : `${'★'.repeat(score)}${'☆'.repeat(5 - score)}`);
   const deleteBookMutation = useDeleteBookMutation();
   const updateBookMutation = useUpdateBookMutation();
 
@@ -248,10 +250,13 @@ export function BookDetailsPage() {
         {reviewsQuery.error && <p className="text-sm text-red-700">Не удалось загрузить комментарии.</p>}
 
         <div className="space-y-3">
-          {reviewsQuery.data?.content.map((review: { id: number; userId: number; text: string; createdAt: string }) => (
+          {reviewsQuery.data?.content.map((review) => (
             <article className="rounded-lg border border-slate-200 p-3" key={review.id}>
-              <p className="text-sm text-slate-800">{review.text}</p>
-              <p className="mt-1 text-xs text-slate-500">User #{review.userId} • {new Date(review.createdAt).toLocaleString()}</p>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-amber-500">{renderStars(review.ratingScore)}{review.ratingScore != null ? ` (${review.ratingScore}/5)` : ''}</p>
+                <p className="text-xs text-slate-500">User #{review.userId} • {new Date(review.createdAt).toLocaleString()}</p>
+              </div>
+              <p className="mt-2 text-sm text-slate-800">{review.text}</p>
             </article>
           ))}
         </div>

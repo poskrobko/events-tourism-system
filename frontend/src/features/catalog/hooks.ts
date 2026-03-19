@@ -6,6 +6,7 @@ import {
   deleteBook,
   fetchBookDetails,
   fetchBookReviews,
+  fetchMyBookReview,
   fetchBooks,
   fetchCatalogMeta,
   reviewBook,
@@ -65,12 +66,14 @@ export function useSaveBookFeedbackMutation() {
       score,
       reviewText,
       hasExistingRating,
+      reviewId,
     }: {
       bookId: number;
       userId: number;
       score: number;
       reviewText?: string;
       hasExistingRating: boolean;
+      reviewId?: number | null;
     }) => {
       if (hasExistingRating) {
         await updateMyBookRating(bookId, userId, score);
@@ -79,12 +82,13 @@ export function useSaveBookFeedbackMutation() {
       }
 
       if (reviewText?.trim()) {
-        await reviewBook(bookId, userId, reviewText.trim());
+        await reviewBook(bookId, userId, reviewText.trim(), reviewId);
       }
     },
     onSuccess: (_, variables) => {
       void queryClient.invalidateQueries({ queryKey: ['book-details', variables.bookId] });
       void queryClient.invalidateQueries({ queryKey: ['book-reviews', variables.bookId] });
+      void queryClient.invalidateQueries({ queryKey: ['my-book-review', variables.bookId] });
       void queryClient.invalidateQueries({ queryKey: ['recommendations'] });
       void queryClient.invalidateQueries({ queryKey: ['loans'] });
       void queryClient.invalidateQueries({ queryKey: ['reservations'] });
@@ -133,6 +137,14 @@ export function useBookReviewsQuery(bookId: number | null, page = 0, size = 10) 
   return useQuery({
     queryKey: ['book-reviews', bookId, page, size],
     queryFn: () => fetchBookReviews(bookId ?? 0, page, size),
+    enabled: Boolean(bookId),
+  });
+}
+
+export function useMyBookReviewQuery(bookId: number | null) {
+  return useQuery({
+    queryKey: ['my-book-review', bookId],
+    queryFn: () => fetchMyBookReview(bookId ?? 0),
     enabled: Boolean(bookId),
   });
 }

@@ -7,6 +7,9 @@ type CatalogFilterState = {
   title: string;
   author: string;
   genre: string;
+  publisher: string;
+  language: string;
+  isbn: string;
   yearFrom: string;
   yearTo: string;
   availability: BookAvailability;
@@ -18,6 +21,9 @@ const initialState: CatalogFilterState = {
   title: '',
   author: '',
   genre: '',
+  publisher: '',
+  language: '',
+  isbn: '',
   yearFrom: '',
   yearTo: '',
   availability: 'all',

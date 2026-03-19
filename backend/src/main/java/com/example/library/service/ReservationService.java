@@ -118,6 +118,7 @@ public class ReservationService {
                 reservation.getId(),
                 reservation.getUser().getId(),
                 reservation.getBook().getId(),
+                reservation.getBook().getTitle(),
                 reservation.getStatus(),
                 reservation.getCreatedAt(),
                 reservation.getNotifiedAt(),

@@ -42,6 +42,8 @@ export type Review = {
   bookId: number;
   userId: number;
   text: string;
+  previousText?: string | null;
+  ratingScore?: number | null;
   createdAt: string;
 };
 
@@ -66,6 +68,7 @@ export type Reservation = {
   id: number;
   userId: number;
   bookId: number;
+  bookTitle: string;
   status: string;
   createdAt: string;
   notifiedAt?: string | null;
@@ -118,6 +121,8 @@ export type PreferencesPayload = {
 export type CatalogMeta = {
   authors: string[];
   genres: string[];
+  publishers: string[];
+  languages: string[];
 };
 
 export type BookSearchIn = 'all' | 'title' | 'author' | 'genre';
@@ -130,6 +135,9 @@ export type BookSearchParams = {
   title?: string;
   author?: string;
   genre?: string;
+  publisher?: string;
+  language?: string;
+  isbn?: string;
   yearFrom?: number;
   yearTo?: number;
   availability?: BookAvailability;

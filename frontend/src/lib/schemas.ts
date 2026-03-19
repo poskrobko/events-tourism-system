@@ -44,6 +44,9 @@ export const advancedCatalogSearchSchema = z.object({
   title: z.string().trim().optional().default(''),
   author: z.string().trim().optional().default(''),
   genre: z.string().trim().optional().default(''),
+  publisher: z.string().trim().optional().default(''),
+  language: z.string().trim().optional().default(''),
+  isbn: optionalIsbnSchema,
   keyword: z.string().trim().optional().default(''),
   yearFrom: z
     .union([z.string(), z.number()])

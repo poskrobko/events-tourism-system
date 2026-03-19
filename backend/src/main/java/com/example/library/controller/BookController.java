@@ -50,10 +50,13 @@ public class BookController {
                                             @RequestParam(required = false) String title,
                                             @RequestParam(required = false) String genre,
                                             @RequestParam(required = false) String author,
+                                            @RequestParam(required = false) String publisher,
+                                            @RequestParam(required = false) String language,
+                                            @RequestParam(required = false) @Pattern(regexp = "^(?:97[89])?\\d{9}[\\dXx]$", message = "Введите корректный ISBN-10 или ISBN-13") String isbn,
                                             @RequestParam(required = false) Integer yearFrom,
                                             @RequestParam(required = false) Integer yearTo,
                                             @RequestParam(required = false) String availability) {
-        return bookService.findAll(page, size, sort, direction, query, title, genre, author, yearFrom, yearTo, availability);
+        return bookService.findAll(page, size, sort, direction, query, title, genre, author, publisher, language, isbn, yearFrom, yearTo, availability);
     }
 
     @GetMapping("/meta")

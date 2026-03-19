@@ -43,6 +43,11 @@ export async function fetchBookReviews(bookId: number, page = 0, size = 10): Pro
   return data;
 }
 
+export async function fetchMyBookReview(bookId: number): Promise<Review | null> {
+  const { data } = await apiClient.get<Review | null>(`/books/${bookId}/reviews/me`);
+  return data;
+}
+
 export async function deleteBook(id: number): Promise<void> {
   await apiClient.delete(`/books/${id}`);
 }
@@ -116,8 +121,8 @@ export async function updateMyBookRating(bookId: number, userId: number, score: 
   await apiClient.put(`/books/${bookId}/ratings/me`, { score, userId });
 }
 
-export async function reviewBook(bookId: number, userId: number, text: string): Promise<void> {
-  await apiClient.post(`/books/${bookId}/reviews`, { text, userId });
+export async function reviewBook(bookId: number, userId: number, text: string, reviewId?: number | null): Promise<void> {
+  await apiClient.post(`/books/${bookId}/reviews`, { reviewId: reviewId ?? null, text, userId });
 }
 
 export async function fetchLoans(userId?: number | null): Promise<Loan[]> {

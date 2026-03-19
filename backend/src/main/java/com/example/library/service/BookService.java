@@ -38,6 +38,9 @@ public class BookService {
                                                String title,
                                                String genre,
                                                String author,
+                                               String publisher,
+                                               String language,
+                                               String isbn,
                                                Integer yearFrom,
                                                Integer yearTo,
                                                String availability) {
@@ -49,6 +52,9 @@ public class BookService {
                 normalize(title),
                 normalize(author),
                 normalize(genre),
+                normalize(publisher),
+                normalize(language),
+                normalize(isbn),
                 yearFrom,
                 yearTo,
                 normalizeAvailability(availability),
@@ -61,6 +67,8 @@ public class BookService {
     @Transactional(readOnly = true)
     public BookDtos.CatalogMetaResponse getCatalogMeta() {
         List<String> authors = bookRepository.findDistinctAuthors();
+        List<String> publishers = bookRepository.findDistinctPublishers();
+        List<String> languages = bookRepository.findDistinctLanguages();
 
         Set<String> genres = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         for (String csv : bookRepository.findDistinctGenresCsv()) {
@@ -73,7 +81,7 @@ public class BookService {
                     .forEach(genres::add);
         }
 
-        return new BookDtos.CatalogMetaResponse(authors, List.copyOf(genres));
+        return new BookDtos.CatalogMetaResponse(authors, List.copyOf(genres), publishers, languages);
     }
 
     @Transactional(readOnly = true)

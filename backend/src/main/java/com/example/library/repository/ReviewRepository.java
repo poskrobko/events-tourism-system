@@ -10,6 +10,8 @@ import org.springframework.data.repository.query.Param;
 public interface ReviewRepository extends JpaRepository<Review, Long> {
     Page<Review> findByBookIdOrderByCreatedAtDesc(Long bookId, Pageable pageable);
 
+    java.util.Optional<Review> findFirstByBookIdAndUserIdOrderByCreatedAtDesc(Long bookId, Long userId);
+
     @Query("""
             select rv from Review rv
             where (:userQuery is null or :userQuery = ''

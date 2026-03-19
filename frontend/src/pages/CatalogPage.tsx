@@ -53,6 +53,9 @@ export function CatalogPage() {
       title,
       author,
       genre,
+      publisher: filters.publisher.trim() || undefined,
+      language: filters.language.trim() || undefined,
+      isbn: filters.isbn.replace(/[-\s]/g, '').trim() || undefined,
       yearFrom: parseYear(filters.yearFrom),
       yearTo: parseYear(filters.yearTo),
       availability: filters.availability,
@@ -85,6 +88,9 @@ export function CatalogPage() {
       title: filters.title,
       author: filters.author,
       genre: filters.genre,
+      publisher: filters.publisher,
+      language: filters.language,
+      isbn: filters.isbn,
       keyword: filters.query,
       yearFrom: filters.yearFrom,
       yearTo: filters.yearTo,
@@ -116,6 +122,9 @@ export function CatalogPage() {
         title: '',
         author: '',
         genre: '',
+        publisher: '',
+        language: '',
+        isbn: '',
         yearFrom: '',
         yearTo: '',
         availability: values.availability,
@@ -132,6 +141,9 @@ export function CatalogPage() {
         title: values.title ?? '',
         author: values.author ?? '',
         genre: values.genre ?? '',
+        publisher: values.publisher ?? '',
+        language: values.language ?? '',
+        isbn: values.isbn ?? '',
         yearFrom: values.yearFrom ?? '',
         yearTo: values.yearTo ?? '',
         availability: values.availability,
@@ -246,8 +258,38 @@ export function CatalogPage() {
           </label>
 
           <label className="grid gap-1 text-sm font-medium">
+            Издательство
+            <select className="rounded-md border border-slate-300 px-3 py-2" {...advancedForm.register('publisher')}>
+              <option value="">Любое</option>
+              {metaQuery.data?.publishers.map((publisher) => (
+                <option key={publisher} value={publisher}>
+                  {publisher}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="grid gap-1 text-sm font-medium">
+            Язык
+            <select className="rounded-md border border-slate-300 px-3 py-2" {...advancedForm.register('language')}>
+              <option value="">Любой</option>
+              {metaQuery.data?.languages.map((language) => (
+                <option key={language} value={language}>
+                  {language}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="grid gap-1 text-sm font-medium">
+            ISBN
+            <input className="rounded-md border border-slate-300 px-3 py-2" placeholder="Например: 9783161484100" {...advancedForm.register('isbn')} />
+            {advancedForm.formState.errors.isbn && <span className="text-sm text-red-700">{advancedForm.formState.errors.isbn.message}</span>}
+          </label>
+
+          <label className="grid gap-1 text-sm font-medium">
             Ключевые слова
-            <input className="rounded-md border border-slate-300 px-3 py-2" {...advancedForm.register('keyword')} placeholder="Слова из описания, автора или жанра" />
+            <input className="rounded-md border border-slate-300 px-3 py-2" {...advancedForm.register('keyword')} placeholder="Слова из описания, автора, жанра или издательства" />
           </label>
 
           <label className="grid gap-1 text-sm font-medium">
@@ -271,11 +313,11 @@ export function CatalogPage() {
             </select>
           </label>
 
-          <div className="md:col-span-2" />
-
-          <button className="w-fit rounded-md bg-indigo-600 px-4 py-2 text-white" type="submit">
-            Применить расширенный поиск
-          </button>
+          <div className="md:col-span-3">
+            <button className="w-fit rounded-md bg-indigo-600 px-4 py-2 text-white" type="submit">
+              Применить расширенный поиск
+            </button>
+          </div>
         </form>
       )}
 
@@ -365,7 +407,6 @@ export function CatalogPage() {
 
       {booksQuery.isLoading && <p className="text-sm text-slate-600">Loading books...</p>}
       {booksQuery.error && <p className="text-sm text-red-700">Ошибка загрузки каталога.</p>}
-
 
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="text-sm text-slate-600">Найдено записей: {booksQuery.data?.totalElements ?? 0}</div>
