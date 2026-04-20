@@ -147,3 +147,24 @@ mvn test
    ```
 
 Если у вас корпоративный прокси/зеркало Nexus, проверьте `settings.xml` (mirror/proxy), потому что частично скачанные jar дают именно такие ошибки.
+
+## Запуск через `java -jar`
+
+Да, можно и часто даже стабильнее запускать именно так (без `spring-boot:run`), потому что jar уже содержит полный classpath приложения.
+
+Команды:
+```bash
+cd backend
+mvn clean package -DskipTests
+java -jar target/library-preferences-backend-0.0.1-SNAPSHOT.jar
+```
+
+Важно:
+- имя jar берется из `artifactId` + `version` в `pom.xml`;
+- для этого проекта корректное имя: `library-preferences-backend-0.0.1-SNAPSHOT.jar`.
+
+Если хотите, можно запускать и через Maven:
+```bash
+mvn clean spring-boot:run
+```
+Но при проблемах с classpath/локальным кэшем вариант `java -jar` обычно надежнее.
