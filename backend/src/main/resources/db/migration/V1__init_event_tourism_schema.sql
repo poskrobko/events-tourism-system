@@ -1,4 +1,10 @@
-alter table users add column if not exists role varchar(20) not null default 'USER';
+create table if not exists users (
+    id bigserial primary key,
+    email varchar(255) not null unique,
+    password_hash varchar(255) not null,
+    full_name varchar(255) not null,
+    role varchar(20) not null default 'USER'
+);
 
 create table if not exists events (
     id bigserial primary key,
@@ -34,7 +40,7 @@ create table if not exists ticket_types (
 create table if not exists orders (
     id bigserial primary key,
     user_id bigint not null references users(id),
-    created_at timestamp not null,
+    created_at timestamp with time zone not null,
     total_amount numeric(12,2) not null
 );
 
