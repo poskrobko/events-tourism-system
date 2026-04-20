@@ -25,7 +25,7 @@ Backend полностью переработан под **Систему упр
 - Интеграция календаря: для каждого события генерируется URL добавления в Google Calendar
 
 ## Технологии
-- Java 17+ (рекомендуется 17 или 21)
+- Java 21
 - Spring Boot 3
 - Spring Security + JWT
 - Spring Data JPA
@@ -159,73 +159,46 @@ mvn clean package -DskipTests
 java -jar target/events-tourism-backend-0.0.1-SNAPSHOT.jar
 ```
 
-Важно:
-- имя jar берется из `artifactId` + `version` в `pom.xml`;
-- для этого проекта корректное имя: `events-tourism-backend-0.0.1-SNAPSHOT.jar`.
+## Переменные окружения
+- `DB_URL` (default: `jdbc:h2:mem:librarydb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE`)
+- `DB_DRIVER` (default: `org.h2.Driver`)
+- `DB_USER` (default: `sa`)
+- `DB_PASSWORD` (default: пусто)
+- `JWT_SECRET` (default: dev secret)
+- `JWT_ACCESS_EXPIRATION_SECONDS` (default: `3600`)
+- `APP_ADMIN_EMAIL` (default: `admin@event.local`)
+- `APP_ADMIN_PASSWORD` (default: `admin123`)
 
-Если хотите, можно запускать и через Maven:
-```bash
-mvn clean spring-boot:run
-```
-Но при проблемах с classpath/локальным кэшем вариант `java -jar` обычно надежнее.
+При старте автоматически создается администратор, если пользователя с таким email еще нет.
 
+## Основные API
 
-### Пошагово: правильный запуск backend через `java` (Windows)
+### Auth
+- `POST /api/auth/register`
+- `POST /api/auth/login`
 
-1. Соберите jar:
-   ```bash
-   cd backend
-   mvn clean package -DskipTests
-   ```
-2. Убедитесь, что jar появился:
-   ```bash
-   dir target
-   ```
-   Должен быть файл `events-tourism-backend-0.0.1-SNAPSHOT.jar`.
-3. Запустите приложение:
-   ```bash
-   java -jar target/events-tourism-backend-0.0.1-SNAPSHOT.jar
-   ```
-4. Проверьте, что backend поднялся:
-   - `http://localhost:8080`
-   - `http://localhost:8080/h2-console` (если включен H2)
+### Публичные события
+- `GET /api/events?dateFrom=&dateTo=&city=&minPrice=&maxPrice=`
+- `GET /api/events/{eventId}`
+- `GET /api/events/{eventId}/program`
+- `GET /api/events/{eventId}/tickets`
 
-Если нужно передать переменные окружения (пример):
-```bash
-set JWT_SECRET=your_secret
-set APP_ADMIN_EMAIL=admin@event.local
-set APP_ADMIN_PASSWORD=admin123
-java -jar target/events-tourism-backend-0.0.1-SNAPSHOT.jar
-```
+### User (требуется JWT)
+- `POST /api/user/tickets/purchase`
+- `GET /api/user/tickets`
+- `GET /api/user/orders`
 
-Если команда `java -jar ...` пишет `Unable to access jarfile`, значит вы запускаете не из папки `backend` или jar еще не собран.
+### Admin (JWT с ролью ADMIN)
+- `POST /api/admin/events`
+- `PUT /api/admin/events/{eventId}`
+- `DELETE /api/admin/events/{eventId}`
+- `POST /api/admin/events/{eventId}/program`
+- `PUT /api/admin/program/{itemId}`
+- `DELETE /api/admin/program/{itemId}`
+- `POST /api/admin/events/{eventId}/tickets`
+- `PUT /api/admin/tickets/{ticketTypeId}`
+- `DELETE /api/admin/tickets/{ticketTypeId}`
+- `GET /api/admin/orders`
 
-
-### Ошибка: `Unable to access jarfile target/events-tourism-backend-0.0.1-SNAPSHOT.jar`
-
-Это значит, что файла по этому пути сейчас нет.
-
-Проверьте по шагам:
-1. Вы точно в папке `backend`:
-   ```bash
-   cd backend
-   ```
-2. Сборка прошла без ошибок:
-   ```bash
-   mvn clean package -DskipTests
-   ```
-3. Посмотрите, какие jar реально созданы:
-   ```bash
-   dir target
-   ```
-4. Запускайте **фактическое** имя файла из `target`.
-
-Пример для PowerShell (автовыбор jar):
-```powershell
-$jar = Get-ChildItem .\target\events-tourism-backend-*.jar |
-  Where-Object { $_.Name -notlike "*.original" } |
-  Select-Object -First 1
-java -jar $jar.FullName
-```
-
-Если в `target` нет jar вообще — значит сборка не завершилась успешно (ищите первую ошибку выше в выводе Maven).
+## Примечание
+Это старт backend-части с чистой доменной моделью под event-туризм. Следующий шаг — адаптация frontend под новые endpoints и сценарии.
