@@ -25,7 +25,7 @@ Backend полностью переработан под **Систему упр
 - Интеграция календаря: для каждого события генерируется URL добавления в Google Calendar
 
 ## Технологии
-- Java 21
+- Java 17+ (рекомендуется 17 или 21)
 - Spring Boot 3
 - Spring Security + JWT
 - Spring Data JPA
