@@ -121,3 +121,29 @@ mvn test
    ```
 
 Если запускаете из IDE, сделайте **Rebuild Project** и убедитесь, что Project SDK = 17 (или 21).
+
+Если видите ошибку:
+
+`NoClassDefFoundError: org/springframework/boot/SpringApplication`
+
+это обычно проблема локального Maven-кэша/неполной загрузки зависимостей, а не кода приложения.
+
+Починка:
+1. Удалите битые артефакты Spring Boot из локального кэша:
+   ```bash
+   rmdir /S /Q "%USERPROFILE%\\.m2\\repository\\org\\springframework\\boot"
+   ```
+2. Принудительно перекачайте зависимости:
+   ```bash
+   mvn -U clean dependency:resolve
+   ```
+3. Проверьте, что spring-boot реально в classpath:
+   ```bash
+   mvn -q dependency:tree -Dincludes=org.springframework.boot:spring-boot
+   ```
+4. Запустите снова:
+   ```bash
+   mvn clean spring-boot:run
+   ```
+
+Если у вас корпоративный прокси/зеркало Nexus, проверьте `settings.xml` (mirror/proxy), потому что частично скачанные jar дают именно такие ошибки.
