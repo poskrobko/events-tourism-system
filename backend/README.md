@@ -95,3 +95,29 @@ mvn test
 
 ## Примечание
 Это старт backend-части с чистой доменной моделью под event-туризм. Следующий шаг — адаптация frontend под новые endpoints и сценарии.
+
+## Troubleshooting (Windows)
+
+Если видите ошибку:
+
+`UnsupportedClassVersionError ... class file version 65.0 ... recognizes up to 61.0`
+
+это значит, что часть классов уже была собрана под Java 21, а запуск идет на Java 17.
+
+Что сделать:
+1. Очистить старые классы:
+   ```bash
+   mvn clean
+   ```
+2. Проверить версии:
+   ```bash
+   java -version
+   mvn -version
+   ```
+   В `mvn -version` должна быть Java 17 или 21.
+3. Запустить заново:
+   ```bash
+   mvn clean spring-boot:run
+   ```
+
+Если запускаете из IDE, сделайте **Rebuild Project** и убедитесь, что Project SDK = 17 (или 21).
