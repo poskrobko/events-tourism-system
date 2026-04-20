@@ -9,10 +9,10 @@
     </parent>
 
     <groupId>com.example</groupId>
-    <artifactId>library-preferences-backend</artifactId>
+    <artifactId>events-tourism-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>library-preferences-backend</name>
-    <description>Backend for library preferences system</description>
+    <name>events-tourism-backend</name>
+    <description>Backend for events tourism system</description>
 
     <properties>
         <java.version>17</java.version>

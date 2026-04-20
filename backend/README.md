@@ -156,12 +156,12 @@ mvn test
 ```bash
 cd backend
 mvn clean package -DskipTests
-java -jar target/library-preferences-backend-0.0.1-SNAPSHOT.jar
+java -jar target/events-tourism-backend-0.0.1-SNAPSHOT.jar
 ```
 
 Важно:
 - имя jar берется из `artifactId` + `version` в `pom.xml`;
-- для этого проекта корректное имя: `library-preferences-backend-0.0.1-SNAPSHOT.jar`.
+- для этого проекта корректное имя: `events-tourism-backend-0.0.1-SNAPSHOT.jar`.
 
 Если хотите, можно запускать и через Maven:
 ```bash
