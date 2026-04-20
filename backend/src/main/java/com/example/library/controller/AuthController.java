@@ -6,7 +6,7 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/api/auth")
 public class AuthController {
     private final AuthService authService;
 
@@ -22,15 +22,5 @@ public class AuthController {
     @PostMapping("/login")
     public AuthDtos.AuthResponse login(@Valid @RequestBody AuthDtos.LoginRequest request) {
         return authService.login(request);
-    }
-
-    @PostMapping("/refresh")
-    public AuthDtos.AuthResponse refresh(@Valid @RequestBody AuthDtos.RefreshRequest request) {
-        return authService.refresh(request.refreshToken());
-    }
-
-    @PostMapping("/logout")
-    public void logout(@Valid @RequestBody AuthDtos.LogoutRequest request) {
-        authService.logout(request.refreshToken());
     }
 }

@@ -16,21 +16,6 @@ spring:
   h2:
     console:
       enabled: true
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-  mail:
-    host: ${MAIL_HOST:smtp.ethereal.email}
-    port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:kayley27@ethereal.email}
-    password: ${MAIL_PASSWORD:j6UHjPp7V7ftE8eb7Q.}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
 
 server:
   port: 8080
@@ -39,8 +24,6 @@ app:
   jwt:
     secret: ${JWT_SECRET:ZGV2LXNlY3JldC1rZXktbXVzdC1iZS1hdC1sZWFzdC0zMi1ieXRlcy1sb25nLXNlY3JldA==}
     access-token-expiration-seconds: ${JWT_ACCESS_EXPIRATION_SECONDS:3600}
-  demo:
-    password: ${APP_DEMO_PASSWORD:password123}
-    seed-enabled: ${APP_DEMO_SEED_ENABLED:true}
-  mail:
-    from: ${MAIL_FROM:library-no-reply@local.dev}
+  admin:
+    email: ${APP_ADMIN_EMAIL:admin@event.local}
+    password: ${APP_ADMIN_PASSWORD:admin123}
