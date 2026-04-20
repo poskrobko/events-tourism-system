@@ -1,46 +1,29 @@
-# Frontend (React + TypeScript + Vite)
+# Frontend (HTML + CSS + Vanilla JS)
 
-Обновлённый SPA интерфейс для `Library Preferences System`.
+Frontend теперь полностью реализован без фреймворков JavaScript: только **HTML + CSS + Vanilla JS** с использованием **Bootstrap 5** для сетки и базовых UI-компонентов.
+
+## Страницы
+
+- `login.html` — вход
+- `register.html` — регистрация
+- `forgot-password.html` — восстановление пароля
+- `events.html` — список событий (карточки)
+- `event-details.html` — детали события
+- `ticket.html` — покупка билета
+- `profile.html` — профиль
+- `admin.html` — админ-панель
 
 ## Запуск
 
 ```bash
 cd frontend
-npm install
-npm run dev
-```
-
-Dev server поднимается на `http://localhost:5173` и проксирует `/api` на `http://localhost:8080`.
-
-## Что теперь покрыто из use-cases
-
-- Стартовая страница — логин (`/login`), логин не находится в основном меню.
-- Гость может просматривать каталог, но при попытке взять книгу отправляется на страницу логина.
-- В каталоге рекомендованные книги для текущего пользователя помечаются бейджем `рекомендация`.
-- Профиль позволяет редактировать имя/email и просматривать свои займы.
-- Возврат книги доступен из профиля кнопкой `Return` для `ACTIVE` займов.
-- Поле просмотра по `userId` доступно только администратору.
-- Фильтры жанров/авторов и предпочтения реализованы через `select` c подгрузкой опций из БД (`/books/meta`).
-- UI учитывает роль пользователя (`GUEST` / `USER` / `ADMIN`).
-
-## Vanilla JS UI prototype (events)
-
-Добавлен отдельный многостраничный прототип на **HTML + CSS + Vanilla JS + Bootstrap 5**:
-
-- `vanilla/login.html`
-- `vanilla/register.html`
-- `vanilla/forgot-password.html`
-- `vanilla/events.html`
-- `vanilla/event-details.html`
-- `vanilla/ticket.html`
-- `vanilla/profile.html`
-- `vanilla/admin.html`
-
-Запуск локально без сборки:
-
-```bash
-cd frontend/vanilla
 python3 -m http.server 8081
 ```
 
-Открыть `http://localhost:8081/events.html`.
+Открыть: `http://localhost:8081/events.html`
+
+## Структура
+
+- `styles.css` — общие стили и цветовая система (`#FF9760`, `#FFD150`, `#458B73`)
+- `app.js` — общая логика UX (валидация форм, feedback, подсчёт итоговой суммы)
+- `*.html` — отдельные страницы интерфейса

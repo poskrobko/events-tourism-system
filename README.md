@@ -13,7 +13,7 @@
 ## Стек
 
 - **Backend:** Java 21, Spring Boot 3.2+, Spring Web, Spring Security, Spring Data JPA/JDBC, Flyway, PostgreSQL, Redis, OAuth2 Client
-- **Frontend:** React 18, TypeScript, Vite, Redux Toolkit, React Router, Axios, Tailwind CSS
+- **Frontend:** HTML, CSS, Vanilla JavaScript, Bootstrap 5
 - **DevOps:** Docker, Docker Compose, GitHub Actions
 
 ## Быстрый старт
@@ -28,7 +28,7 @@ docker compose up -d postgres redis
 cd backend && mvn spring-boot:run
 
 # 3) frontend
-cd frontend && npm install && npm run dev
+cd frontend && python3 -m http.server 8081
 ```
 
 > В репозитории доступны backend (`backend/`), frontend (`frontend/`), docker-compose для postgres/redis и CI workflow (`.github/workflows/ci.yml`).
@@ -39,4 +39,4 @@ Backend реализован в директории `backend/` (Spring Boot 3).
 
 ## Frontend status
 
-Frontend реализован в директории `frontend/` (React 18 + TypeScript + Vite + Redux Toolkit + React Router). См. `frontend/README.md`.
+Frontend реализован в директории `frontend/` (HTML + CSS + Vanilla JS + Bootstrap 5). См. `frontend/README.md`.
