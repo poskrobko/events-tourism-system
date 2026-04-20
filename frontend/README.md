@@ -22,3 +22,25 @@ Dev server поднимается на `http://localhost:5173` и проксир
 - Поле просмотра по `userId` доступно только администратору.
 - Фильтры жанров/авторов и предпочтения реализованы через `select` c подгрузкой опций из БД (`/books/meta`).
 - UI учитывает роль пользователя (`GUEST` / `USER` / `ADMIN`).
+
+## Vanilla JS UI prototype (events)
+
+Добавлен отдельный многостраничный прототип на **HTML + CSS + Vanilla JS + Bootstrap 5**:
+
+- `vanilla/login.html`
+- `vanilla/register.html`
+- `vanilla/forgot-password.html`
+- `vanilla/events.html`
+- `vanilla/event-details.html`
+- `vanilla/ticket.html`
+- `vanilla/profile.html`
+- `vanilla/admin.html`
+
+Запуск локально без сборки:
+
+```bash
+cd frontend/vanilla
+python3 -m http.server 8081
+```
+
+Открыть `http://localhost:8081/events.html`.
