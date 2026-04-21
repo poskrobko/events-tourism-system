@@ -12,4 +12,6 @@ public interface TicketTypeRepository extends JpaRepository<TicketType, Long> {
 
     @Query("select min(tt.price) from TicketType tt where tt.event.id = :eventId")
     Optional<BigDecimal> findMinPriceByEventId(Long eventId);
+
+    Optional<TicketType> findByIdAndEventCreatedByEmail(Long id, String email);
 }
