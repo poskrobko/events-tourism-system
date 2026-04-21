@@ -59,4 +59,57 @@
       }
     });
   });
+
+  const userSearch = document.getElementById('userSearch');
+  const userRows = Array.from(document.querySelectorAll('[data-user-row]'));
+  const userFeedback = document.getElementById('userEditFeedback');
+  const roleSelects = document.querySelectorAll('[data-role-select]');
+
+  if (userSearch && userRows.length) {
+    userSearch.addEventListener('input', () => {
+      const query = userSearch.value.trim().toLowerCase();
+      userRows.forEach((row) => {
+        const inputs = row.querySelectorAll('input');
+        const email = inputs[0]?.value.toLowerCase() || '';
+        const firstName = inputs[1]?.value.toLowerCase() || '';
+        const lastName = inputs[2]?.value.toLowerCase() || '';
+        const fullName = `${firstName} ${lastName}`.trim();
+        const match = !query || email.includes(query) || fullName.includes(query);
+        row.classList.toggle('d-none', !match);
+      });
+    });
+  }
+
+  roleSelects.forEach((select) => {
+    select.addEventListener('change', () => {
+      if (select.value === 'ADMIN') {
+        select.value = 'MANAGER';
+        if (userFeedback) {
+          userFeedback.className = 'alert alert-warning mt-3 mb-0';
+          userFeedback.textContent = 'Назначение роли ADMIN через список пользователей запрещено.';
+        }
+      }
+    });
+  });
+
+  const saveButtons = document.querySelectorAll('[data-save-user]');
+  saveButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const row = button.closest('[data-user-row]');
+      if (!row) return;
+      const rowInputs = row.querySelectorAll('input');
+      const allValid = Array.from(rowInputs).every((input) => input.checkValidity());
+      rowInputs.forEach((input) => input.classList.toggle('is-invalid', !input.checkValidity()));
+
+      if (!userFeedback) return;
+      if (!allValid) {
+        userFeedback.className = 'alert alert-danger mt-3 mb-0';
+        userFeedback.textContent = 'Проверьте email, имя и фамилию перед сохранением.';
+        return;
+      }
+
+      userFeedback.className = 'alert alert-success mt-3 mb-0';
+      userFeedback.textContent = 'Изменения пользователя сохранены.';
+    });
+  });
 })();

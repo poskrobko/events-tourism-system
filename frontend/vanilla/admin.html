@@ -46,6 +46,97 @@
       </div>
     </div>
 
+    <div class="card page-card p-4 mb-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-3">
+        <h2 class="h5 mb-0">Пользователи</h2>
+        <div class="w-100 w-md-auto">
+          <label class="form-label" for="userSearch">Поиск по email и ФИО</label>
+          <input class="form-control" id="userSearch" type="search" placeholder="Например: ivan@mail.ru или Иван Петров" />
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Имя</th>
+              <th>Фамилия</th>
+              <th>Роль</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <tr data-user-row>
+              <td><input class="form-control form-control-sm" type="email" value="admin@eventflow.ru" required /></td>
+              <td><input class="form-control form-control-sm" type="text" value="Системный" required /></td>
+              <td><input class="form-control form-control-sm" type="text" value="Администратор" required /></td>
+              <td>
+                <select class="form-select form-select-sm" disabled data-admin-role>
+                  <option selected>ADMIN</option>
+                </select>
+              </td>
+              <td class="text-secondary small">Роль администратора нельзя изменить</td>
+            </tr>
+            <tr data-user-row>
+              <td><input class="form-control form-control-sm" type="email" value="elena@eventflow.ru" required /></td>
+              <td><input class="form-control form-control-sm" type="text" value="Елена" required /></td>
+              <td><input class="form-control form-control-sm" type="text" value="Волкова" required /></td>
+              <td>
+                <select class="form-select form-select-sm" data-role-select>
+                  <option selected>MANAGER</option>
+                  <option>USER</option>
+                </select>
+              </td>
+              <td><button class="btn btn-sm btn-outline-primary" data-save-user>Сохранить</button></td>
+            </tr>
+            <tr data-user-row>
+              <td><input class="form-control form-control-sm" type="email" value="alex@eventflow.ru" required /></td>
+              <td><input class="form-control form-control-sm" type="text" value="Алексей" required /></td>
+              <td><input class="form-control form-control-sm" type="text" value="Смирнов" required /></td>
+              <td>
+                <select class="form-select form-select-sm" data-role-select>
+                  <option>MANAGER</option>
+                  <option selected>USER</option>
+                </select>
+              </td>
+              <td><button class="btn btn-sm btn-outline-primary" data-save-user>Сохранить</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="alert d-none mt-3 mb-0" id="userEditFeedback" role="alert"></div>
+    </div>
+
+    <div class="card page-card p-4 mb-4">
+      <h2 class="h5 mb-3">Добавить менеджера</h2>
+      <form class="needs-validation row g-3" id="managerForm" novalidate data-success-message="Менеджер успешно добавлен.">
+        <div class="col-md-6">
+          <label class="form-label" for="managerFirstName">Имя</label>
+          <input class="form-control" id="managerFirstName" name="firstName" type="text" minlength="2" required />
+          <div class="invalid-feedback">Введите имя (минимум 2 символа).</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="managerLastName">Фамилия</label>
+          <input class="form-control" id="managerLastName" name="lastName" type="text" minlength="2" required />
+          <div class="invalid-feedback">Введите фамилию (минимум 2 символа).</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="managerEmail">Email</label>
+          <input class="form-control" id="managerEmail" name="email" type="email" required />
+          <div class="invalid-feedback">Введите корректный email.</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="managerPassword">Пароль</label>
+          <input class="form-control" id="managerPassword" name="password" type="password" minlength="8" required />
+          <div class="invalid-feedback">Пароль должен быть не короче 8 символов.</div>
+        </div>
+        <div class="col-12 d-flex gap-2 align-items-center">
+          <button class="btn btn-primary" type="submit">Добавить менеджера</button>
+          <div class="alert mb-0 py-2 px-3 d-none" data-feedback role="alert"></div>
+        </div>
+      </form>
+    </div>
+
     <div class="card page-card p-4">
       <h2 class="h5 mb-3">Быстрые действия</h2>
       <div class="d-flex flex-wrap gap-2">
