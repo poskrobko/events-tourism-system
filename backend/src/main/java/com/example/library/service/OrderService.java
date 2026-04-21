@@ -85,6 +85,10 @@ public class OrderService {
         return orderRepository.findAllByOrderByCreatedAtDesc().stream().map(this::toOrderResponse).toList();
     }
 
+    public List<OrderDtos.OrderResponse> ordersForManager(String managerEmail) {
+        return orderRepository.findOrdersByManagerEmail(managerEmail).stream().map(this::toOrderResponse).toList();
+    }
+
     private OrderDtos.OrderResponse toOrderResponse(Order order) {
         var items = orderItemRepository.findByOrderId(order.getId());
         return toOrderResponse(order, items);

@@ -4,6 +4,7 @@ import com.example.library.dto.EventDtos;
 import com.example.library.model.Event;
 import com.example.library.model.EventProgramItem;
 import com.example.library.model.TicketType;
+import com.example.library.repository.UserRepository;
 import com.example.library.repository.EventProgramItemRepository;
 import com.example.library.repository.EventRepository;
 import com.example.library.repository.TicketTypeRepository;
@@ -22,12 +23,14 @@ public class EventService {
     private final EventRepository eventRepository;
     private final EventProgramItemRepository programRepository;
     private final TicketTypeRepository ticketTypeRepository;
+    private final UserRepository userRepository;
 
     public EventService(EventRepository eventRepository, EventProgramItemRepository programRepository,
-                        TicketTypeRepository ticketTypeRepository) {
+                        TicketTypeRepository ticketTypeRepository, UserRepository userRepository) {
         this.eventRepository = eventRepository;
         this.programRepository = programRepository;
         this.ticketTypeRepository = ticketTypeRepository;
+        this.userRepository = userRepository;
     }
 
     public List<EventDtos.EventResponse> listEvents(LocalDateTime dateFrom, LocalDateTime dateTo, String city,
@@ -52,8 +55,24 @@ public class EventService {
     }
 
     @Transactional
+    public EventDtos.EventResponse createEventAsManager(EventDtos.EventRequest request, String managerEmail) {
+        Event event = new Event();
+        apply(event, request);
+        event.setCreatedBy(userRepository.findByEmail(managerEmail)
+                .orElseThrow(() -> new IllegalArgumentException("User not found")));
+        return toResponse(eventRepository.save(event));
+    }
+
+    @Transactional
     public EventDtos.EventResponse updateEvent(Long eventId, EventDtos.EventRequest request) {
         Event event = getEvent(eventId);
+        apply(event, request);
+        return toResponse(eventRepository.save(event));
+    }
+
+    @Transactional
+    public EventDtos.EventResponse updateEventAsManager(Long eventId, EventDtos.EventRequest request, String managerEmail) {
+        Event event = getManagerEvent(eventId, managerEmail);
         apply(event, request);
         return toResponse(eventRepository.save(event));
     }
@@ -64,9 +83,26 @@ public class EventService {
     }
 
     @Transactional
+    public void deleteEventAsManager(Long eventId, String managerEmail) {
+        Event event = getManagerEvent(eventId, managerEmail);
+        eventRepository.delete(event);
+    }
+
+    @Transactional
     public EventDtos.ProgramItemResponse addProgramItem(Long eventId, EventDtos.ProgramItemRequest request) {
         EventProgramItem item = new EventProgramItem();
         item.setEvent(getEvent(eventId));
+        item.setTitle(request.title());
+        item.setStartDateTime(request.startDateTime());
+        item.setEndDateTime(request.endDateTime());
+        item.setDescription(request.description());
+        return toProgramResponse(programRepository.save(item));
+    }
+
+    @Transactional
+    public EventDtos.ProgramItemResponse addProgramItemAsManager(Long eventId, EventDtos.ProgramItemRequest request, String managerEmail) {
+        EventProgramItem item = new EventProgramItem();
+        item.setEvent(getManagerEvent(eventId, managerEmail));
         item.setTitle(request.title());
         item.setStartDateTime(request.startDateTime());
         item.setEndDateTime(request.endDateTime());
@@ -90,14 +126,43 @@ public class EventService {
     }
 
     @Transactional
+    public EventDtos.ProgramItemResponse updateProgramItemAsManager(Long itemId, EventDtos.ProgramItemRequest request, String managerEmail) {
+        EventProgramItem item = programRepository.findByIdAndEventCreatedByEmail(itemId, managerEmail)
+                .orElseThrow(() -> new IllegalArgumentException("Program item not found"));
+        item.setTitle(request.title());
+        item.setStartDateTime(request.startDateTime());
+        item.setEndDateTime(request.endDateTime());
+        item.setDescription(request.description());
+        return toProgramResponse(programRepository.save(item));
+    }
+
+    @Transactional
     public void deleteProgramItem(Long itemId) {
         programRepository.deleteById(itemId);
+    }
+
+    @Transactional
+    public void deleteProgramItemAsManager(Long itemId, String managerEmail) {
+        EventProgramItem item = programRepository.findByIdAndEventCreatedByEmail(itemId, managerEmail)
+                .orElseThrow(() -> new IllegalArgumentException("Program item not found"));
+        programRepository.delete(item);
     }
 
     @Transactional
     public EventDtos.TicketTypeResponse addTicketType(Long eventId, EventDtos.TicketTypeRequest request) {
         TicketType tt = new TicketType();
         tt.setEvent(getEvent(eventId));
+        tt.setName(request.name());
+        tt.setPrice(request.price());
+        tt.setQuantityTotal(request.quantityTotal());
+        tt.setQuantitySold(0);
+        return toTicketResponse(ticketTypeRepository.save(tt));
+    }
+
+    @Transactional
+    public EventDtos.TicketTypeResponse addTicketTypeAsManager(Long eventId, EventDtos.TicketTypeRequest request, String managerEmail) {
+        TicketType tt = new TicketType();
+        tt.setEvent(getManagerEvent(eventId, managerEmail));
         tt.setName(request.name());
         tt.setPrice(request.price());
         tt.setQuantityTotal(request.quantityTotal());
@@ -123,12 +188,38 @@ public class EventService {
     }
 
     @Transactional
+    public EventDtos.TicketTypeResponse updateTicketTypeAsManager(Long ticketTypeId, EventDtos.TicketTypeRequest request,
+                                                                  String managerEmail) {
+        TicketType tt = ticketTypeRepository.findByIdAndEventCreatedByEmail(ticketTypeId, managerEmail)
+                .orElseThrow(() -> new IllegalArgumentException("Ticket type not found"));
+        tt.setName(request.name());
+        tt.setPrice(request.price());
+        if (request.quantityTotal() < tt.getQuantitySold()) {
+            throw new IllegalArgumentException("quantityTotal cannot be less than quantitySold");
+        }
+        tt.setQuantityTotal(request.quantityTotal());
+        return toTicketResponse(ticketTypeRepository.save(tt));
+    }
+
+    @Transactional
     public void deleteTicketType(Long ticketTypeId) {
         ticketTypeRepository.deleteById(ticketTypeId);
     }
 
+    @Transactional
+    public void deleteTicketTypeAsManager(Long ticketTypeId, String managerEmail) {
+        TicketType tt = ticketTypeRepository.findByIdAndEventCreatedByEmail(ticketTypeId, managerEmail)
+                .orElseThrow(() -> new IllegalArgumentException("Ticket type not found"));
+        ticketTypeRepository.delete(tt);
+    }
+
     public Event getEvent(Long id) {
         return eventRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Event not found"));
+    }
+
+    private Event getManagerEvent(Long id, String managerEmail) {
+        return eventRepository.findByIdAndCreatedByEmail(id, managerEmail)
+                .orElseThrow(() -> new IllegalArgumentException("Event not found"));
     }
 
     public EventDtos.EventResponse toResponse(Event e) {

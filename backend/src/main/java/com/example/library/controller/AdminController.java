@@ -2,9 +2,12 @@ package com.example.library.controller;
 
 import com.example.library.dto.EventDtos;
 import com.example.library.dto.OrderDtos;
+import com.example.library.dto.UserDtos;
 import com.example.library.service.EventService;
 import com.example.library.service.OrderService;
+import com.example.library.service.UserManagementService;
 import jakarta.validation.Valid;
+import java.security.Principal;
 import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -15,10 +18,12 @@ import org.springframework.web.bind.annotation.*;
 public class AdminController {
     private final EventService eventService;
     private final OrderService orderService;
+    private final UserManagementService userManagementService;
 
-    public AdminController(EventService eventService, OrderService orderService) {
+    public AdminController(EventService eventService, OrderService orderService, UserManagementService userManagementService) {
         this.eventService = eventService;
         this.orderService = orderService;
+        this.userManagementService = userManagementService;
     }
 
     @PostMapping("/events")
@@ -73,5 +78,26 @@ public class AdminController {
     @GetMapping("/orders")
     public List<OrderDtos.OrderResponse> allOrders() {
         return orderService.allOrders();
+    }
+
+    @GetMapping("/users")
+    public List<UserDtos.UserResponse> listUsers() {
+        return userManagementService.listUsers();
+    }
+
+    @PostMapping("/users")
+    public UserDtos.UserResponse createManager(@Valid @RequestBody UserDtos.CreateUserRequest request) {
+        return userManagementService.createUser(request);
+    }
+
+    @PutMapping("/users/{userId}")
+    public UserDtos.UserResponse updateUser(@PathVariable Long userId,
+                                            @Valid @RequestBody UserDtos.UpdateUserRequest request) {
+        return userManagementService.updateUser(userId, request);
+    }
+
+    @DeleteMapping("/users/{userId}")
+    public void deleteUser(@PathVariable Long userId, Principal principal) {
+        userManagementService.deleteUser(userId, principal.getName());
     }
 }
