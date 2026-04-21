@@ -11,10 +11,7 @@
   <nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top">
     <div class="container">
       <a class="navbar-brand" href="events.html">EventFlow</a>
-      <div class="navbar-nav ms-auto gap-2">
-        <a class="nav-link" href="events.html">События</a>
-        <a class="nav-link active" href="profile.html">Профиль</a>
-      </div>
+      <div id="mainNavLinks" class="navbar-nav ms-auto gap-2"></div>
     </div>
   </nav>
 
@@ -22,32 +19,24 @@
     <div class="row g-4">
       <div class="col-lg-4">
         <div class="card page-card p-4 text-center">
-          <img src="https://ui-avatars.com/api/?name=Ivan+Petrov&background=FFD150&color=3d2a00&size=120" class="rounded-circle mx-auto mb-3" alt="avatar" width="120" height="120" />
-          <h1 class="h4 mb-1">Иван Петров</h1>
-          <p class="text-secondary mb-3">ivan.petrov@email.com</p>
-          <button class="btn btn-secondary w-100">Изменить фото</button>
+          <img src="https://ui-avatars.com/api/?name=User&background=FFD150&color=3d2a00&size=120" class="rounded-circle mx-auto mb-3" alt="avatar" width="120" height="120" />
+          <h1 id="profileName" class="h4 mb-1"></h1>
+          <p id="profileEmail" class="text-secondary mb-0"></p>
         </div>
       </div>
       <div class="col-lg-8">
         <div class="card page-card p-4 mb-4">
-          <h2 class="h5 mb-3">Личные данные</h2>
-          <form class="needs-validation" novalidate data-success-message="Профиль успешно обновлен.">
+          <h2 class="h5 mb-3">Информация пользователя</h2>
+          <form id="profileForm" class="needs-validation" novalidate>
             <div class="row g-3">
-              <div class="col-md-6"><input class="form-control" placeholder="Имя" required value="Иван" /></div>
-              <div class="col-md-6"><input class="form-control" placeholder="Фамилия" required value="Петров" /></div>
-              <div class="col-md-6"><input class="form-control" type="email" required value="ivan.petrov@email.com" /></div>
-              <div class="col-md-6"><input class="form-control" type="tel" required value="+7 999 123-45-67" /></div>
+              <div class="col-md-6"><input id="profileFirstName" class="form-control" placeholder="Имя" required minlength="2" /></div>
+              <div class="col-md-6"><input id="profileLastName" class="form-control" placeholder="Фамилия" required minlength="2" /></div>
+              <div class="col-md-6"><input id="profileEmailInput" class="form-control" type="email" required /></div>
+              <div class="col-md-6"><input id="profilePhone" class="form-control" type="tel" pattern="\+?[0-9\-\s]{10,18}" required /></div>
             </div>
             <button class="btn btn-primary mt-3" type="submit">Сохранить изменения</button>
             <div data-feedback></div>
           </form>
-        </div>
-        <div class="card page-card p-4">
-          <h2 class="h5 mb-3">Мои билеты</h2>
-          <ul class="list-group list-group-flush">
-            <li class="list-group-item d-flex justify-content-between px-0"><span>Sunset Jazz Night</span><span class="text-success">Оплачено</span></li>
-            <li class="list-group-item d-flex justify-content-between px-0"><span>City Light Weekend</span><span class="text-warning">Ожидает оплаты</span></li>
-          </ul>
         </div>
       </div>
     </div>
