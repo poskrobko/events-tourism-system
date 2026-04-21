@@ -78,7 +78,7 @@
     }
 
     if (user.role === 'admin') {
-      links.push({ href: 'admin.html', label: 'Админ' });
+      links.push({ href: 'admin.html', label: 'Админ' }, { href: 'users.html', label: 'Пользователи' });
     } else {
       links.push({ href: 'profile.html', label: 'Профиль' }, { href: 'my-tickets.html', label: 'Мои билеты' });
     }
@@ -398,6 +398,134 @@
     });
   }
 
+
+  function initAdminUsersPage() {
+    const wrap = document.getElementById('adminUsersPanel');
+    if (!wrap) return;
+    requireAdmin();
+
+    const currentUser = getCurrentUser();
+    const usersTable = document.getElementById('adminUsersTable');
+    const createCard = document.getElementById('managerCreateCard');
+    const openCreateBtn = document.getElementById('openManagerFormBtn');
+    const closeCreateBtn = document.getElementById('closeManagerFormBtn');
+    const createForm = document.getElementById('managerCreateForm');
+
+    function renderUsers() {
+      const users = read(STORAGE_KEYS.users, []);
+      usersTable.innerHTML = users.map((u) => `<tr>
+        <td>${u.email}</td>
+        <td><input class="form-control form-control-sm" data-field="fullName" data-user-id="${u.id}" value="${u.fullName}" /></td>
+        <td>
+          <select class="form-select form-select-sm" data-field="role" data-user-id="${u.id}">
+            <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Администратор</option>
+            <option value="manager" ${u.role === 'manager' ? 'selected' : ''}>Менеджер</option>
+            <option value="user" ${u.role === 'user' ? 'selected' : ''}>Пользователь</option>
+          </select>
+        </td>
+        <td><input class="form-control form-control-sm" data-field="password" data-user-id="${u.id}" type="password" placeholder="Новый пароль" /></td>
+        <td class="d-flex gap-2 justify-content-end">
+          <button class="btn btn-sm btn-outline-secondary" data-save="${u.id}">Сохранить</button>
+          <button class="btn btn-sm btn-outline-danger" data-delete="${u.id}">Удалить</button>
+        </td>
+      </tr>`).join('');
+
+      usersTable.querySelectorAll('[data-save]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const userId = btn.dataset.save;
+          const allUsers = read(STORAGE_KEYS.users, []);
+          const idx = allUsers.findIndex((u) => u.id === userId);
+          if (idx < 0) return;
+
+          const fullNameInput = usersTable.querySelector(`[data-field="fullName"][data-user-id="${userId}"]`);
+          const roleInput = usersTable.querySelector(`[data-field="role"][data-user-id="${userId}"]`);
+          const passwordInput = usersTable.querySelector(`[data-field="password"][data-user-id="${userId}"]`);
+
+          const nextRole = roleInput.value;
+          if (currentUser.id === userId && nextRole !== 'admin') {
+            alert('Текущий администратор не может сменить себе роль.');
+            roleInput.value = allUsers[idx].role;
+            return;
+          }
+
+          allUsers[idx] = {
+            ...allUsers[idx],
+            fullName: fullNameInput.value.trim(),
+            role: nextRole,
+          };
+
+          if (passwordInput.value.trim()) {
+            allUsers[idx].password = passwordInput.value.trim();
+          }
+
+          write(STORAGE_KEYS.users, allUsers);
+          renderUsers();
+        });
+      });
+
+      usersTable.querySelectorAll('[data-delete]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const userId = btn.dataset.delete;
+          if (currentUser.id === userId) {
+            alert('Нельзя удалить текущего администратора.');
+            return;
+          }
+
+          const users = read(STORAGE_KEYS.users, []);
+          write(STORAGE_KEYS.users, users.filter((u) => u.id !== userId));
+          renderUsers();
+        });
+      });
+    }
+
+    openCreateBtn.addEventListener('click', () => createCard.classList.remove('d-none'));
+    closeCreateBtn.addEventListener('click', () => {
+      createCard.classList.add('d-none');
+      createForm.reset();
+      createForm.classList.remove('was-validated');
+      const feedback = createForm.querySelector('[data-feedback]');
+      feedback.textContent = '';
+      feedback.className = 'mt-3';
+    });
+
+    createForm.dataset.handled = 'custom';
+    createForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!createForm.checkValidity()) {
+        createForm.classList.add('was-validated');
+        return;
+      }
+
+      const users = read(STORAGE_KEYS.users, []);
+      const email = document.getElementById('managerEmail').value.trim().toLowerCase();
+      const feedback = createForm.querySelector('[data-feedback]');
+
+      if (users.some((u) => u.email.toLowerCase() === email)) {
+        feedback.className = 'alert alert-danger mt-3';
+        feedback.textContent = 'Пользователь с таким email уже существует.';
+        return;
+      }
+
+      users.push({
+        id: `u-${Date.now()}`,
+        fullName: document.getElementById('managerFullName').value.trim(),
+        email,
+        password: document.getElementById('managerPassword').value,
+        phone: '',
+        role: 'manager',
+      });
+      write(STORAGE_KEYS.users, users);
+
+      feedback.className = 'alert alert-success mt-3';
+      feedback.textContent = `Менеджер ${email} успешно создан.`;
+      createForm.reset();
+      createForm.classList.remove('was-validated');
+      renderUsers();
+    });
+
+    renderUsers();
+  }
+
   function initAdminPage() {
     const wrap = document.getElementById('adminPanel');
     if (!wrap) return;
@@ -499,4 +627,5 @@
   initMyTicketsPage();
   initProfilePage();
   initAdminPage();
+  initAdminUsersPage();
 })();
