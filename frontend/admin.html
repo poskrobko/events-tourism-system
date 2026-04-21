@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Админ-панель</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top">
+    <div class="container">
+      <a class="navbar-brand" href="events.html">EventFlow</a>
+      <div class="navbar-nav ms-auto gap-2">
+        <a class="nav-link" href="events.html">События</a>
+        <a class="nav-link active" href="admin.html">Админ</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between gap-3 align-items-end mb-4">
+      <div>
+        <p class="section-label mb-1">Управление системой</p>
+        <h1 class="page-title h2 mb-0">Админ-панель</h1>
+      </div>
+      <button class="btn btn-primary">+ Добавить событие</button>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <div class="col-md-4"><div class="card page-card p-3"><p class="mb-1 text-secondary">Всего событий</p><h2 class="h3 mb-0">24</h2></div></div>
+      <div class="col-md-4"><div class="card page-card p-3"><p class="mb-1 text-secondary">Продано билетов</p><h2 class="h3 mb-0">1 382</h2></div></div>
+      <div class="col-md-4"><div class="card page-card p-3"><p class="mb-1 text-secondary">Выручка</p><h2 class="h3 mb-0">3.9 млн ₽</h2></div></div>
+    </div>
+
+    <div class="card page-card p-4 mb-4">
+      <h2 class="h5 mb-3">Заявки на публикацию</h2>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead><tr><th>Событие</th><th>Организатор</th><th>Статус</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>Design Conf 2026</td><td>Studio North</td><td class="request-status text-warning fw-semibold">На проверке</td><td><button class="btn btn-sm btn-secondary" data-approve>Одобрить</button></td></tr>
+            <tr><td>Food Market Fest</td><td>Taste Group</td><td class="request-status text-warning fw-semibold">На проверке</td><td><button class="btn btn-sm btn-secondary" data-approve>Одобрить</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card page-card p-4">
+      <h2 class="h5 mb-3">Быстрые действия</h2>
+      <div class="d-flex flex-wrap gap-2">
+        <button class="btn btn-accent">Экспорт отчёта</button>
+        <button class="btn btn-primary">Рассылка пользователям</button>
+        <button class="btn btn-outline-secondary">Настройки ролей</button>
+      </div>
+    </div>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
