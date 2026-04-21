@@ -11,10 +11,7 @@
   <nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top">
     <div class="container">
       <a class="navbar-brand" href="events.html">EventFlow</a>
-      <div class="navbar-nav ms-auto gap-2">
-        <a class="nav-link" href="login.html">Вход</a>
-        <a class="nav-link active" href="register.html">Регистрация</a>
-      </div>
+      <div id="mainNavLinks" class="navbar-nav ms-auto gap-2"></div>
     </div>
   </nav>
 
@@ -22,19 +19,18 @@
     <div class="row justify-content-center">
       <div class="col-md-8 col-lg-6">
         <div class="card page-card p-4">
-          <p class="section-label mb-2">Новый пользователь</p>
-          <h1 class="page-title h3 mb-4">Создание аккаунта</h1>
-          <form class="needs-validation" novalidate data-success-message="Регистрация успешна. Подтвердите email.">
+          <h1 class="page-title h3 mb-4">Регистрация</h1>
+          <form id="registerForm" class="needs-validation" novalidate>
             <div class="row g-3">
               <div class="col-md-6">
                 <label class="form-label" for="firstName">Имя</label>
-                <input class="form-control" id="firstName" required />
-                <div class="invalid-feedback">Введите имя.</div>
+                <input class="form-control" id="firstName" required minlength="2" />
+                <div class="invalid-feedback">Минимум 2 символа.</div>
               </div>
               <div class="col-md-6">
                 <label class="form-label" for="lastName">Фамилия</label>
-                <input class="form-control" id="lastName" required />
-                <div class="invalid-feedback">Введите фамилию.</div>
+                <input class="form-control" id="lastName" required minlength="2" />
+                <div class="invalid-feedback">Минимум 2 символа.</div>
               </div>
               <div class="col-12">
                 <label class="form-label" for="regEmail">Email</label>
@@ -47,6 +43,11 @@
                 <div class="invalid-feedback">Минимум 8 символов.</div>
               </div>
               <div class="col-md-6">
+                <label class="form-label" for="regPasswordRepeat">Повторите пароль</label>
+                <input class="form-control" id="regPasswordRepeat" type="password" minlength="8" required />
+                <div class="invalid-feedback">Пароли должны совпадать.</div>
+              </div>
+              <div class="col-12">
                 <label class="form-label" for="phone">Телефон</label>
                 <input class="form-control" id="phone" type="tel" pattern="\+?[0-9\-\s]{10,18}" required />
                 <div class="invalid-feedback">Введите номер телефона.</div>

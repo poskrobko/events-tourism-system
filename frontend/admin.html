@@ -11,47 +11,67 @@
   <nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top">
     <div class="container">
       <a class="navbar-brand" href="events.html">EventFlow</a>
-      <div class="navbar-nav ms-auto gap-2">
-        <a class="nav-link" href="events.html">События</a>
-        <a class="nav-link active" href="admin.html">Админ</a>
-      </div>
+      <div id="mainNavLinks" class="navbar-nav ms-auto gap-2"></div>
     </div>
   </nav>
 
-  <main class="container py-5">
-    <div class="d-flex flex-wrap justify-content-between gap-3 align-items-end mb-4">
-      <div>
-        <p class="section-label mb-1">Управление системой</p>
-        <h1 class="page-title h2 mb-0">Админ-панель</h1>
-      </div>
-      <button class="btn btn-primary">+ Добавить событие</button>
+  <main id="adminPanel" class="container py-5">
+    <div class="mb-4">
+      <p class="section-label mb-1">Управление системой</p>
+      <h1 class="page-title h2 mb-0">Админ-панель</h1>
     </div>
 
     <div class="row g-4 mb-4">
-      <div class="col-md-4"><div class="card page-card p-3"><p class="mb-1 text-secondary">Всего событий</p><h2 class="h3 mb-0">24</h2></div></div>
-      <div class="col-md-4"><div class="card page-card p-3"><p class="mb-1 text-secondary">Продано билетов</p><h2 class="h3 mb-0">1 382</h2></div></div>
-      <div class="col-md-4"><div class="card page-card p-3"><p class="mb-1 text-secondary">Выручка</p><h2 class="h3 mb-0">3.9 млн ₽</h2></div></div>
+      <div class="col-md-4"><div class="card page-card p-3"><p class="mb-1 text-secondary">Всего событий</p><h2 id="totalEvents" class="h3 mb-0">0</h2></div></div>
+      <div class="col-md-4"><div class="card page-card p-3"><p class="mb-1 text-secondary">Продано билетов</p><h2 id="totalTickets" class="h3 mb-0">0</h2></div></div>
+      <div class="col-md-4"><div class="card page-card p-3"><p class="mb-1 text-secondary">Выручка</p><h2 id="totalRevenue" class="h3 mb-0">0 ₽</h2></div></div>
     </div>
 
     <div class="card page-card p-4 mb-4">
-      <h2 class="h5 mb-3">Заявки на публикацию</h2>
+      <h2 class="h5 mb-3">CRUD мероприятий + программа + билеты</h2>
+      <form id="eventCrudForm" class="needs-validation" novalidate>
+        <input id="eventId" type="hidden" />
+        <div class="row g-3">
+          <div class="col-md-4"><input id="eventTitleInput" class="form-control" placeholder="Название" required /></div>
+          <div class="col-md-2">
+            <select id="eventTypeInput" class="form-select" required>
+              <option value="">Тип</option>
+              <option>Бизнес</option><option>Фестиваль</option><option>Музыка</option><option>Творчество</option><option>Концерты</option><option>Образование</option><option>Спорт</option>
+            </select>
+          </div>
+          <div class="col-md-2"><input id="eventCityInput" class="form-control" placeholder="Город" required /></div>
+          <div class="col-md-2"><input id="eventDateInput" class="form-control" type="date" required /></div>
+          <div class="col-md-2"><input id="eventTimeInput" class="form-control" type="time" required /></div>
+          <div class="col-md-2"><input id="eventPriceInput" class="form-control" type="number" min="1" placeholder="Цена" required /></div>
+          <div class="col-md-2"><input id="eventTicketLimitInput" class="form-control" type="number" min="1" placeholder="Кол-во билетов" required /></div>
+          <div class="col-md-8"><input id="eventImageInput" class="form-control" type="url" placeholder="URL изображения" required /></div>
+          <div class="col-12"><textarea id="eventDescriptionInput" class="form-control" placeholder="Описание" required></textarea></div>
+          <div class="col-12"><textarea id="eventScheduleInput" class="form-control" rows="4" placeholder="Программа мероприятия, каждый пункт с новой строки" required></textarea></div>
+        </div>
+        <div class="d-flex gap-2 mt-3">
+          <button class="btn btn-primary" type="submit">Сохранить</button>
+          <button id="eventFormReset" class="btn btn-outline-secondary" type="button">Очистить</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card page-card p-4 mb-4">
+      <h2 class="h5 mb-3">Список мероприятий</h2>
       <div class="table-responsive">
         <table class="table align-middle">
-          <thead><tr><th>Событие</th><th>Организатор</th><th>Статус</th><th></th></tr></thead>
-          <tbody>
-            <tr><td>Design Conf 2026</td><td>Studio North</td><td class="request-status text-warning fw-semibold">На проверке</td><td><button class="btn btn-sm btn-secondary" data-approve>Одобрить</button></td></tr>
-            <tr><td>Food Market Fest</td><td>Taste Group</td><td class="request-status text-warning fw-semibold">На проверке</td><td><button class="btn btn-sm btn-secondary" data-approve>Одобрить</button></td></tr>
-          </tbody>
+          <thead><tr><th>Событие</th><th>Тип</th><th>Дата</th><th>Цена</th><th>Билеты</th><th></th></tr></thead>
+          <tbody id="adminEventsTable"></tbody>
         </table>
       </div>
     </div>
 
     <div class="card page-card p-4">
-      <h2 class="h5 mb-3">Быстрые действия</h2>
-      <div class="d-flex flex-wrap gap-2">
-        <button class="btn btn-accent">Экспорт отчёта</button>
-        <button class="btn btn-primary">Рассылка пользователям</button>
-        <button class="btn btn-outline-secondary">Настройки ролей</button>
+      <h2 class="h5 mb-3">Заказы пользователей</h2>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead><tr><th>Событие</th><th>Кол-во</th><th>Сумма</th><th>Статус</th><th>Дата</th></tr></thead>
+          <tbody id="adminOrdersTable"></tbody>
+        </table>
       </div>
     </div>
   </main>

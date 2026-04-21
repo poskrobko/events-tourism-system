@@ -11,7 +11,7 @@
   <nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top">
     <div class="container">
       <a class="navbar-brand" href="events.html">EventFlow</a>
-      <div class="navbar-nav ms-auto"><a class="nav-link" href="event-details.html">Назад к событию</a></div>
+      <div id="mainNavLinks" class="navbar-nav ms-auto gap-2"></div>
     </div>
   </nav>
 
@@ -21,14 +21,15 @@
         <div class="card page-card p-4">
           <p class="section-label mb-2">Checkout</p>
           <h1 class="page-title h3">Покупка билета</h1>
-          <form class="needs-validation" novalidate data-success-message="Заказ создан. Оплата ожидается.">
+          <p class="mb-3">Событие: <strong id="ticketEventTitle"></strong></p>
+          <form id="ticketForm" class="needs-validation" novalidate>
             <div class="row g-3">
               <div class="col-md-6">
                 <label class="form-label" for="ticketType">Тип билета</label>
                 <select class="form-select" id="ticketType" required>
-                  <option value="standard">Standard — 1200 ₽</option>
-                  <option value="premium">Premium — 2200 ₽</option>
-                  <option value="vip">VIP — 3500 ₽</option>
+                  <option value="1">Standard ×1</option>
+                  <option value="1.5">Premium ×1.5</option>
+                  <option value="2">VIP ×2</option>
                 </select>
               </div>
               <div class="col-md-6">
@@ -43,9 +44,9 @@
             </div>
             <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3 mt-4">
               <span>Итого к оплате:</span>
-              <strong id="ticketTotal">1200 ₽</strong>
+              <strong id="ticketTotal">0 ₽</strong>
             </div>
-            <button class="btn btn-primary w-100 mt-3" type="submit">Перейти к оплате</button>
+            <button class="btn btn-primary w-100 mt-3" type="submit">Купить билет</button>
             <div data-feedback></div>
           </form>
         </div>
