@@ -188,7 +188,10 @@
       });
       write(STORAGE_KEYS.users, users);
       feedback.className = 'alert alert-success mt-3';
-      feedback.textContent = 'Регистрация успешна. Теперь войдите в систему.';
+      feedback.innerHTML = `
+        <div class="mb-2">Регистрация успешна.</div>
+        <a class="btn btn-success btn-sm" href="login.html">Перейти на страницу входа</a>
+      `;
       form.reset();
       form.classList.remove('was-validated');
     });
