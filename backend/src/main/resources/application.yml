@@ -1,9 +1,9 @@
 spring:
   datasource:
-    url: ${DB_URL:jdbc:h2:mem:librarydb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+    url: jdbc:postgresql://localhost:5434/event_tourism
     driver-class-name: ${DB_DRIVER:org.h2.Driver}
-    username: ${DB_USER:sa}
-    password: ${DB_PASSWORD:}
+    username: postgres
+    password: root
   jpa:
     hibernate:
       ddl-auto: validate
