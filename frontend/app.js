@@ -410,25 +410,47 @@
     const openCreateBtn = document.getElementById('openManagerFormBtn');
     const closeCreateBtn = document.getElementById('closeManagerFormBtn');
     const createForm = document.getElementById('managerCreateForm');
+    const usersSearchInput = document.getElementById('usersSearchInput');
+
+    function splitName(fullName = '') {
+      const parts = fullName.trim().split(/\s+/).filter(Boolean);
+      return {
+        firstName: parts[0] || '',
+        lastName: parts.slice(1).join(' '),
+      };
+    }
 
     function renderUsers() {
       const users = read(STORAGE_KEYS.users, []);
-      usersTable.innerHTML = users.map((u) => `<tr>
-        <td>${u.email}</td>
-        <td><input class="form-control form-control-sm" data-field="fullName" data-user-id="${u.id}" value="${u.fullName}" /></td>
+      const searchQuery = (usersSearchInput?.value || '').trim().toLowerCase();
+      const visibleUsers = users.filter((u) => {
+        if (!searchQuery) return true;
+        const { firstName, lastName } = splitName(u.fullName);
+        const fullName = `${firstName} ${lastName}`.trim().toLowerCase();
+        return u.email.toLowerCase().includes(searchQuery) || fullName.includes(searchQuery);
+      });
+
+      usersTable.innerHTML = visibleUsers.map((u) => {
+        const { firstName, lastName } = splitName(u.fullName);
+        const isAdminUser = u.role === 'admin';
+        return `<tr>
+        <td><input class="form-control form-control-sm" data-field="email" data-user-id="${u.id}" type="email" value="${u.email}" required /></td>
+        <td><input class="form-control form-control-sm" data-field="firstName" data-user-id="${u.id}" value="${firstName}" minlength="2" required /></td>
+        <td><input class="form-control form-control-sm" data-field="lastName" data-user-id="${u.id}" value="${lastName}" minlength="2" required /></td>
         <td>
-          <select class="form-select form-select-sm" data-field="role" data-user-id="${u.id}">
-            <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Администратор</option>
+          <select class="form-select form-select-sm" data-field="role" data-user-id="${u.id}" ${isAdminUser ? 'disabled' : ''}>
             <option value="manager" ${u.role === 'manager' ? 'selected' : ''}>Менеджер</option>
             <option value="user" ${u.role === 'user' ? 'selected' : ''}>Пользователь</option>
+            ${isAdminUser ? '<option value="admin" selected>Администратор</option>' : ''}
           </select>
         </td>
-        <td><input class="form-control form-control-sm" data-field="password" data-user-id="${u.id}" type="password" placeholder="Новый пароль" /></td>
+        <td><input class="form-control form-control-sm" data-field="password" data-user-id="${u.id}" type="password" minlength="8" placeholder="Новый пароль (мин. 8)" /></td>
         <td class="d-flex gap-2 justify-content-end">
           <button class="btn btn-sm btn-outline-secondary" data-save="${u.id}">Сохранить</button>
-          <button class="btn btn-sm btn-outline-danger" data-delete="${u.id}">Удалить</button>
+          <button class="btn btn-sm btn-outline-danger" data-delete="${u.id}" ${isAdminUser ? 'disabled' : ''}>Удалить</button>
         </td>
-      </tr>`).join('');
+      </tr>`;
+      }).join('') || '<tr><td colspan="6" class="text-secondary">Ничего не найдено.</td></tr>';
 
       usersTable.querySelectorAll('[data-save]').forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -437,24 +459,48 @@
           const idx = allUsers.findIndex((u) => u.id === userId);
           if (idx < 0) return;
 
-          const fullNameInput = usersTable.querySelector(`[data-field="fullName"][data-user-id="${userId}"]`);
+          const emailInput = usersTable.querySelector(`[data-field="email"][data-user-id="${userId}"]`);
+          const firstNameInput = usersTable.querySelector(`[data-field="firstName"][data-user-id="${userId}"]`);
+          const lastNameInput = usersTable.querySelector(`[data-field="lastName"][data-user-id="${userId}"]`);
           const roleInput = usersTable.querySelector(`[data-field="role"][data-user-id="${userId}"]`);
           const passwordInput = usersTable.querySelector(`[data-field="password"][data-user-id="${userId}"]`);
 
-          const nextRole = roleInput.value;
-          if (currentUser.id === userId && nextRole !== 'admin') {
-            alert('Текущий администратор не может сменить себе роль.');
-            roleInput.value = allUsers[idx].role;
+          const editedUser = allUsers[idx];
+          const nextRole = roleInput ? roleInput.value : editedUser.role;
+          const normalizedEmail = emailInput.value.trim().toLowerCase();
+          const firstName = firstNameInput.value.trim();
+          const lastName = lastNameInput.value.trim();
+
+          if (!normalizedEmail || !emailInput.checkValidity() || firstName.length < 2 || lastName.length < 2) {
+            alert('Проверьте корректность полей: email, имя и фамилия обязательны.');
+            return;
+          }
+
+          if (allUsers.some((u) => u.id !== userId && u.email.toLowerCase() === normalizedEmail)) {
+            alert('Пользователь с таким email уже существует.');
+            return;
+          }
+          if (editedUser.role === 'admin' && nextRole !== 'admin') {
+            alert('Роль администратора нельзя изменить.');
+            return;
+          }
+          if (editedUser.role !== 'admin' && nextRole === 'admin') {
+            alert('Назначение роли администратора через этот раздел запрещено.');
             return;
           }
 
           allUsers[idx] = {
             ...allUsers[idx],
-            fullName: fullNameInput.value.trim(),
+            email: normalizedEmail,
+            fullName: `${firstName} ${lastName}`.trim(),
             role: nextRole,
           };
 
           if (passwordInput.value.trim()) {
+            if (passwordInput.value.trim().length < 8) {
+              alert('Новый пароль должен быть не короче 8 символов.');
+              return;
+            }
             allUsers[idx].password = passwordInput.value.trim();
           }
 
@@ -466,8 +512,8 @@
       usersTable.querySelectorAll('[data-delete]').forEach((btn) => {
         btn.addEventListener('click', () => {
           const userId = btn.dataset.delete;
-          if (currentUser.id === userId) {
-            alert('Нельзя удалить текущего администратора.');
+          if (currentUser.id === userId || read(STORAGE_KEYS.users, []).find((u) => u.id === userId)?.role === 'admin') {
+            alert('Нельзя удалить администратора.');
             return;
           }
 
@@ -487,6 +533,9 @@
       feedback.textContent = '';
       feedback.className = 'mt-3';
     });
+    if (usersSearchInput) {
+      usersSearchInput.addEventListener('input', renderUsers);
+    }
 
     createForm.dataset.handled = 'custom';
     createForm.addEventListener('submit', (e) => {
@@ -508,7 +557,7 @@
 
       users.push({
         id: `u-${Date.now()}`,
-        fullName: document.getElementById('managerFullName').value.trim(),
+        fullName: `${document.getElementById('managerFirstName').value.trim()} ${document.getElementById('managerLastName').value.trim()}`.trim(),
         email,
         password: document.getElementById('managerPassword').value,
         phone: '',

@@ -32,13 +32,24 @@
       <form id="managerCreateForm" class="needs-validation" novalidate>
         <div class="row g-3">
           <div class="col-md-4">
-            <input id="managerFullName" class="form-control" placeholder="ФИО" required />
+            <label class="form-label" for="managerFirstName">Имя</label>
+            <input id="managerFirstName" class="form-control" minlength="2" placeholder="Имя" required />
+            <div class="invalid-feedback">Введите имя (минимум 2 символа).</div>
           </div>
           <div class="col-md-4">
-            <input id="managerEmail" class="form-control" type="email" placeholder="Email / логин" required />
+            <label class="form-label" for="managerLastName">Фамилия</label>
+            <input id="managerLastName" class="form-control" minlength="2" placeholder="Фамилия" required />
+            <div class="invalid-feedback">Введите фамилию (минимум 2 символа).</div>
           </div>
           <div class="col-md-4">
-            <input id="managerPassword" class="form-control" type="password" minlength="6" placeholder="Пароль (мин. 6)" required />
+            <label class="form-label" for="managerEmail">Email</label>
+            <input id="managerEmail" class="form-control" type="email" placeholder="Email" required />
+            <div class="invalid-feedback">Введите корректный email.</div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="managerPassword">Пароль</label>
+            <input id="managerPassword" class="form-control" type="password" minlength="8" placeholder="Пароль (мин. 8)" required />
+            <div class="invalid-feedback">Пароль должен быть не короче 8 символов.</div>
           </div>
         </div>
         <div class="d-flex gap-2 mt-3">
@@ -49,13 +60,20 @@
     </div>
 
     <div class="card page-card p-4">
-      <h2 class="h5 mb-3">Список пользователей системы</h2>
+      <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
+        <h2 class="h5 mb-0">Список пользователей системы</h2>
+        <div class="w-100 w-md-auto">
+          <label class="form-label mb-1" for="usersSearchInput">Поиск по email и ФИО</label>
+          <input id="usersSearchInput" class="form-control" type="search" placeholder="Например: ivan@mail.ru или Иван Петров" />
+        </div>
+      </div>
       <div class="table-responsive">
         <table class="table align-middle">
           <thead>
             <tr>
               <th>Email</th>
-              <th>ФИО</th>
+              <th>Имя</th>
+              <th>Фамилия</th>
               <th>Роль</th>
               <th>Пароль</th>
               <th></th>
