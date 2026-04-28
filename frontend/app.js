@@ -279,7 +279,8 @@
     document.getElementById('eventCity').textContent = `📍 ${event.city}`;
     document.getElementById('eventImage').src = event.image;
     document.getElementById('eventPrice').textContent = `${event.price} ₽`;
-    document.getElementById('buyTicketBtn').href = `ticket.html?id=${event.id}`;
+    const buyTicketBtn = document.getElementById('buyTicketBtn');
+    buyTicketBtn.href = getCurrentUser() ? `ticket.html?id=${event.id}` : 'login.html';
     document.getElementById('eventSchedule').innerHTML = event.schedule.map((s) => `<li class="list-group-item">${s}</li>`).join('');
   }
 
