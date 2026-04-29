@@ -28,7 +28,6 @@ public class AuthDtos {
 
     public record PasswordResetConfirmRequest(
             @Email @NotBlank String email,
-            @NotBlank @Pattern(regexp = "\\d{6}", message = "Code must contain 6 digits") String code,
             @NotBlank @Size(min = 8, message = "Password must be at least 8 characters") String newPassword
     ) {}
 
