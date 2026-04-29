@@ -16,7 +16,7 @@ public class AdminBootstrapService {
     private final String adminPassword;
 
     public AdminBootstrapService(UserRepository userRepository, PasswordEncoder passwordEncoder,
-                                 @Value("${app.admin.email:admin@event.local}") String adminEmail,
+                                 @Value("${app.admin.email:admin123}") String adminEmail,
                                  @Value("${app.admin.password:admin123}") String adminPassword) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
