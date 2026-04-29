@@ -3,6 +3,8 @@ package com.example.library.controller;
 import com.example.library.dto.AuthDtos;
 import com.example.library.service.AuthService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,6 +26,11 @@ public class AuthController {
         return authService.login(request);
     }
 
+
+    @GetMapping("/email-exists")
+    public AuthDtos.EmailExistsResponse checkEmailExists(@RequestParam @Email @NotBlank String email) {
+        return authService.checkEmailExists(email);
+    }
 
     @PostMapping("/password-reset/confirm")
     public AuthDtos.MessageResponse confirmPasswordReset(@Valid @RequestBody AuthDtos.PasswordResetConfirmRequest request) {

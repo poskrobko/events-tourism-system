@@ -10,13 +10,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-
 @Service
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService,
                        AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
@@ -25,13 +25,18 @@ public class AuthService {
         this.authenticationManager = authenticationManager;
     }
 
+    private static String normalizeEmail(String email) {
+        return email == null ? null : email.trim().toLowerCase();
+    }
+
     public AuthDtos.AuthResponse register(AuthDtos.RegisterRequest request) {
-        if (userRepository.existsByEmail(request.email())) {
+        String normalizedEmail = normalizeEmail(request.email());
+        if (userRepository.existsByEmail(normalizedEmail)) {
             throw new IllegalArgumentException("Email already used");
         }
 
         User user = new User();
-        user.setEmail(request.email());
+        user.setEmail(normalizedEmail);
         user.setFullName(request.fullName());
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setRole(Role.USER);
@@ -42,17 +47,19 @@ public class AuthService {
     }
 
     public AuthDtos.AuthResponse login(AuthDtos.LoginRequest request) {
+        String normalizedEmail = normalizeEmail(request.email());
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.email(), request.password())
+                new UsernamePasswordAuthenticationToken(normalizedEmail, request.password())
         );
-        var user = userRepository.findByEmail(request.email())
+        var user = userRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         String token = jwtService.generateToken(user.getEmail(), user.getRole().name());
         return new AuthDtos.AuthResponse(token, user.getEmail(), user.getRole().name());
     }
 
     public AuthDtos.MessageResponse confirmPasswordReset(AuthDtos.PasswordResetConfirmRequest request) {
-        User user = userRepository.findByEmail(request.email())
+        String normalizedEmail = normalizeEmail(request.email());
+        User user = userRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         user.setPassword(passwordEncoder.encode(request.newPassword()));
@@ -60,4 +67,8 @@ public class AuthService {
         return new AuthDtos.MessageResponse("Пароль успешно обновлён");
     }
 
+    public AuthDtos.EmailExistsResponse checkEmailExists(String email) {
+        String normalizedEmail = normalizeEmail(email);
+        return new AuthDtos.EmailExistsResponse(userRepository.existsByEmail(normalizedEmail));
+    }
 }
