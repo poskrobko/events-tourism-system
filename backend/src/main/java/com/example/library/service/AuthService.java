@@ -90,7 +90,6 @@ public class AuthService {
     }
 
     public AuthDtos.MessageResponse confirmPasswordReset(AuthDtos.PasswordResetConfirmRequest request) {
-        validateResetCode(request.email(), request.code());
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
