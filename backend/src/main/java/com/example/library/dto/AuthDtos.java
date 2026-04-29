@@ -2,7 +2,6 @@ package com.example.library.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class AuthDtos {
@@ -15,15 +14,6 @@ public class AuthDtos {
     public record LoginRequest(
             @Email @NotBlank String email,
             @NotBlank String password
-    ) {}
-
-    public record PasswordResetRequest(
-            @Email @NotBlank String email
-    ) {}
-
-    public record PasswordResetVerifyRequest(
-            @Email @NotBlank String email,
-            @NotBlank @Pattern(regexp = "\\d{6}", message = "Code must contain 6 digits") String code
     ) {}
 
     public record PasswordResetConfirmRequest(
