@@ -58,10 +58,15 @@ public class UserManagementService {
     public void deleteUser(Long userId, String adminEmail) {
         User admin = userRepository.findByEmail(adminEmail)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        User userToDelete = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
         if (admin.getId().equals(userId)) {
             throw new IllegalArgumentException("Admin cannot delete themselves");
         }
-        userRepository.deleteById(userId);
+        if (userToDelete.getRole() == Role.ADMIN) {
+            throw new IllegalArgumentException("Admin user cannot be deleted");
+        }
+        userRepository.delete(userToDelete);
     }
 
     private UserDtos.UserResponse toResponse(User user) {
