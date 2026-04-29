@@ -212,24 +212,6 @@
       feedback.textContent = text;
     }
 
-    async function validateEmailExists() {
-      const email = emailInput.value.trim().toLowerCase();
-      if (!email) return false;
-
-      const response = await fetch(`http://localhost:8080/api/auth/email-exists?email=${encodeURIComponent(email)}`);
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Не удалось проверить email.');
-
-      if (!data.exists) {
-        emailInput.setCustomValidity('Пользователь с таким email не найден');
-        form.classList.add('was-validated');
-        return false;
-      }
-
-      emailInput.setCustomValidity('');
-      return true;
-    }
-
     emailInput.addEventListener('input', () => emailInput.setCustomValidity(''));
 
     savePasswordBtn.addEventListener('click', async () => {
@@ -239,9 +221,6 @@
       }
 
       try {
-        const exists = await validateEmailExists();
-        if (!exists) return;
-
         const response = await fetch('http://localhost:8080/api/auth/password-reset/confirm', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -250,7 +229,14 @@
           }),
         });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.message || data.error || 'Не удалось обновить пароль.');
+        if (!response.ok) {
+          if ((data.message || '').includes('User not found')) {
+            emailInput.setCustomValidity('Пользователь с таким email не найден');
+            form.classList.add('was-validated');
+            return;
+          }
+          throw new Error(data.message || data.error || 'Не удалось обновить пароль.');
+        }
         showFeedback('success', data.message || 'Пароль обновлён. Теперь вы можете войти.');
         setTimeout(() => { window.location.href = 'login.html'; }, 600);
       } catch (e) { showFeedback('danger', e.message); }
