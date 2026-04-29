@@ -142,21 +142,47 @@
         return;
       }
 
-      const login = document.getElementById('email').value.trim();
+      const login = document.getElementById('email').value.trim().toLowerCase();
       const password = document.getElementById('password').value;
       const feedback = form.querySelector('[data-feedback]');
-      const users = read(STORAGE_KEYS.users, []);
-      const user = users.find((u) => (u.email === login) && u.password === password);
-      if (!user) {
-        feedback.className = 'alert alert-danger mt-3';
-        feedback.textContent = 'Неверный логин или пароль.';
-        return;
-      }
 
-      write(STORAGE_KEYS.auth, { userId: user.id, loginAt: new Date().toISOString() });
-      feedback.className = 'alert alert-success mt-3';
-      feedback.textContent = 'Успешный вход. Перенаправляем...';
-      setTimeout(() => { window.location.href = user.role === 'admin' ? 'admin.html' : 'events.html'; }, 400);
+      fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: login, password }),
+      })
+        .then(async (response) => {
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data.message || data.error || 'Неверный логин или пароль.');
+          }
+
+          const users = read(STORAGE_KEYS.users, []);
+          let user = users.find((u) => (u.email || '').toLowerCase() === login);
+          const normalizedRole = (data.role || '').toLowerCase();
+          if (!user) {
+            user = {
+              id: `u-${Date.now()}`,
+              fullName: login,
+              email: login,
+              password,
+              role: normalizedRole === 'event_manager' ? 'manager' : (normalizedRole === 'admin' ? 'admin' : 'user'),
+              phone: '',
+            };
+            users.push(user);
+          } else {
+            user.role = normalizedRole === 'event_manager' ? 'manager' : (normalizedRole === 'admin' ? 'admin' : 'user');
+          }
+          write(STORAGE_KEYS.users, users);
+          write(STORAGE_KEYS.auth, { userId: user.id, email: login, token: data.token, role: user.role, loginAt: new Date().toISOString() });
+          feedback.className = 'alert alert-success mt-3';
+          feedback.textContent = 'Успешный вход. Перенаправляем...';
+          setTimeout(() => { window.location.href = user.role === 'admin' ? 'admin.html' : 'events.html'; }, 400);
+        })
+        .catch((error) => {
+          feedback.className = 'alert alert-danger mt-3';
+          feedback.textContent = error.message;
+        });
     });
   }
 
@@ -522,8 +548,34 @@
       };
     }
 
-    function renderUsers() {
-      const users = read(STORAGE_KEYS.users, []);
+    async function renderUsers() {
+      const auth = read(STORAGE_KEYS.auth, null);
+      let users = [];
+
+      if (auth?.token) {
+        try {
+          const response = await fetch(`${API_BASE}/admin/users`, {
+            headers: { Authorization: `Bearer ${auth.token}` },
+          });
+          if (!response.ok) {
+            throw new Error('Не удалось загрузить пользователей из базы данных.');
+          }
+          const dbUsers = await response.json();
+          users = dbUsers.map((u) => ({
+            id: String(u.id),
+            fullName: u.fullName || '',
+            email: u.email || '',
+            password: '',
+            role: u.role === 'ADMIN' ? 'admin' : (u.role === 'EVENT_MANAGER' ? 'manager' : 'user'),
+          }));
+        } catch (error) {
+          const row = `<tr><td colspan="6" class="text-danger">${error.message}</td></tr>`;
+          usersTable.innerHTML = row;
+          return;
+        }
+      } else {
+        users = read(STORAGE_KEYS.users, []);
+      }
       const searchQuery = (usersSearchInput?.value || '').trim().toLowerCase();
       const visibleUsers = users.filter((u) => {
         if (!searchQuery) return true;
@@ -649,7 +701,38 @@
 
       const users = read(STORAGE_KEYS.users, []);
       const email = document.getElementById('managerEmail').value.trim().toLowerCase();
+      const fullName = `${document.getElementById('managerFirstName').value.trim()} ${document.getElementById('managerLastName').value.trim()}`.trim();
+      const password = document.getElementById('managerPassword').value;
       const feedback = createForm.querySelector('[data-feedback]');
+      const auth = read(STORAGE_KEYS.auth, null);
+
+      if (auth?.token) {
+        fetch(`${API_BASE}/admin/users`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${auth.token}`,
+          },
+          body: JSON.stringify({ email, password, fullName }),
+        })
+          .then(async (response) => {
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(data.message || data.error || 'Не удалось создать пользователя в базе данных.');
+            }
+
+            feedback.className = 'alert alert-success mt-3';
+            feedback.textContent = `Пользователь ${email} успешно создан.`;
+            createForm.reset();
+            createForm.classList.remove('was-validated');
+            renderUsers();
+          })
+          .catch((error) => {
+            feedback.className = 'alert alert-danger mt-3';
+            feedback.textContent = error.message;
+          });
+        return;
+      }
 
       if (users.some((u) => u.email.toLowerCase() === email)) {
         feedback.className = 'alert alert-danger mt-3';
@@ -659,16 +742,16 @@
 
       users.push({
         id: `u-${Date.now()}`,
-        fullName: `${document.getElementById('managerFirstName').value.trim()} ${document.getElementById('managerLastName').value.trim()}`.trim(),
+        fullName,
         email,
-        password: document.getElementById('managerPassword').value,
+        password,
         phone: '',
         role: 'manager',
       });
       write(STORAGE_KEYS.users, users);
 
       feedback.className = 'alert alert-success mt-3';
-      feedback.textContent = `Менеджер ${email} успешно создан.`;
+      feedback.textContent = `Пользователь ${email} успешно создан.`;
       createForm.reset();
       createForm.classList.remove('was-validated');
       renderUsers();
