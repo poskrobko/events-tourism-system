@@ -12,18 +12,18 @@
   const API_BASE = 'http://localhost:8080/api';
 
   const DEFAULT_EVENTS = [
-    { id: 'e1', title: 'Sunset Jazz Night', type: 'Музыка', city: 'Москва', date: '2026-04-26', time: '19:00', price: 1200, ticketLimit: 250, image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1170&auto=format&fit=crop', description: 'Вечер живого джаза под открытым небом.', schedule: ['18:00 — Открытие площадки', '19:00 — Первый сет', '20:30 — Импровизация', '22:00 — Afterparty'] },
-    { id: 'e2', title: 'Product Leaders Meetup', type: 'Бизнес', city: 'Санкт-Петербург', date: '2026-04-30', time: '11:00', price: 1800, ticketLimit: 120, image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=1170&auto=format&fit=crop', description: 'Нетворкинг и практики для product-менеджеров.', schedule: ['10:00 — Регистрация', '11:00 — Ключевой доклад', '13:00 — Панельная дискуссия'] },
-    { id: 'e3', title: 'City Light Weekend', type: 'Фестиваль', city: 'Казань', date: '2026-05-05', time: '16:00', price: 1500, ticketLimit: 900, image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1170&auto=format&fit=crop', description: 'Фестиваль света, музыки и уличного искусства.', schedule: ['16:00 — Открытие', '18:00 — Light show', '20:00 — Live set'] },
-    { id: 'e4', title: 'Startup Pitch Day', type: 'Бизнес', city: 'Екатеринбург', date: '2026-05-09', time: '12:00', price: 1000, ticketLimit: 200, image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=1170&auto=format&fit=crop', description: 'Презентации стартапов перед инвесторами.', schedule: ['12:00 — Питч-сессия 1', '14:00 — Менторская зона'] },
-    { id: 'e5', title: 'Open Air Rock', type: 'Концерты', city: 'Новосибирск', date: '2026-05-11', time: '18:30', price: 2200, ticketLimit: 800, image: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?q=80&w=1170&auto=format&fit=crop', description: 'Большой рок-концерт на открытой площадке.', schedule: ['18:30 — Разогрев', '20:00 — Главная группа'] },
-    { id: 'e6', title: 'Art Lab Expo', type: 'Творчество', city: 'Москва', date: '2026-05-15', time: '14:00', price: 900, ticketLimit: 300, image: 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?q=80&w=1170&auto=format&fit=crop', description: 'Выставка современных творческих проектов.', schedule: ['14:00 — Открытие экспозиции', '16:00 — Мастер-класс'] },
-    { id: 'e7', title: 'Design Sprint Weekend', type: 'Образование', city: 'Самара', date: '2026-05-18', time: '10:00', price: 1300, ticketLimit: 100, image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1170&auto=format&fit=crop', description: 'Интенсив по дизайну цифровых продуктов.', schedule: ['10:00 — Воркшоп', '13:00 — Практика'] },
-    { id: 'e8', title: 'Street Food Jam', type: 'Фестиваль', city: 'Краснодар', date: '2026-05-20', time: '13:00', price: 700, ticketLimit: 600, image: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=1170&auto=format&fit=crop', description: 'Фестиваль гастрономии и локальных брендов.', schedule: ['13:00 — Открытие фуд-корта', '15:00 — Шоу поваров'] },
-    { id: 'e9', title: 'Indie Music Fest', type: 'Музыка', city: 'Пермь', date: '2026-05-22', time: '17:00', price: 1600, ticketLimit: 500, image: 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?q=80&w=1170&auto=format&fit=crop', description: 'Фестиваль инди-исполнителей.', schedule: ['17:00 — Открытие', '18:00 — Сеты групп'] },
-    { id: 'e10', title: 'Motion Graphics Day', type: 'Творчество', city: 'Нижний Новгород', date: '2026-05-25', time: '12:00', price: 1100, ticketLimit: 180, image: 'https://images.unsplash.com/photo-1523726491678-bf852e717f6a?q=80&w=1170&auto=format&fit=crop', description: 'Конференция по motion-дизайну.', schedule: ['12:00 — Доклады', '15:00 — Q&A'] },
-    { id: 'e11', title: 'Urban Run Club', type: 'Спорт', city: 'Москва', date: '2026-05-28', time: '09:00', price: 500, ticketLimit: 1000, image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?q=80&w=1170&auto=format&fit=crop', description: 'Массовый забег по городу.', schedule: ['09:00 — Старт', '11:00 — Награждение'] },
-    { id: 'e12', title: 'Classical Night', type: 'Концерты', city: 'Сочи', date: '2026-06-01', time: '20:00', price: 2500, ticketLimit: 350, image: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?q=80&w=1170&auto=format&fit=crop', description: 'Симфонический концерт на берегу моря.', schedule: ['20:00 — I отделение', '21:30 — II отделение'] },
+    { id: 'e1', title: 'Sunset Jazz Night', type: 'Музыка', city: 'Минск', date: '2026-04-26', time: '19:00', price: 45, ticketLimit: 250, image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1170&auto=format&fit=crop', description: 'Вечер живого джаза под открытым небом.', schedule: ['18:00 — Открытие площадки', '19:00 — Первый сет', '20:30 — Импровизация', '22:00 — Afterparty'] },
+    { id: 'e2', title: 'Product Leaders Meetup', type: 'Бизнес', city: 'Гомель', date: '2026-04-30', time: '11:00', price: 65, ticketLimit: 120, image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=1170&auto=format&fit=crop', description: 'Нетворкинг и практики для product-менеджеров.', schedule: ['10:00 — Регистрация', '11:00 — Ключевой доклад', '13:00 — Панельная дискуссия'] },
+    { id: 'e3', title: 'City Light Weekend', type: 'Фестиваль', city: 'Брест', date: '2026-05-05', time: '16:00', price: 55, ticketLimit: 900, image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1170&auto=format&fit=crop', description: 'Фестиваль света, музыки и уличного искусства.', schedule: ['16:00 — Открытие', '18:00 — Light show', '20:00 — Live set'] },
+    { id: 'e4', title: 'Startup Pitch Day', type: 'Бизнес', city: 'Витебск', date: '2026-05-09', time: '12:00', price: 38, ticketLimit: 200, image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=1170&auto=format&fit=crop', description: 'Презентации стартапов перед инвесторами.', schedule: ['12:00 — Питч-сессия 1', '14:00 — Менторская зона'] },
+    { id: 'e5', title: 'Open Air Rock', type: 'Концерты', city: 'Могилёв', date: '2026-05-11', time: '18:30', price: 80, ticketLimit: 800, image: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?q=80&w=1170&auto=format&fit=crop', description: 'Большой рок-концерт на открытой площадке.', schedule: ['18:30 — Разогрев', '20:00 — Главная группа'] },
+    { id: 'e6', title: 'Art Lab Expo', type: 'Творчество', city: 'Минск', date: '2026-05-15', time: '14:00', price: 34, ticketLimit: 300, image: 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?q=80&w=1170&auto=format&fit=crop', description: 'Выставка современных творческих проектов.', schedule: ['14:00 — Открытие экспозиции', '16:00 — Мастер-класс'] },
+    { id: 'e7', title: 'Design Sprint Weekend', type: 'Образование', city: 'Гродно', date: '2026-05-18', time: '10:00', price: 48, ticketLimit: 100, image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1170&auto=format&fit=crop', description: 'Интенсив по дизайну цифровых продуктов.', schedule: ['10:00 — Воркшоп', '13:00 — Практика'] },
+    { id: 'e8', title: 'Street Food Jam', type: 'Фестиваль', city: 'Барановичи', date: '2026-05-20', time: '13:00', price: 28, ticketLimit: 600, image: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=1170&auto=format&fit=crop', description: 'Фестиваль гастрономии и локальных брендов.', schedule: ['13:00 — Открытие фуд-корта', '15:00 — Шоу поваров'] },
+    { id: 'e9', title: 'Indie Music Fest', type: 'Музыка', city: 'Пинск', date: '2026-05-22', time: '17:00', price: 58, ticketLimit: 500, image: 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?q=80&w=1170&auto=format&fit=crop', description: 'Фестиваль инди-исполнителей.', schedule: ['17:00 — Открытие', '18:00 — Сеты групп'] },
+    { id: 'e10', title: 'Motion Graphics Day', type: 'Творчество', city: 'Бобруйск', date: '2026-05-25', time: '12:00', price: 42, ticketLimit: 180, image: 'https://images.unsplash.com/photo-1523726491678-bf852e717f6a?q=80&w=1170&auto=format&fit=crop', description: 'Конференция по motion-дизайну.', schedule: ['12:00 — Доклады', '15:00 — Q&A'] },
+    { id: 'e11', title: 'Urban Run Club', type: 'Спорт', city: 'Минск', date: '2026-05-28', time: '09:00', price: 20, ticketLimit: 1000, image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?q=80&w=1170&auto=format&fit=crop', description: 'Массовый забег по городу.', schedule: ['09:00 — Старт', '11:00 — Награждение'] },
+    { id: 'e12', title: 'Classical Night', type: 'Концерты', city: 'Полоцк', date: '2026-06-01', time: '20:00', price: 90, ticketLimit: 350, image: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?q=80&w=1170&auto=format&fit=crop', description: 'Симфонический концерт на берегу моря.', schedule: ['20:00 — I отделение', '21:30 — II отделение'] },
   ];
 
   function read(key, fallback) {
@@ -379,7 +379,7 @@
     document.getElementById('eventTime').textContent = `🕖 ${event.time}`;
     document.getElementById('eventCity').textContent = `📍 ${event.city}`;
     document.getElementById('eventImage').src = event.image;
-    document.getElementById('eventPrice').textContent = `${event.price} ₽`;
+    document.getElementById('eventPrice').textContent = `${event.price} BYN`;
     const buyTicketBtn = document.getElementById('buyTicketBtn');
     buyTicketBtn.href = getCurrentUser() ? `ticket.html?id=${event.id}` : 'login.html';
     document.getElementById('eventSchedule').innerHTML = event.schedule.map((s) => `<li class="list-group-item">${s}</li>`).join('');
@@ -404,7 +404,7 @@
     function updateTotal() {
       const multi = Number(ticketType.value || 1);
       const qty = Number(qtyInput.value || 1);
-      totalNode.textContent = `${event.price * multi * qty} ₽`;
+      totalNode.textContent = `${event.price * multi * qty} BYN`;
     }
     qtyInput.addEventListener('input', updateTotal);
     ticketType.addEventListener('change', updateTotal);
@@ -454,7 +454,7 @@
       return;
     }
 
-    list.innerHTML = orders.map((o) => `<li class="list-group-item d-flex justify-content-between align-items-center"><div><strong>${o.eventTitle}</strong><div class="small text-secondary">${new Date(o.createdAt).toLocaleString('ru-RU')} · ${o.qty} шт.</div></div><span class="text-success fw-semibold">${o.total} ₽</span></li>`).join('');
+    list.innerHTML = orders.map((o) => `<li class="list-group-item d-flex justify-content-between align-items-center"><div><strong>${o.eventTitle}</strong><div class="small text-secondary">${new Date(o.createdAt).toLocaleString('ru-RU')} · ${o.qty} шт.</div></div><span class="text-success fw-semibold">${o.total} BYN</span></li>`).join('');
   }
 
   function initProfilePage() {
@@ -692,14 +692,14 @@
       const orders = read(STORAGE_KEYS.orders, []);
       document.getElementById('totalEvents').textContent = events.length;
       document.getElementById('totalTickets').textContent = orders.reduce((sum, o) => sum + o.qty, 0);
-      document.getElementById('totalRevenue').textContent = `${orders.reduce((sum, o) => sum + o.total, 0)} ₽`;
+      document.getElementById('totalRevenue').textContent = `${orders.reduce((sum, o) => sum + o.total, 0)} BYN`;
 
       eventsTable.innerHTML = events.map((e) => `<tr>
-        <td>${e.title}</td><td>${e.type}</td><td>${e.date}</td><td>${e.price} ₽</td><td>${e.ticketLimit}</td>
+        <td>${e.title}</td><td>${e.type}</td><td>${e.date}</td><td>${e.price} BYN</td><td>${e.ticketLimit}</td>
         <td class="d-flex gap-2"><button class="btn btn-sm btn-outline-secondary" data-edit="${e.id}">Изменить</button><button class="btn btn-sm btn-outline-danger" data-delete="${e.id}">Удалить</button></td>
       </tr>`).join('');
 
-      ordersTable.innerHTML = orders.map((o) => `<tr><td>${o.eventTitle}</td><td>${o.qty}</td><td>${o.total} ₽</td><td>${o.status}</td><td>${new Date(o.createdAt).toLocaleString('ru-RU')}</td></tr>`).join('') || '<tr><td colspan="5">Заказов пока нет.</td></tr>';
+      ordersTable.innerHTML = orders.map((o) => `<tr><td>${o.eventTitle}</td><td>${o.qty}</td><td>${o.total} BYN</td><td>${o.status}</td><td>${new Date(o.createdAt).toLocaleString('ru-RU')}</td></tr>`).join('') || '<tr><td colspan="5">Заказов пока нет.</td></tr>';
 
       eventsTable.querySelectorAll('[data-delete]').forEach((btn) => {
         btn.addEventListener('click', () => {
