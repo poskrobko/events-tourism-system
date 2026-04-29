@@ -23,5 +23,7 @@ public class AuthDtos {
 
     public record MessageResponse(String message) {}
 
+    public record EmailExistsResponse(boolean exists) {}
+
     public record AuthResponse(String token, String email, String role) {}
 }
