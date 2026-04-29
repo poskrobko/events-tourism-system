@@ -539,6 +539,21 @@
     const closeCreateBtn = document.getElementById('closeManagerFormBtn');
     const createForm = document.getElementById('managerCreateForm');
     const usersSearchInput = document.getElementById('usersSearchInput');
+    const usersUpdateToast = document.getElementById('usersUpdateToast');
+    let updateToastTimer = null;
+
+    function showUsersUpdateToast(message = 'Данные пользователя успешно обновлены.') {
+      if (!usersUpdateToast) {
+        alert(message);
+        return;
+      }
+      usersUpdateToast.textContent = message;
+      usersUpdateToast.classList.remove('d-none');
+      clearTimeout(updateToastTimer);
+      updateToastTimer = setTimeout(() => {
+        usersUpdateToast.classList.add('d-none');
+      }, 2500);
+    }
 
     function splitName(fullName = '') {
       const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -607,11 +622,11 @@
       }).join('') || '<tr><td colspan="6" class="text-secondary">Ничего не найдено.</td></tr>';
 
       usersTable.querySelectorAll('[data-save]').forEach((btn) => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
           const userId = btn.dataset.save;
-          const allUsers = read(STORAGE_KEYS.users, []);
-          const idx = allUsers.findIndex((u) => u.id === userId);
-          if (idx < 0) return;
+          const auth = read(STORAGE_KEYS.auth, null);
+          const currentRowUser = users.find((u) => u.id === userId);
+          if (!currentRowUser) return;
 
           const emailInput = usersTable.querySelector(`[data-field="email"][data-user-id="${userId}"]`);
           const firstNameInput = usersTable.querySelector(`[data-field="firstName"][data-user-id="${userId}"]`);
@@ -619,7 +634,7 @@
           const roleInput = usersTable.querySelector(`[data-field="role"][data-user-id="${userId}"]`);
           const passwordInput = usersTable.querySelector(`[data-field="password"][data-user-id="${userId}"]`);
 
-          const editedUser = allUsers[idx];
+          const editedUser = currentRowUser;
           const nextRole = roleInput ? roleInput.value : editedUser.role;
           const normalizedEmail = emailInput.value.trim().toLowerCase();
           const firstName = firstNameInput.value.trim();
@@ -630,10 +645,6 @@
             return;
           }
 
-          if (allUsers.some((u) => u.id !== userId && u.email.toLowerCase() === normalizedEmail)) {
-            alert('Пользователь с таким email уже существует.');
-            return;
-          }
           if (editedUser.role === 'admin' && nextRole !== 'admin') {
             alert('Роль администратора нельзя изменить.');
             return;
@@ -643,6 +654,41 @@
             return;
           }
 
+          if (auth?.token) {
+            try {
+              const response = await fetch(`${API_BASE}/admin/users/${encodeURIComponent(userId)}`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${auth.token}`,
+                },
+                body: JSON.stringify({
+                  email: normalizedEmail,
+                  fullName: `${firstName} ${lastName}`.trim(),
+                  role: nextRole === 'admin' ? 'ADMIN' : (nextRole === 'manager' ? 'EVENT_MANAGER' : 'USER'),
+                  password: passwordInput.value.trim() || null,
+                }),
+              });
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data.message || data.error || 'Не удалось обновить пользователя в базе данных.');
+              }
+              renderUsers();
+              showUsersUpdateToast('Данные успешно обновлены и сохранены в базе данных.');
+              return;
+            } catch (error) {
+              alert(error.message);
+              return;
+            }
+          }
+
+          const allUsers = read(STORAGE_KEYS.users, []);
+          if (allUsers.some((u) => u.id !== userId && u.email.toLowerCase() === normalizedEmail)) {
+            alert('Пользователь с таким email уже существует.');
+            return;
+          }
+          const idx = allUsers.findIndex((u) => u.id === userId);
+          if (idx < 0) return;
           allUsers[idx] = {
             ...allUsers[idx],
             email: normalizedEmail,
@@ -660,6 +706,7 @@
 
           write(STORAGE_KEYS.users, allUsers);
           renderUsers();
+          showUsersUpdateToast();
         });
       });
 

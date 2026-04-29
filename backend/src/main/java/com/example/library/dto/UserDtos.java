@@ -15,6 +15,7 @@ public class UserDtos {
     ) {}
 
     public record UpdateUserRequest(
+            @Email @NotBlank String email,
             @NotBlank String fullName,
             @NotNull Role role,
             String password
