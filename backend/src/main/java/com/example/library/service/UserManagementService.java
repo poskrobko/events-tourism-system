@@ -41,6 +41,11 @@ public class UserManagementService {
     public UserDtos.UserResponse updateUser(Long userId, UserDtos.UpdateUserRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        String normalizedEmail = request.email().trim().toLowerCase();
+        if (!user.getEmail().equalsIgnoreCase(normalizedEmail) && userRepository.existsByEmail(normalizedEmail)) {
+            throw new IllegalArgumentException("Email already used");
+        }
+        user.setEmail(normalizedEmail);
         user.setFullName(request.fullName());
         user.setRole(request.role());
         if (request.password() != null && !request.password().isBlank()) {
