@@ -38,7 +38,7 @@ create table if not exists payments (
     id bigserial primary key,
     order_id bigint not null references orders(id) on delete cascade,
     amount numeric(12,2) not null,
-    currency char(3) not null default 'USD',
+    currency char(3) not null default 'BYN',
     payment_method varchar(50) not null,
     provider varchar(100),
     provider_transaction_id varchar(255),

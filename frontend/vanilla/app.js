@@ -39,7 +39,7 @@
     if (!qtyInput || !typeSelect || !totalNode) return;
     const qty = Number(qtyInput.value || 1);
     const price = prices[typeSelect.value] || prices.standard;
-    totalNode.textContent = `${qty * price} ₽`;
+    totalNode.textContent = `${qty * price} BYN`;
   }
 
   if (qtyInput && typeSelect) {
