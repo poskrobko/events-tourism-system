@@ -605,7 +605,7 @@
         return `<tr>
         <td><input class="form-control form-control-sm" data-field="email" data-user-id="${u.id}" type="email" value="${u.email}" required /></td>
         <td><input class="form-control form-control-sm" data-field="firstName" data-user-id="${u.id}" value="${firstName}" minlength="2" required /></td>
-        <td><input class="form-control form-control-sm" data-field="lastName" data-user-id="${u.id}" value="${lastName}" minlength="2" required /></td>
+        <td><input class="form-control form-control-sm" data-field="lastName" data-user-id="${u.id}" value="${lastName}" /></td>
         <td>
           <select class="form-select form-select-sm" data-field="role" data-user-id="${u.id}" ${isAdminUser ? 'disabled' : ''}>
             <option value="manager" ${u.role === 'manager' ? 'selected' : ''}>Менеджер</option>
@@ -640,8 +640,9 @@
           const firstName = firstNameInput.value.trim();
           const lastName = lastNameInput.value.trim();
 
-          if (!normalizedEmail || !emailInput.checkValidity() || firstName.length < 2 || lastName.length < 2) {
-            alert('Проверьте корректность полей: email, имя и фамилия обязательны.');
+          const fullName = `${firstName} ${lastName}`.trim();
+          if (!normalizedEmail || !emailInput.checkValidity() || fullName.length < 2) {
+            alert('Проверьте корректность полей: email и ФИО обязательны.');
             return;
           }
 
@@ -664,7 +665,7 @@
                 },
                 body: JSON.stringify({
                   email: normalizedEmail,
-                  fullName: `${firstName} ${lastName}`.trim(),
+                  fullName,
                   role: nextRole === 'admin' ? 'ADMIN' : (nextRole === 'manager' ? 'EVENT_MANAGER' : 'USER'),
                   password: passwordInput.value.trim() || null,
                 }),
@@ -692,7 +693,7 @@
           allUsers[idx] = {
             ...allUsers[idx],
             email: normalizedEmail,
-            fullName: `${firstName} ${lastName}`.trim(),
+            fullName,
             role: nextRole,
           };
 
@@ -711,16 +712,40 @@
       });
 
       usersTable.querySelectorAll('[data-delete]').forEach((btn) => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
           const userId = btn.dataset.delete;
-          if (currentUser.id === userId || read(STORAGE_KEYS.users, []).find((u) => u.id === userId)?.role === 'admin') {
+          const auth = read(STORAGE_KEYS.auth, null);
+          const userToDelete = users.find((u) => u.id === userId);
+          if (!userToDelete) return;
+
+          if (currentUser.id === userId || userToDelete.role === 'admin') {
             alert('Нельзя удалить администратора.');
             return;
           }
 
-          const users = read(STORAGE_KEYS.users, []);
-          write(STORAGE_KEYS.users, users.filter((u) => u.id !== userId));
+          if (auth?.token) {
+            try {
+              const response = await fetch(`${API_BASE}/admin/users/${encodeURIComponent(userId)}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${auth.token}` },
+              });
+              const data = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(data.message || data.error || 'Не удалось удалить пользователя из базы данных.');
+              }
+              renderUsers();
+              showUsersUpdateToast('Пользователь успешно удален из базы данных.');
+              return;
+            } catch (error) {
+              alert(error.message);
+              return;
+            }
+          }
+
+          const allUsers = read(STORAGE_KEYS.users, []);
+          write(STORAGE_KEYS.users, allUsers.filter((u) => u.id !== userId));
           renderUsers();
+          showUsersUpdateToast('Пользователь успешно удален.');
         });
       });
     }
