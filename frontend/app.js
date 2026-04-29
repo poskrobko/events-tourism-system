@@ -9,6 +9,7 @@
   };
 
   const EVENT_TYPES = ['Бизнес', 'Фестиваль', 'Музыка', 'Творчество', 'Концерты', 'Образование', 'Спорт'];
+  const API_BASE = 'http://localhost:8080/api';
 
   const DEFAULT_EVENTS = [
     { id: 'e1', title: 'Sunset Jazz Night', type: 'Музыка', city: 'Москва', date: '2026-04-26', time: '19:00', price: 1200, ticketLimit: 250, image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1170&auto=format&fit=crop', description: 'Вечер живого джаза под открытым небом.', schedule: ['18:00 — Открытие площадки', '19:00 — Первый сет', '20:30 — Импровизация', '22:00 — Afterparty'] },
@@ -42,7 +43,12 @@
     const users = read(STORAGE_KEYS.users, null);
     if (!users) {
       write(STORAGE_KEYS.users, [{
-        id: 'u-admin', fullName: 'Администратор', email: 'admin123', password: 'admin123', role: 'admin', phone: '+70000000000',
+        id: 'u-admin',
+        fullName: 'Администратор',
+        email: 'admin123',
+        password: 'admin123',
+        role: 'admin',
+        phone: '+70000000000',
       }]);
     }
     const events = read(STORAGE_KEYS.events, null);
@@ -138,9 +144,9 @@
 
       const login = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
+      const feedback = form.querySelector('[data-feedback]');
       const users = read(STORAGE_KEYS.users, []);
       const user = users.find((u) => (u.email === login) && u.password === password);
-      const feedback = form.querySelector('[data-feedback]');
       if (!user) {
         feedback.className = 'alert alert-danger mt-3';
         feedback.textContent = 'Неверный логин или пароль.';
@@ -169,31 +175,44 @@
         return;
       }
 
-      const users = read(STORAGE_KEYS.users, []);
       const email = document.getElementById('regEmail').value.trim().toLowerCase();
+      const fullName = `${document.getElementById('firstName').value.trim()} ${document.getElementById('lastName').value.trim()}`.trim();
       const feedback = form.querySelector('[data-feedback]');
-      if (users.some((u) => u.email.toLowerCase() === email)) {
-        feedback.className = 'alert alert-danger mt-3';
-        feedback.textContent = 'Пользователь с таким логином/email уже существует.';
-        return;
-      }
 
-      users.push({
-        id: `u-${Date.now()}`,
-        fullName: `${document.getElementById('firstName').value.trim()} ${document.getElementById('lastName').value.trim()}`.trim(),
-        email,
-        password: password.value,
-        phone: document.getElementById('phone').value.trim(),
-        role: 'user',
-      });
-      write(STORAGE_KEYS.users, users);
-      feedback.className = 'alert alert-success mt-3';
-      feedback.innerHTML = `
-        <div class="mb-2">Регистрация успешна.</div>
-        <a class="btn btn-success btn-sm" href="login.html">Перейти на страницу входа</a>
-      `;
-      form.reset();
-      form.classList.remove('was-validated');
+      fetch(`${API_BASE}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: password.value, fullName }),
+      })
+        .then(async (response) => {
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data.message || data.error || 'Не удалось зарегистрироваться.');
+          }
+          const users = read(STORAGE_KEYS.users, []);
+          if (!users.some((u) => u.email.toLowerCase() === email)) {
+            users.push({
+              id: `u-${Date.now()}`,
+              fullName,
+              email,
+              password: password.value,
+              phone: document.getElementById('phone').value.trim(),
+              role: 'user',
+            });
+            write(STORAGE_KEYS.users, users);
+          }
+          feedback.className = 'alert alert-success mt-3';
+          feedback.innerHTML = `
+            <div class="mb-2">Регистрация успешна. Пользователь сохранен в базе данных.</div>
+            <a class="btn btn-success btn-sm" href="login.html">Перейти на страницу входа</a>
+          `;
+          form.reset();
+          form.classList.remove('was-validated');
+        })
+        .catch((error) => {
+          feedback.className = 'alert alert-danger mt-3';
+          feedback.textContent = error.message;
+        });
     });
   }
 
@@ -212,7 +231,30 @@
       feedback.textContent = text;
     }
 
+    async function validateEmailExistsInDb() {
+      const email = emailInput.value.trim().toLowerCase();
+      if (!email) return false;
+      const response = await fetch(`${API_BASE}/auth/email-exists?email=${encodeURIComponent(email)}`);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Не удалось проверить email.');
+      if (!data.exists) {
+        emailInput.setCustomValidity('Пользователь с таким email не найден');
+        form.classList.add('was-validated');
+        return false;
+      }
+      emailInput.setCustomValidity('');
+      return true;
+    }
+
     emailInput.addEventListener('input', () => emailInput.setCustomValidity(''));
+    emailInput.addEventListener('blur', async () => {
+      if (!emailInput.value.trim()) return;
+      try {
+        await validateEmailExistsInDb();
+      } catch (e) {
+        showFeedback('danger', e.message);
+      }
+    });
 
     savePasswordBtn.addEventListener('click', async () => {
       if (!emailInput.checkValidity() || !newPasswordInput.checkValidity()) {
@@ -221,7 +263,10 @@
       }
 
       try {
-        const response = await fetch('http://localhost:8080/api/auth/password-reset/confirm', {
+        const exists = await validateEmailExistsInDb();
+        if (!exists) return;
+
+        const response = await fetch(`${API_BASE}/auth/password-reset/confirm`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email: emailInput.value.trim().toLowerCase(),
