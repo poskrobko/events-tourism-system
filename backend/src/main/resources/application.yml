@@ -1,7 +1,7 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5434/event_tourism
-    driver-class-name: ${DB_DRIVER:org.h2.Driver}
+    url: jdbc:postgresql://localhost:5434/tourismdb
+    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
     username: postgres
     password: root
   jpa:
