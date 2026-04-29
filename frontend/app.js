@@ -282,6 +282,15 @@
           }
           throw new Error(data.message || data.error || 'Не удалось обновить пароль.');
         }
+        const normalizedEmail = emailInput.value.trim().toLowerCase();
+        const updatedPassword = newPasswordInput.value;
+        const users = read(STORAGE_KEYS.users, []);
+        const userIndex = users.findIndex((u) => (u.email || '').toLowerCase() === normalizedEmail);
+        if (userIndex >= 0) {
+          users[userIndex].password = updatedPassword;
+          write(STORAGE_KEYS.users, users);
+        }
+
         showFeedback('success', data.message || 'Пароль обновлён. Теперь вы можете войти.');
         setTimeout(() => { window.location.href = 'login.html'; }, 600);
       } catch (e) { showFeedback('danger', e.message); }
