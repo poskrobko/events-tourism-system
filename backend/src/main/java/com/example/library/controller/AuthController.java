@@ -23,4 +23,19 @@ public class AuthController {
     public AuthDtos.AuthResponse login(@Valid @RequestBody AuthDtos.LoginRequest request) {
         return authService.login(request);
     }
+
+    @PostMapping("/password-reset/request")
+    public AuthDtos.MessageResponse requestPasswordReset(@Valid @RequestBody AuthDtos.PasswordResetRequest request) {
+        return authService.requestPasswordResetCode(request);
+    }
+
+    @PostMapping("/password-reset/verify")
+    public AuthDtos.MessageResponse verifyPasswordReset(@Valid @RequestBody AuthDtos.PasswordResetVerifyRequest request) {
+        return authService.verifyPasswordResetCode(request);
+    }
+
+    @PostMapping("/password-reset/confirm")
+    public AuthDtos.MessageResponse confirmPasswordReset(@Valid @RequestBody AuthDtos.PasswordResetConfirmRequest request) {
+        return authService.confirmPasswordReset(request);
+    }
 }

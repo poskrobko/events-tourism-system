@@ -197,6 +197,85 @@
     });
   }
 
+
+  async function initForgotPasswordPage() {
+    const form = document.getElementById('forgotPasswordForm');
+    if (!form) return;
+
+    const emailInput = document.getElementById('restoreEmail');
+    const codeInput = document.getElementById('resetCode');
+    const newPasswordInput = document.getElementById('newPassword');
+    const codeGroup = document.getElementById('codeGroup');
+    const passwordGroup = document.getElementById('passwordGroup');
+    const requestCodeBtn = document.getElementById('requestCodeBtn');
+    const verifyCodeBtn = document.getElementById('verifyCodeBtn');
+    const savePasswordBtn = document.getElementById('savePasswordBtn');
+    const feedback = form.querySelector('[data-feedback]');
+
+    function showFeedback(type, text) {
+      feedback.className = `alert alert-${type} mt-3`;
+      feedback.textContent = text;
+    }
+
+    requestCodeBtn.addEventListener('click', async () => {
+      if (!emailInput.checkValidity()) {
+        form.classList.add('was-validated');
+        return;
+      }
+      try {
+        const response = await fetch('http://localhost:8080/api/auth/password-reset/request', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: emailInput.value.trim() }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Не удалось отправить код.');
+        codeGroup.classList.remove('d-none');
+        verifyCodeBtn.classList.remove('d-none');
+        showFeedback('success', data.message || 'Код отправлен на почту.');
+      } catch (e) { showFeedback('danger', e.message); }
+    });
+
+    verifyCodeBtn.addEventListener('click', async () => {
+      if (!codeInput.checkValidity()) {
+        codeInput.classList.add('is-invalid');
+        return;
+      }
+      codeInput.classList.remove('is-invalid');
+      try {
+        const response = await fetch('http://localhost:8080/api/auth/password-reset/verify', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: emailInput.value.trim(), code: codeInput.value.trim() }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Код неверный.');
+        passwordGroup.classList.remove('d-none');
+        savePasswordBtn.classList.remove('d-none');
+        showFeedback('success', data.message || 'Код подтвержден.');
+      } catch (e) { showFeedback('danger', e.message); }
+    });
+
+    savePasswordBtn.addEventListener('click', async () => {
+      if (!newPasswordInput.checkValidity()) {
+        newPasswordInput.classList.add('is-invalid');
+        return;
+      }
+      newPasswordInput.classList.remove('is-invalid');
+      try {
+        const response = await fetch('http://localhost:8080/api/auth/password-reset/confirm', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: emailInput.value.trim(),
+            code: codeInput.value.trim(),
+            newPassword: newPasswordInput.value,
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Не удалось обновить пароль.');
+        showFeedback('success', data.message || 'Пароль обновлен. Теперь вы можете войти.');
+      } catch (e) { showFeedback('danger', e.message); }
+    });
+  }
+
   function renderEvents() {
     const grid = document.getElementById('eventsGrid');
     if (!grid) return;
@@ -671,6 +750,7 @@
   setupGenericFormValidation();
   initLoginPage();
   initRegisterPage();
+  initForgotPasswordPage();
   renderEvents();
   initEventDetailsPage();
   initTicketPage();
