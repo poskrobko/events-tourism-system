@@ -85,6 +85,8 @@
 
     if (user.role === 'admin') {
       links.push({ href: 'admin.html', label: 'Админ' }, { href: 'users.html', label: 'Пользователи' });
+    } else if (user.role === 'manager') {
+      links.push({ href: 'my-events.html', label: 'Мои мероприятия' }, { href: 'my-tickets.html', label: 'Мои билеты' }, { href: 'profile.html', label: 'Профиль' });
     } else {
       links.push({ href: 'profile.html', label: 'Профиль' }, { href: 'my-tickets.html', label: 'Мои билеты' });
     }
@@ -324,7 +326,30 @@
   }
 
 
-  function renderEvents() {
+  async function fetchEventsFromApi() {
+    const response = await fetch(`${API_BASE}/events`);
+    if (!response.ok) throw new Error('Не удалось загрузить события из базы данных.');
+    return response.json();
+  }
+
+  function mapApiEventToUi(event) {
+    const start = new Date(event.startDateTime);
+    return {
+      id: String(event.id),
+      title: event.title,
+      type: 'Событие',
+      city: event.city,
+      date: start.toISOString().slice(0, 10),
+      time: start.toTimeString().slice(0, 5),
+      image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1170&auto=format&fit=crop',
+      description: event.description,
+      venue: event.venue,
+      price: Number(event.minPrice || 0),
+      schedule: [],
+    };
+  }
+
+  async function renderEvents() {
     const grid = document.getElementById('eventsGrid');
     if (!grid) return;
     const state = {
@@ -334,19 +359,28 @@
       from: '',
       to: '',
     };
-    const events = read(STORAGE_KEYS.events, []);
+    let events = read(STORAGE_KEYS.events, []);
 
     const typeSelect = document.getElementById('typeFilter');
     const fromInput = document.getElementById('dateFromFilter');
     const toInput = document.getElementById('dateToFilter');
     const pagination = document.getElementById('eventsPagination');
 
-    EVENT_TYPES.forEach((type) => {
-      const option = document.createElement('option');
-      option.value = type;
-      option.textContent = type;
-      typeSelect.appendChild(option);
-    });
+    try {
+      const apiEvents = await fetchEventsFromApi();
+      events = apiEvents.map(mapApiEventToUi);
+      write(STORAGE_KEYS.events, events);
+      const uniqueTypes = [...new Set(events.map((event) => event.type))];
+      uniqueTypes.forEach((type) => {
+        const option = document.createElement('option');
+        option.value = type;
+        option.textContent = type;
+        typeSelect.appendChild(option);
+      });
+    } catch (error) {
+      grid.innerHTML = `<p class="text-danger">${error.message}</p>`;
+      return;
+    }
 
     function applyFilters() {
       return events
@@ -832,6 +866,92 @@
     renderUsers();
   }
 
+  async function initManagerEventsPage() {
+    const wrap = document.getElementById('managerEventsPanel');
+    if (!wrap) return;
+    requireAuth();
+    const user = getCurrentUser();
+    if (user.role !== 'manager') {
+      window.location.href = 'events.html';
+      return;
+    }
+
+    const auth = read(STORAGE_KEYS.auth, null);
+    const form = document.getElementById('managerEventForm');
+    const table = document.getElementById('managerEventsTable');
+    const resetBtn = document.getElementById('managerEventFormReset');
+
+    async function loadManagerEvents() {
+      const response = await fetch(`${API_BASE}/events`);
+      if (!response.ok) throw new Error('Не удалось загрузить события.');
+      const events = await response.json();
+      table.innerHTML = events.map((event) => `<tr>
+        <td>${event.title}</td><td>${event.city}</td><td>${new Date(event.startDateTime).toLocaleString('ru-RU')}</td>
+        <td class="d-flex gap-2">
+          <button class="btn btn-sm btn-outline-secondary" data-edit="${event.id}">Изменить</button>
+          <button class="btn btn-sm btn-outline-danger" data-delete="${event.id}">Удалить</button>
+        </td></tr>`).join('') || '<tr><td colspan="4">Событий пока нет.</td></tr>';
+
+      table.querySelectorAll('[data-delete]').forEach((btn) => btn.addEventListener('click', async () => {
+        const resp = await fetch(`${API_BASE}/manager/events/${btn.dataset.delete}`, { method: 'DELETE', headers: { Authorization: `Bearer ${auth.token}` } });
+        if (!resp.ok) {
+          alert('Не удалось удалить событие.');
+          return;
+        }
+        await loadManagerEvents();
+      }));
+
+      table.querySelectorAll('[data-edit]').forEach((btn) => btn.addEventListener('click', () => {
+        const event = events.find((e) => String(e.id) === btn.dataset.edit);
+        document.getElementById('managerEventId').value = event.id;
+        document.getElementById('managerEventTitle').value = event.title;
+        document.getElementById('managerEventDescription').value = event.description;
+        document.getElementById('managerEventCity').value = event.city;
+        document.getElementById('managerEventVenue').value = event.venue;
+        document.getElementById('managerEventStart').value = event.startDateTime.slice(0, 16);
+        document.getElementById('managerEventEnd').value = event.endDateTime.slice(0, 16);
+      }));
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const eventId = document.getElementById('managerEventId').value;
+      const payload = {
+        title: document.getElementById('managerEventTitle').value.trim(),
+        description: document.getElementById('managerEventDescription').value.trim(),
+        city: document.getElementById('managerEventCity').value.trim(),
+        venue: document.getElementById('managerEventVenue').value.trim(),
+        latitude: 53.9,
+        longitude: 27.5667,
+        mapUrl: '',
+        startDateTime: document.getElementById('managerEventStart').value,
+        endDateTime: document.getElementById('managerEventEnd').value,
+      };
+      const url = eventId ? `${API_BASE}/manager/events/${eventId}` : `${API_BASE}/manager/events`;
+      const method = eventId ? 'PUT' : 'POST';
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        alert('Не удалось сохранить событие.');
+        return;
+      }
+      form.reset();
+      document.getElementById('managerEventId').value = '';
+      await loadManagerEvents();
+      await renderEvents();
+    });
+
+    resetBtn.addEventListener('click', () => {
+      form.reset();
+      document.getElementById('managerEventId').value = '';
+    });
+
+    await loadManagerEvents();
+  }
+
   function initAdminPage() {
     const wrap = document.getElementById('adminPanel');
     if (!wrap) return;
@@ -935,4 +1055,5 @@
   initProfilePage();
   initAdminPage();
   initAdminUsersPage();
+  initManagerEventsPage();
 })();
