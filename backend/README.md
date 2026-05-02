@@ -53,10 +53,10 @@ mvn test
 ```
 
 ## Переменные окружения
-- `DB_URL` (default: `jdbc:h2:mem:librarydb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE`)
-- `DB_DRIVER` (default: `org.h2.Driver`)
-- `DB_USER` (default: `sa`)
-- `DB_PASSWORD` (default: пусто)
+- `DB_URL` (default: `jdbc:postgresql://localhost:5434/tourismdb`)
+- `DB_DRIVER` (default: `org.postgresql.Driver`)
+- `DB_USERNAME` (default: `postgres`)
+- `DB_PASSWORD` (default: `root`)
 - `JWT_SECRET` (default: dev secret)
 - `JWT_ACCESS_EXPIRATION_SECONDS` (default: `3600`)
 - `APP_ADMIN_EMAIL` (default: `admin123`)
@@ -160,10 +160,10 @@ java -jar target/events-tourism-backend-0.0.1-SNAPSHOT.jar
 ```
 
 ## Переменные окружения
-- `DB_URL` (default: `jdbc:h2:mem:librarydb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE`)
-- `DB_DRIVER` (default: `org.h2.Driver`)
-- `DB_USER` (default: `sa`)
-- `DB_PASSWORD` (default: пусто)
+- `DB_URL` (default: `jdbc:postgresql://localhost:5434/tourismdb`)
+- `DB_DRIVER` (default: `org.postgresql.Driver`)
+- `DB_USERNAME` (default: `postgres`)
+- `DB_PASSWORD` (default: `root`)
 - `JWT_SECRET` (default: dev secret)
 - `JWT_ACCESS_EXPIRATION_SECONDS` (default: `3600`)
 - `APP_ADMIN_EMAIL` (default: `admin123`)
