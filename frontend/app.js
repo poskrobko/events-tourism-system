@@ -363,6 +363,8 @@
         time: start.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
         image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1170&auto=format&fit=crop',
       };
+    }
+
     try {
       const apiEvents = await fetchEventsFromApi();
       events = apiEvents.map(mapApiEventToUi);
