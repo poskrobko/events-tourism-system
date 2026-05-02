@@ -6,10 +6,12 @@ create table if not exists roles (
 );
 
 insert into roles (code, name, description)
-values
-    ('USER', 'User', 'Regular user with access to events and ticket purchasing'),
-    ('ADMIN', 'Administrator', 'Administrator with event and order management permissions')
-on conflict (code) do nothing;
+select 'USER', 'User', 'Regular user with access to events and ticket purchasing'
+where not exists (select 1 from roles where code = 'USER');
+
+insert into roles (code, name, description)
+select 'ADMIN', 'Administrator', 'Administrator with event and order management permissions'
+where not exists (select 1 from roles where code = 'ADMIN');
 
 alter table users
     add column if not exists role_id bigint references roles(id);

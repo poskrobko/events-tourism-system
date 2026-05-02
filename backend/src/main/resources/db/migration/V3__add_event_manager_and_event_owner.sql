@@ -1,6 +1,6 @@
 insert into roles (code, name, description)
-values ('EVENT_MANAGER', 'Event manager', 'Can manage own events, program, tickets and see related orders')
-on conflict (code) do nothing;
+select 'EVENT_MANAGER', 'Event manager', 'Can manage own events, program, tickets and see related orders'
+where not exists (select 1 from roles where code = 'EVENT_MANAGER');
 
 alter table events
     add column if not exists created_by_user_id bigint references users(id);
