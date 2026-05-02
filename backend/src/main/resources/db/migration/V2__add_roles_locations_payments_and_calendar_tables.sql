@@ -5,11 +5,13 @@ create table if not exists roles (
     description varchar(500)
 );
 
-merge into roles (code, name, description) key (code)
-values ('USER', 'User', 'Regular user with access to events and ticket purchasing');
+insert into roles (code, name, description)
+select 'USER', 'User', 'Regular user with access to events and ticket purchasing'
+where not exists (select 1 from roles where code = 'USER');
 
-merge into roles (code, name, description) key (code)
-values ('ADMIN', 'Administrator', 'Administrator with event and order management permissions');
+insert into roles (code, name, description)
+select 'ADMIN', 'Administrator', 'Administrator with event and order management permissions'
+where not exists (select 1 from roles where code = 'ADMIN');
 
 alter table users
     add column if not exists role_id bigint references roles(id);
