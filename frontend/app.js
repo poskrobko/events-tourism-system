@@ -11,20 +11,6 @@
   const EVENT_TYPES = ['Бизнес', 'Фестиваль', 'Музыка', 'Творчество', 'Концерты', 'Образование', 'Спорт'];
   const API_BASE = 'http://localhost:8080/api';
 
-  const DEFAULT_EVENTS = [
-    { id: 'e1', title: 'Sunset Jazz Night', type: 'Музыка', city: 'Минск', date: '2026-04-26', time: '19:00', price: 45, ticketLimit: 250, image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1170&auto=format&fit=crop', description: 'Вечер живого джаза под открытым небом.', schedule: ['18:00 — Открытие площадки', '19:00 — Первый сет', '20:30 — Импровизация', '22:00 — Afterparty'] },
-    { id: 'e2', title: 'Product Leaders Meetup', type: 'Бизнес', city: 'Гомель', date: '2026-04-30', time: '11:00', price: 65, ticketLimit: 120, image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=1170&auto=format&fit=crop', description: 'Нетворкинг и практики для product-менеджеров.', schedule: ['10:00 — Регистрация', '11:00 — Ключевой доклад', '13:00 — Панельная дискуссия'] },
-    { id: 'e3', title: 'City Light Weekend', type: 'Фестиваль', city: 'Брест', date: '2026-05-05', time: '16:00', price: 55, ticketLimit: 900, image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1170&auto=format&fit=crop', description: 'Фестиваль света, музыки и уличного искусства.', schedule: ['16:00 — Открытие', '18:00 — Light show', '20:00 — Live set'] },
-    { id: 'e4', title: 'Startup Pitch Day', type: 'Бизнес', city: 'Витебск', date: '2026-05-09', time: '12:00', price: 38, ticketLimit: 200, image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=1170&auto=format&fit=crop', description: 'Презентации стартапов перед инвесторами.', schedule: ['12:00 — Питч-сессия 1', '14:00 — Менторская зона'] },
-    { id: 'e5', title: 'Open Air Rock', type: 'Концерты', city: 'Могилёв', date: '2026-05-11', time: '18:30', price: 80, ticketLimit: 800, image: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?q=80&w=1170&auto=format&fit=crop', description: 'Большой рок-концерт на открытой площадке.', schedule: ['18:30 — Разогрев', '20:00 — Главная группа'] },
-    { id: 'e6', title: 'Art Lab Expo', type: 'Творчество', city: 'Минск', date: '2026-05-15', time: '14:00', price: 34, ticketLimit: 300, image: 'https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?q=80&w=1170&auto=format&fit=crop', description: 'Выставка современных творческих проектов.', schedule: ['14:00 — Открытие экспозиции', '16:00 — Мастер-класс'] },
-    { id: 'e7', title: 'Design Sprint Weekend', type: 'Образование', city: 'Гродно', date: '2026-05-18', time: '10:00', price: 48, ticketLimit: 100, image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1170&auto=format&fit=crop', description: 'Интенсив по дизайну цифровых продуктов.', schedule: ['10:00 — Воркшоп', '13:00 — Практика'] },
-    { id: 'e8', title: 'Street Food Jam', type: 'Фестиваль', city: 'Барановичи', date: '2026-05-20', time: '13:00', price: 28, ticketLimit: 600, image: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=1170&auto=format&fit=crop', description: 'Фестиваль гастрономии и локальных брендов.', schedule: ['13:00 — Открытие фуд-корта', '15:00 — Шоу поваров'] },
-    { id: 'e9', title: 'Indie Music Fest', type: 'Музыка', city: 'Пинск', date: '2026-05-22', time: '17:00', price: 58, ticketLimit: 500, image: 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?q=80&w=1170&auto=format&fit=crop', description: 'Фестиваль инди-исполнителей.', schedule: ['17:00 — Открытие', '18:00 — Сеты групп'] },
-    { id: 'e10', title: 'Motion Graphics Day', type: 'Творчество', city: 'Бобруйск', date: '2026-05-25', time: '12:00', price: 42, ticketLimit: 180, image: 'https://images.unsplash.com/photo-1523726491678-bf852e717f6a?q=80&w=1170&auto=format&fit=crop', description: 'Конференция по motion-дизайну.', schedule: ['12:00 — Доклады', '15:00 — Q&A'] },
-    { id: 'e11', title: 'Urban Run Club', type: 'Спорт', city: 'Минск', date: '2026-05-28', time: '09:00', price: 20, ticketLimit: 1000, image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?q=80&w=1170&auto=format&fit=crop', description: 'Массовый забег по городу.', schedule: ['09:00 — Старт', '11:00 — Награждение'] },
-    { id: 'e12', title: 'Classical Night', type: 'Концерты', city: 'Полоцк', date: '2026-06-01', time: '20:00', price: 90, ticketLimit: 350, image: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?q=80&w=1170&auto=format&fit=crop', description: 'Симфонический концерт на берегу моря.', schedule: ['20:00 — I отделение', '21:30 — II отделение'] },
-  ];
 
   function read(key, fallback) {
     try {
@@ -51,8 +37,6 @@
         phone: '+70000000000',
       }]);
     }
-    const events = read(STORAGE_KEYS.events, null);
-    if (!events) write(STORAGE_KEYS.events, DEFAULT_EVENTS);
     if (!read(STORAGE_KEYS.orders, null)) write(STORAGE_KEYS.orders, []);
   }
 
@@ -327,29 +311,36 @@
   function renderEvents() {
     const grid = document.getElementById('eventsGrid');
     if (!grid) return;
+
     const state = {
       page: 1,
       perPage: 10,
       type: 'all',
       from: '',
       to: '',
+      events: [],
     };
-    const events = read(STORAGE_KEYS.events, []);
 
     const typeSelect = document.getElementById('typeFilter');
     const fromInput = document.getElementById('dateFromFilter');
     const toInput = document.getElementById('dateToFilter');
     const pagination = document.getElementById('eventsPagination');
 
-    EVENT_TYPES.forEach((type) => {
-      const option = document.createElement('option');
-      option.value = type;
-      option.textContent = type;
-      typeSelect.appendChild(option);
-    });
+    function normalizeEvent(event) {
+      const start = new Date(event.startDateTime);
+      return {
+        id: event.id,
+        title: event.title,
+        type: event.venue || 'Событие',
+        city: event.city,
+        date: event.startDateTime ? event.startDateTime.slice(0, 10) : '',
+        time: start.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+        image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1170&auto=format&fit=crop',
+      };
+    }
 
     function applyFilters() {
-      return events
+      return state.events
         .filter((event) => state.type === 'all' || event.type === state.type)
         .filter((event) => !state.from || event.date >= state.from)
         .filter((event) => !state.to || event.date <= state.to);
@@ -386,11 +377,35 @@
       }
     }
 
+    function renderTypes() {
+      const types = Array.from(new Set(state.events.map((e) => e.type))).sort();
+      typeSelect.innerHTML = '<option value="all">Все типы</option>';
+      types.forEach((type) => {
+        const option = document.createElement('option');
+        option.value = type;
+        option.textContent = type;
+        typeSelect.appendChild(option);
+      });
+    }
+
+    async function loadEvents() {
+      try {
+        const response = await fetch(`${API_BASE}/events`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || data.error || 'Не удалось загрузить события.');
+        state.events = data.map(normalizeEvent);
+        renderTypes();
+        render();
+      } catch (error) {
+        grid.innerHTML = `<p class="text-danger">${error.message}</p>`;
+      }
+    }
+
     typeSelect.addEventListener('change', () => { state.type = typeSelect.value; state.page = 1; render(); });
     fromInput.addEventListener('change', () => { state.from = fromInput.value; state.page = 1; render(); });
     toInput.addEventListener('change', () => { state.to = toInput.value; state.page = 1; render(); });
 
-    render();
+    loadEvents();
   }
 
   function initEventDetailsPage() {
