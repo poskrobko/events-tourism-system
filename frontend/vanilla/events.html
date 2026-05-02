@@ -28,42 +28,10 @@
       <button class="btn btn-accent">Фильтры</button>
     </div>
 
-    <div class="row g-4">
-      <div class="col-md-6 col-lg-4">
-        <article class="card event-card h-100">
-          <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1170&auto=format&fit=crop" class="card-img-top" alt="Концерт" style="height:190px; object-fit:cover" />
-          <div class="card-body">
-            <span class="badge badge-status mb-2">Музыка</span>
-            <h2 class="h5">Sunset Jazz Night</h2>
-            <p class="text-secondary mb-3">26 апреля · Минск · 19:00</p>
-            <a href="event-details.html" class="btn btn-primary w-100">Подробнее</a>
-          </div>
-        </article>
-      </div>
-      <div class="col-md-6 col-lg-4">
-        <article class="card event-card h-100">
-          <img src="https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=1170&auto=format&fit=crop" class="card-img-top" alt="Форум" style="height:190px; object-fit:cover" />
-          <div class="card-body">
-            <span class="badge badge-status mb-2">Бизнес</span>
-            <h2 class="h5">Product Leaders Meetup</h2>
-            <p class="text-secondary mb-3">30 апреля · Гомель · 11:00</p>
-            <a href="event-details.html" class="btn btn-primary w-100">Подробнее</a>
-          </div>
-        </article>
-      </div>
-      <div class="col-md-6 col-lg-4">
-        <article class="card event-card h-100">
-          <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1170&auto=format&fit=crop" class="card-img-top" alt="Фестиваль" style="height:190px; object-fit:cover" />
-          <div class="card-body">
-            <span class="badge badge-status mb-2">Фестиваль</span>
-            <h2 class="h5">City Light Weekend</h2>
-            <p class="text-secondary mb-3">5 мая · Брест · 16:00</p>
-            <a href="event-details.html" class="btn btn-primary w-100">Подробнее</a>
-          </div>
-        </article>
-      </div>
-    </div>
+    <div id="eventsGrid" class="row g-4"></div>
+    <div id="eventsPagination" class="d-flex gap-2 mt-4"></div>
   </main>
   <footer class="container pb-4">© 2026 EventFlow</footer>
+  <script src="app.js"></script>
 </body>
 </html>
