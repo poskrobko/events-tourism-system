@@ -15,10 +15,17 @@ alter table users
     add column if not exists role_id bigint references roles(id);
 
 update users
-set role_id = r.id
-from roles r
+set role_id = (
+    select r.id
+    from roles r
+    where r.code = users.role
+)
 where users.role_id is null
-  and users.role = r.code;
+  and exists (
+    select 1
+    from roles r
+    where r.code = users.role
+);
 
 create table if not exists locations (
     id bigserial primary key,

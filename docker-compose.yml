@@ -1,24 +1,24 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: library-postgres
+    container_name: tourism-postgres
     environment:
-      POSTGRES_DB: library
-      POSTGRES_USER: library_user
-      POSTGRES_PASSWORD: library_pass
+      POSTGRES_DB: tourismdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${POSTGRES_PORT:-5434}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U library_user -d library"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tourismdb"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
-    container_name: library-redis
+    container_name: tourism-redis
     ports:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
