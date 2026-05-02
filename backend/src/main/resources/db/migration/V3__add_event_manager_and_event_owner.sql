@@ -9,11 +9,17 @@ update events
 set created_by_user_id = (
     select u.id
     from users u
-    where u.role = 'ADMIN'
+    join roles r on u.role_id = r.id
+    where r.code = 'ADMIN'
     order by u.id
     limit 1
 )
-where events.created_by_user_id is null
-  and exists (select 1 from users u where u.role = 'ADMIN');
+where created_by_user_id is null
+  and exists (
+      select 1
+      from users u
+      join roles r on u.role_id = r.id
+      where r.code = 'ADMIN'
+  );
 
 create index if not exists idx_events_created_by_user_id on events(created_by_user_id);
