@@ -638,7 +638,48 @@
       return;
     }
 
-    list.innerHTML = orders.map((o) => `<li class="list-group-item d-flex justify-content-between align-items-center"><div><strong>${o.eventTitle}</strong><div class="small text-secondary">${new Date(o.createdAt).toLocaleString('ru-RU')} · ${o.qty} шт.</div></div><span class="text-success fw-semibold">${o.total} BYN</span></li>`).join('');
+    list.innerHTML = orders.map((o) => `<li class="list-group-item d-flex justify-content-between align-items-center gap-3"><div><strong>${o.eventTitle}</strong><div class="small text-secondary">${new Date(o.createdAt).toLocaleString('ru-RU')} · ${o.qty} шт.</div></div><div class="d-flex align-items-center gap-3"><span class="text-success fw-semibold">${o.total} BYN</span><button class="btn btn-outline-primary btn-sm" data-download-ticket-id="${o.id}" type="button">Скачать PDF</button></div></li>`).join('');
+
+    list.querySelectorAll('[data-download-ticket-id]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const order = orders.find((item) => item.id === button.dataset.downloadTicketId);
+        if (order) {
+          downloadTicketPdf(order, user);
+        }
+      });
+    });
+  }
+
+  function downloadTicketPdf(order, user) {
+    const jsPdfLib = window.jspdf?.jsPDF;
+    if (!jsPdfLib) {
+      alert('Не удалось сформировать PDF. Попробуйте обновить страницу.');
+      return;
+    }
+
+    const doc = new jsPdfLib();
+    const purchaseDate = new Date(order.createdAt).toLocaleString('ru-RU');
+    const ticketNumber = String(order.id).replace('o-', '');
+    const lines = [
+      'ЭЛЕКТРОННЫЙ БИЛЕТ',
+      '',
+      `Номер билета: ${ticketNumber}`,
+      `Событие: ${order.eventTitle}`,
+      `Покупатель: ${user.fullName}`,
+      `Email: ${user.email}`,
+      `Тип билета: ${order.ticketTypeLabel || 'Standard'}`,
+      `Количество: ${order.qty}`,
+      `Сумма: ${order.total} BYN`,
+      `Дата покупки: ${purchaseDate}`,
+      '',
+      'Покажите этот билет на входе.',
+    ];
+
+    doc.setFontSize(18);
+    doc.text(lines[0], 20, 20);
+    doc.setFontSize(12);
+    doc.text(lines.slice(2), 20, 35);
+    doc.save(`ticket-${ticketNumber}.pdf`);
   }
 
   function initProfilePage() {
