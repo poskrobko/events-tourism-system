@@ -674,9 +674,20 @@
 
     const base64Font = btoa(binary);
     doc.addFileToVFS('Roboto-Regular.ttf', base64Font);
-    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal', 'Identity-H');
     doc.setFont('Roboto', 'normal');
     pdfCyrillicFontLoaded = true;
+  }
+
+  function slugifyFilePart(value, fallback = 'ticket') {
+    const normalized = String(value || '')
+      .normalize('NFKD')
+      .replace(/[̀-ͯ]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9а-яё]+/gi, '-')
+      .replace(/^-+|-+$/g, '');
+
+    return normalized || fallback;
   }
 
   async function downloadTicketPdf(order, user) {
@@ -686,19 +697,21 @@
       return;
     }
 
-    const doc = new jsPdfLib();
+    const doc = new jsPdfLib({ putOnlyUsedFonts: true });
     const purchaseDate = new Date(order.createdAt).toLocaleString('ru-RU');
+    const purchaseDateForFile = new Date(order.createdAt).toISOString().slice(0, 10);
     const ticketNumber = String(order.id).replace('o-', '');
+    const eventTitle = order.eventTitle || 'Без названия';
     const lines = [
       'ЭЛЕКТРОННЫЙ БИЛЕТ',
       '',
       `Номер билета: ${ticketNumber}`,
-      `Событие: ${order.eventTitle}`,
-      `Покупатель: ${user.fullName}`,
-      `Email: ${user.email}`,
+      `Событие: ${eventTitle}`,
+      `Покупатель: ${user.fullName || 'Не указан'}`,
+      `Email: ${user.email || 'Не указан'}`,
       `Тип билета: ${order.ticketTypeLabel || 'Standard'}`,
-      `Количество: ${order.qty}`,
-      `Сумма: ${order.total} BYN`,
+      `Количество: ${order.qty || 1}`,
+      `Сумма: ${order.total || 0} BYN`,
       `Дата покупки: ${purchaseDate}`,
       '',
       'Покажите этот билет на входе.',
@@ -714,8 +727,12 @@
     doc.setFontSize(18);
     doc.text(lines[0], 20, 20);
     doc.setFontSize(12);
-    doc.text(lines.slice(2), 20, 35);
-    doc.save(`ticket-${ticketNumber}.pdf`);
+    doc.text(lines.slice(2), 20, 35, { maxWidth: 170 });
+
+    const safeEventTitle = slugifyFilePart(eventTitle, 'event');
+    const ticketFileName = `bilet-${safeEventTitle}-${purchaseDateForFile}-#${ticketNumber}.pdf`;
+    doc.save(ticketFileName);
+
   }
 
   function initProfilePage() {
