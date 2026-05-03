@@ -29,10 +29,26 @@
           <h2 class="h5 mb-3">Информация пользователя</h2>
           <form id="profileForm" class="needs-validation" novalidate>
             <div class="row g-3">
-              <div class="col-md-6"><input id="profileFirstName" class="form-control" placeholder="Имя" required minlength="2" /></div>
-              <div class="col-md-6"><input id="profileLastName" class="form-control" placeholder="Фамилия" required minlength="2" /></div>
-              <div class="col-md-6"><input id="profileEmailInput" class="form-control" type="email" required /></div>
-              <div class="col-md-6"><input id="profileAvatarFile" class="form-control" type="file" accept="image/*" /></div>
+              <div class="col-md-6">
+                <label class="form-label" for="profileFirstName">Имя</label>
+                <input id="profileFirstName" class="form-control" placeholder="Имя" required minlength="2" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="profileLastName">Фамилия</label>
+                <input id="profileLastName" class="form-control" placeholder="Фамилия" required minlength="2" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="profileEmailInput">Email</label>
+                <input id="profileEmailInput" class="form-control" type="email" required />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="profilePhoneInput">Номер телефона</label>
+                <input id="profilePhoneInput" class="form-control" type="tel" placeholder="+7 (___) ___-__-__" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label" for="profileAvatarFile">Аватар</label>
+                <input id="profileAvatarFile" class="form-control" type="file" accept="image/*" />
+              </div>
             </div>
             <button class="btn btn-primary mt-3" type="submit">Сохранить изменения</button>
             <div data-feedback></div>
