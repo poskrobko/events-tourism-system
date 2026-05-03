@@ -34,9 +34,25 @@ public class EventService {
     }
 
     public List<EventDtos.EventResponse> listEvents(LocalDateTime dateFrom, LocalDateTime dateTo, String city,
-                                                    BigDecimal minPrice, BigDecimal maxPrice) {
-        return eventRepository.findByFilters(dateFrom, dateTo, city, minPrice, maxPrice)
-                .stream().map(this::toResponse).toList();
+                                                    BigDecimal minPrice, BigDecimal maxPrice, String ticketType) {
+        return eventRepository.findAllByOrderByStartDateTimeAsc().stream()
+                .filter(event -> dateFrom == null || !event.getStartDateTime().isBefore(dateFrom))
+                .filter(event -> dateTo == null || !event.getStartDateTime().isAfter(dateTo))
+                .filter(event -> city == null || event.getCity().equalsIgnoreCase(city))
+                .filter(event -> matchesTicketFilters(event.getId(), minPrice, maxPrice, ticketType))
+                .map(this::toResponse)
+                .toList();
+    }
+
+    private boolean matchesTicketFilters(Long eventId, BigDecimal minPrice, BigDecimal maxPrice, String ticketType) {
+        if (minPrice == null && maxPrice == null && (ticketType == null || ticketType.isBlank())) {
+            return true;
+        }
+
+        return ticketTypeRepository.findByEventIdOrderByPriceAsc(eventId).stream()
+                .anyMatch(ticket -> (minPrice == null || ticket.getPrice().compareTo(minPrice) >= 0)
+                        && (maxPrice == null || ticket.getPrice().compareTo(maxPrice) <= 0)
+                        && (ticketType == null || ticketType.isBlank() || ticket.getName().equalsIgnoreCase(ticketType)));
     }
 
     public EventDtos.EventDetailsResponse getEventDetails(Long eventId) {

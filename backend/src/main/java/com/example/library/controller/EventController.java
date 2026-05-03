@@ -24,9 +24,10 @@ public class EventController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateTo,
             @RequestParam(required = false) String city,
             @RequestParam(required = false) BigDecimal minPrice,
-            @RequestParam(required = false) BigDecimal maxPrice
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) String ticketType
     ) {
-        return eventService.listEvents(dateFrom, dateTo, city, minPrice, maxPrice);
+        return eventService.listEvents(dateFrom, dateTo, city, minPrice, maxPrice, ticketType);
     }
 
     @GetMapping("/{eventId}")
