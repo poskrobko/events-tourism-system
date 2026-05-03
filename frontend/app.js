@@ -943,6 +943,7 @@
       document.getElementById('profileFirstName').value = profile.firstName || '';
       document.getElementById('profileLastName').value = profile.lastName || '';
       document.getElementById('profileEmailInput').value = profile.email;
+      document.getElementById('profilePhoneInput').value = profile.phone || '';
       avatarValue = profile.avatarUrl || '';
       avatarImage.src = avatarValue || `https://ui-avatars.com/api/?name=${encodeURIComponent((profile.firstName || 'User') + ' ' + (profile.lastName || ''))}&background=FFD150&color=3d2a00&size=120`;
     }
@@ -986,6 +987,7 @@
             lastName: document.getElementById('profileLastName').value.trim(),
             email: document.getElementById('profileEmailInput').value.trim().toLowerCase(),
             avatarUrl: avatarValue || null,
+            phone: document.getElementById('profilePhoneInput').value.trim(),
           }),
         });
         const data = await response.json();
@@ -1054,11 +1056,12 @@
             id: String(u.id),
             fullName: u.fullName || '',
             email: u.email || '',
+            phone: u.phone || '',
             password: '',
             role: u.role === 'ADMIN' ? 'admin' : (u.role === 'EVENT_MANAGER' ? 'manager' : 'user'),
           }));
         } catch (error) {
-          const row = `<tr><td colspan="6" class="text-danger">${error.message}</td></tr>`;
+          const row = `<tr><td colspan="7" class="text-danger">${error.message}</td></tr>`;
           usersTable.innerHTML = row;
           return;
         }
@@ -1080,6 +1083,7 @@
         <td><input class="form-control form-control-sm" data-field="email" data-user-id="${u.id}" type="email" value="${u.email}" required /></td>
         <td><input class="form-control form-control-sm" data-field="firstName" data-user-id="${u.id}" value="${firstName}" minlength="2" required /></td>
         <td><input class="form-control form-control-sm" data-field="lastName" data-user-id="${u.id}" value="${lastName}" /></td>
+        <td><input class="form-control form-control-sm" data-field="phone" data-user-id="${u.id}" value="${u.phone || ''}" /></td>
         <td>
           <select class="form-select form-select-sm" data-field="role" data-user-id="${u.id}" ${isAdminUser ? 'disabled' : ''}>
             <option value="manager" ${u.role === 'manager' ? 'selected' : ''}>Менеджер</option>
@@ -1093,7 +1097,7 @@
           <button class="btn btn-sm btn-outline-danger" data-delete="${u.id}" ${isAdminUser ? 'disabled' : ''}>Удалить</button>
         </td>
       </tr>`;
-      }).join('') || '<tr><td colspan="6" class="text-secondary">Ничего не найдено.</td></tr>';
+      }).join('') || '<tr><td colspan="7" class="text-secondary">Ничего не найдено.</td></tr>';
 
       usersTable.querySelectorAll('[data-save]').forEach((btn) => {
         btn.addEventListener('click', async () => {
@@ -1105,6 +1109,7 @@
           const emailInput = usersTable.querySelector(`[data-field="email"][data-user-id="${userId}"]`);
           const firstNameInput = usersTable.querySelector(`[data-field="firstName"][data-user-id="${userId}"]`);
           const lastNameInput = usersTable.querySelector(`[data-field="lastName"][data-user-id="${userId}"]`);
+          const phoneInput = usersTable.querySelector(`[data-field="phone"][data-user-id="${userId}"]`);
           const roleInput = usersTable.querySelector(`[data-field="role"][data-user-id="${userId}"]`);
           const passwordInput = usersTable.querySelector(`[data-field="password"][data-user-id="${userId}"]`);
 
@@ -1140,6 +1145,7 @@
                 body: JSON.stringify({
                   email: normalizedEmail,
                   fullName,
+                  phone: phoneInput.value.trim(),
                   role: nextRole === 'admin' ? 'ADMIN' : (nextRole === 'manager' ? 'EVENT_MANAGER' : 'USER'),
                   password: passwordInput.value.trim() || null,
                 }),
@@ -1168,6 +1174,7 @@
             ...allUsers[idx],
             email: normalizedEmail,
             fullName,
+            phone: phoneInput.value.trim(),
             role: nextRole,
           };
 

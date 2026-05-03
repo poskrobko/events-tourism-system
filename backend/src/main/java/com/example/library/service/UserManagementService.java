@@ -53,6 +53,7 @@ public class UserManagementService {
         }
         user.setEmail(normalizedEmail);
         user.setFullName(request.fullName());
+        user.setPhone(request.phone() == null ? null : request.phone().trim());
         user.setRole(request.role());
         if (request.password() != null && !request.password().isBlank()) {
             user.setPassword(passwordEncoder.encode(request.password()));
@@ -71,6 +72,7 @@ public class UserManagementService {
         user.setEmail(normalizedEmail);
         user.setFullName((request.firstName().trim() + " " + request.lastName().trim()).trim());
         user.setAvatarUrl(request.avatarUrl() == null ? null : request.avatarUrl().trim());
+        user.setPhone(request.phone() == null ? null : request.phone().trim());
         return toProfileResponse(userRepository.save(user));
     }
 
@@ -90,13 +92,13 @@ public class UserManagementService {
     }
 
     private UserDtos.UserResponse toResponse(User user) {
-        return new UserDtos.UserResponse(user.getId(), user.getEmail(), user.getFullName(), user.getAvatarUrl(), user.getRole());
+        return new UserDtos.UserResponse(user.getId(), user.getEmail(), user.getFullName(), user.getAvatarUrl(), user.getPhone(), user.getRole());
     }
 
     private UserDtos.ProfileResponse toProfileResponse(User user) {
         String[] parts = user.getFullName() == null ? new String[0] : user.getFullName().trim().split("\\s+");
         String firstName = parts.length > 0 ? parts[0] : "";
         String lastName = parts.length > 1 ? String.join(" ", java.util.Arrays.copyOfRange(parts, 1, parts.length)) : "";
-        return new UserDtos.ProfileResponse(user.getId(), user.getEmail(), firstName, lastName, user.getAvatarUrl());
+        return new UserDtos.ProfileResponse(user.getId(), user.getEmail(), firstName, lastName, user.getAvatarUrl(), user.getPhone());
     }
 }
