@@ -173,7 +173,9 @@ public class EventService {
         tt.setPrice(request.price());
         tt.setQuantityTotal(request.quantityTotal());
         tt.setQuantitySold(0);
-        return toTicketResponse(ticketTypeRepository.save(tt));
+        TicketType saved = ticketTypeRepository.save(tt);
+        refreshEventAvailableTickets(eventId);
+        return toTicketResponse(saved);
     }
 
     @Transactional
@@ -184,7 +186,9 @@ public class EventService {
         tt.setPrice(request.price());
         tt.setQuantityTotal(request.quantityTotal());
         tt.setQuantitySold(0);
-        return toTicketResponse(ticketTypeRepository.save(tt));
+        TicketType saved = ticketTypeRepository.save(tt);
+        refreshEventAvailableTickets(eventId);
+        return toTicketResponse(saved);
     }
 
     public List<EventDtos.TicketTypeResponse> listTicketTypes(Long eventId) {
@@ -201,7 +205,9 @@ public class EventService {
             throw new IllegalArgumentException("quantityTotal cannot be less than quantitySold");
         }
         tt.setQuantityTotal(request.quantityTotal());
-        return toTicketResponse(ticketTypeRepository.save(tt));
+        TicketType saved = ticketTypeRepository.save(tt);
+        refreshEventAvailableTickets(saved.getEvent().getId());
+        return toTicketResponse(saved);
     }
 
     @Transactional
@@ -215,19 +221,27 @@ public class EventService {
             throw new IllegalArgumentException("quantityTotal cannot be less than quantitySold");
         }
         tt.setQuantityTotal(request.quantityTotal());
-        return toTicketResponse(ticketTypeRepository.save(tt));
+        TicketType saved = ticketTypeRepository.save(tt);
+        refreshEventAvailableTickets(saved.getEvent().getId());
+        return toTicketResponse(saved);
     }
 
     @Transactional
     public void deleteTicketType(Long ticketTypeId) {
-        ticketTypeRepository.deleteById(ticketTypeId);
+        TicketType tt = ticketTypeRepository.findById(ticketTypeId)
+                .orElseThrow(() -> new IllegalArgumentException("Ticket type not found"));
+        Long eventId = tt.getEvent().getId();
+        ticketTypeRepository.delete(tt);
+        refreshEventAvailableTickets(eventId);
     }
 
     @Transactional
     public void deleteTicketTypeAsManager(Long ticketTypeId, String managerEmail) {
         TicketType tt = ticketTypeRepository.findByIdAndEventCreatedByEmail(ticketTypeId, managerEmail)
                 .orElseThrow(() -> new IllegalArgumentException("Ticket type not found"));
+        Long eventId = tt.getEvent().getId();
         ticketTypeRepository.delete(tt);
+        refreshEventAvailableTickets(eventId);
     }
 
     public Event getEvent(Long id) {
@@ -243,7 +257,7 @@ public class EventService {
         BigDecimal minPrice = ticketTypeRepository.findMinPriceByEventId(e.getId()).orElse(null);
         return new EventDtos.EventResponse(
                 e.getId(), e.getTitle(), e.getDescription(), e.getCity(), e.getVenue(),
-                e.getLatitude(), e.getLongitude(), e.getMapUrl(), e.getImageUrl(), e.getStartDateTime(), e.getEndDateTime(), minPrice
+                e.getLatitude(), e.getLongitude(), e.getMapUrl(), e.getImageUrl(), e.getStartDateTime(), e.getEndDateTime(), minPrice, e.getAvailableTickets()
         );
     }
 
@@ -273,6 +287,13 @@ public class EventService {
 
     private String enc(String input) {
         return URLEncoder.encode(input, StandardCharsets.UTF_8);
+    }
+
+    public void refreshEventAvailableTickets(Long eventId) {
+        Event event = getEvent(eventId);
+        Integer available = ticketTypeRepository.sumAvailableByEventId(eventId);
+        event.setAvailableTickets(available == null ? 0 : available);
+        eventRepository.save(event);
     }
 
     private void apply(Event event, EventDtos.EventRequest request) {

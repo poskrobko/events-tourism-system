@@ -520,7 +520,23 @@
         const minTicket = details.ticketTypes?.[0]?.price ?? event.price;
         document.getElementById('eventPrice').textContent = `${minTicket} BYN`;
         const buyTicketBtn = document.getElementById('buyTicketBtn');
+        const soldOutNotice = document.getElementById('soldOutNotice');
+        const totalAvailable = (details.ticketTypes || []).reduce((sum, tt) => sum + Number(tt.quantityAvailable || 0), 0);
         buyTicketBtn.href = getCurrentUser() ? `ticket.html?id=${event.id}` : 'login.html';
+        if (totalAvailable <= 0) {
+          buyTicketBtn.classList.add('disabled');
+          buyTicketBtn.setAttribute('aria-disabled', 'true');
+          buyTicketBtn.addEventListener('click', (e) => e.preventDefault());
+          if (soldOutNotice) soldOutNotice.classList.remove('d-none');
+        } else if (soldOutNotice) {
+          soldOutNotice.classList.add('d-none');
+        }
+        const ticketAvailability = document.getElementById('ticketAvailability');
+        if (ticketAvailability) {
+          ticketAvailability.innerHTML = (details.ticketTypes || []).length
+            ? details.ticketTypes.map((tt) => `<li class="list-group-item d-flex justify-content-between"><span>${tt.name}</span><span>Осталось: ${tt.quantityAvailable}</span></li>`).join('')
+            : '<li class="list-group-item text-muted">Типы билетов еще не добавлены.</li>';
+        }
         const program = details.program || [];
         document.getElementById('eventSchedule').innerHTML = program.map((item) => (
           `<li class="list-group-item"><strong>${item.title}</strong><br><small>${new Date(item.startDateTime).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })} - ${new Date(item.endDateTime).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</small>${item.description ? `<br>${item.description}` : ''}</li>`
@@ -561,7 +577,7 @@
       .then((data) => {
         ticketTypes = data || [];
         if (ticketTypes.length) {
-          ticketType.innerHTML = ticketTypes.map((item) => `<option value="${item.id}">${item.name} — ${item.price} BYN</option>`).join('');
+          ticketType.innerHTML = ticketTypes.map((item) => `<option value="${item.id}" ${Number(item.quantityAvailable) <= 0 ? 'disabled' : ''}>${item.name} — ${item.price} BYN (осталось: ${item.quantityAvailable})</option>`).join('');
         }
         updateTotal();
       })
@@ -649,6 +665,7 @@
   async function initMyTicketsPage() {
     const list = document.getElementById('myTicketsList');
     const pendingList = document.getElementById('myOrdersPendingList');
+    const completedList = document.getElementById('myCompletedTicketsList');
     if (!list) return;
     requireAuth();
     const user = getCurrentUser();
@@ -657,7 +674,9 @@
     const token = getAuthToken();
     const response = await fetch(`${API_BASE}/user/orders`, { headers: { Authorization: `Bearer ${token}` } });
     const orders = await response.json();
-    const paid = (orders || []).filter((o) => o.paymentStatus === 'PAID');
+    const now = new Date();
+    const paid = (orders || []).filter((o) => o.paymentStatus === 'PAID' && !o.isEventCompleted);
+    const completed = (orders || []).filter((o) => o.paymentStatus === 'PAID' && o.isEventCompleted);
     const pending = (orders || []).filter((o) => o.paymentStatus === 'PENDING');
     const paymentStatusLabel = (status) => status === 'PAID' ? 'Оплачено' : (status === 'PENDING' ? 'Ожидается оплата' : status);
     const eventLabel = (order) => order.items?.[0]?.eventTitle || `Заказ #${order.id}`;
@@ -665,6 +684,12 @@
     list.innerHTML = paid.length ? paid.map((o) => `<li class='list-group-item d-flex justify-content-between align-items-center'><div><strong>${eventLabel(o)}</strong><div class='small text-secondary'>Заказ #${o.id} · ${new Date(o.createdAt).toLocaleString('ru-RU')} · ${paymentStatusLabel(o.paymentStatus)}</div></div><div class='d-flex align-items-center gap-2'><span class='text-success fw-semibold'>${o.totalAmount} BYN</span><button class='btn btn-outline-primary btn-sm' data-download-ticket='${o.id}'>Скачать PDF</button></div></li>`).join('') : '<li class="list-group-item">Пока нет оплаченных билетов.</li>';
 
     pendingList.innerHTML = pending.length ? pending.map((o) => `<li class='list-group-item d-flex justify-content-between align-items-center'><div><strong>${eventLabel(o)}</strong><div class='small text-secondary'>Заказ #${o.id} · ${paymentStatusLabel(o.paymentStatus)}</div></div><button class='btn btn-primary btn-sm' data-pay-order='${o.id}'>Оплатить</button></li>`).join('') : '<li class="list-group-item">Нет заказов в ожидании оплаты.</li>';
+
+    if (completedList) {
+      completedList.innerHTML = completed.length
+        ? completed.map((o) => `<li class='list-group-item d-flex justify-content-between align-items-center'><div><strong>${eventLabel(o)}</strong><div class='small text-secondary'>Заказ #${o.id} · Событие завершено</div></div><span class='badge text-bg-secondary'>Завершено</span></li>`).join('')
+        : '<li class="list-group-item">Нет завершенных событий.</li>';
+    }
 
     pendingList.querySelectorAll('[data-pay-order]').forEach((btn) => btn.addEventListener('click', async () => {
       await fetch(`${API_BASE}/user/orders/${btn.dataset.payOrder}/pay`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ paymentMethod: 'CARD' }) });
@@ -1137,11 +1162,11 @@
       if (!response.ok) throw new Error('Не удалось загрузить события.');
       const events = await response.json();
       table.innerHTML = events.map((event) => `<tr>
-        <td>${event.title}</td><td>${event.city}</td><td>${new Date(event.startDateTime).toLocaleString('ru-RU')}</td>
+        <td>${event.title}</td><td>${event.city}</td><td>${new Date(event.startDateTime).toLocaleString('ru-RU')}</td><td>${event.availableTickets ?? 0}</td>
         <td class="d-flex gap-2">
           <button class="btn btn-sm btn-outline-secondary" data-edit="${event.id}">Изменить</button>
           <button class="btn btn-sm btn-outline-danger" data-delete="${event.id}">Удалить</button>
-        </td></tr>`).join('') || '<tr><td colspan="4">Событий пока нет.</td></tr>';
+        </td></tr>`).join('') || '<tr><td colspan="5">Событий пока нет.</td></tr>';
 
       table.querySelectorAll('[data-delete]').forEach((btn) => btn.addEventListener('click', async () => {
         const resp = await fetch(`${API_BASE}/manager/events/${btn.dataset.delete}`, { method: 'DELETE', headers: { Authorization: `Bearer ${auth.token}` } });
@@ -1190,6 +1215,19 @@
       if (!response.ok) {
         alert('Не удалось сохранить событие.');
         return;
+      }
+      const savedEvent = await response.json();
+      if (!eventId) {
+        const ticketName = document.getElementById('managerTicketName').value.trim();
+        const ticketPrice = Number(document.getElementById('managerTicketPrice').value);
+        const ticketQuantity = Number(document.getElementById('managerTicketQuantity').value);
+        if (ticketName && Number.isFinite(ticketPrice) && ticketPrice >= 0 && Number.isInteger(ticketQuantity) && ticketQuantity > 0) {
+          await fetch(`${API_BASE}/manager/events/${savedEvent.id}/tickets`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
+            body: JSON.stringify({ name: ticketName, price: ticketPrice, quantityTotal: ticketQuantity }),
+          });
+        }
       }
       form.reset();
       document.getElementById('managerEventId').value = '';

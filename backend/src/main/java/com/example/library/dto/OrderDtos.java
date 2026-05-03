@@ -45,6 +45,7 @@ public class OrderDtos {
             BigDecimal totalAmount,
             List<OrderItemResponse> items,
             String paymentStatus,
-            String paymentMethod
+            String paymentMethod,
+            Boolean isEventCompleted
     ) {}
 }
