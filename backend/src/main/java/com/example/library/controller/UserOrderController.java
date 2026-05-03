@@ -48,6 +48,11 @@ public class UserOrderController {
     public OrderDtos.OrderResponse refundOrder(@PathVariable Long orderId, Principal principal) {
         return orderService.refundOrder(principal.getName(), orderId);
     }
+
+    @DeleteMapping("/orders/{orderId}")
+    public void cancelOrder(@PathVariable Long orderId, Principal principal) {
+        orderService.cancelOrder(principal.getName(), orderId);
+    }
     @GetMapping("/orders")
     public List<OrderDtos.OrderResponse> myOrders(Principal principal) {
         return orderService.myOrders(principal.getName());
