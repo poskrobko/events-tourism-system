@@ -550,105 +550,84 @@
       .catch(() => updateTotal());
 
     form.dataset.handled = 'custom';
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!form.checkValidity()) {
         form.classList.add('was-validated');
         return;
       }
-
-      const orders = read(STORAGE_KEYS.orders, []);
-      const order = {
-        id: `o-${Date.now()}`,
-        userId: user.id,
-        eventId: event.id,
-        eventTitle: event.title,
-        qty: Number(qtyInput.value),
-        typeMultiplier: Number(ticketType.value),
-        ticketTypeLabel: ticketType.options[ticketType.selectedIndex].text.split(' ×')[0],
-        total: event.price * Number(ticketType.value) * Number(qtyInput.value),
-        ticketTypeId: Number(ticketType.value),
-        total: Number((totalNode.textContent || '0').replace(' BYN', '')),
-        createdAt: new Date().toISOString(),
-        status: 'PENDING',
-        statusLabel: 'Ожидает оплаты',
-        ticketCreated: false,
-      };
-      orders.push(order);
-      write(STORAGE_KEYS.orders, orders);
-      window.location.href = `payment.html?orderId=${encodeURIComponent(order.id)}`;
+      const feedback = form.querySelector('[data-feedback]');
+      try {
+        const response = await fetch(`${API_BASE}/user/tickets/purchase`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${read(STORAGE_KEYS.auth, {}).token}` },
+          body: JSON.stringify({ ticketTypeId: Number(ticketType.value), quantity: Number(qtyInput.value), paymentMethod: 'CARD' }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Не удалось создать заказ.');
+        window.location.href = `payment.html?orderId=${encodeURIComponent(data.id)}`;
+      } catch (error) {
+        feedback.className = 'alert alert-danger mt-3';
+        feedback.textContent = error.message;
+      }
     });
   }
 
 
-  function initPaymentPage() {
+  async function initPaymentPage() {
     const title = document.getElementById('paymentTitle');
     if (!title) return;
     requireAuth();
 
     const orderId = new URLSearchParams(window.location.search).get('orderId');
-    const user = getCurrentUser();
-    const orders = read(STORAGE_KEYS.orders, []);
-    const order = orders.find((o) => o.id === orderId && o.userId === user.id);
+    const token = read(STORAGE_KEYS.auth, {}).token;
+    const response = await fetch(`${API_BASE}/user/orders`, { headers: { Authorization: `Bearer ${token}` } });
+    const orders = await response.json();
+    const order = (orders || []).find((o) => String(o.id) === String(orderId));
+    if (!order) { window.location.href = 'my-tickets.html'; return; }
 
-    if (!order) {
-      window.location.href = 'my-tickets.html';
-      return;
-    }
-
-    title.textContent = `Оплата заказа №${String(order.id).replace('o-', '')}`;
-    document.getElementById('paymentEvent').textContent = order.eventTitle;
-    document.getElementById('paymentTicketType').textContent = order.ticketTypeLabel || 'Standard';
-    document.getElementById('paymentQty').textContent = order.qty;
-    document.getElementById('paymentTotal').textContent = `${order.total} BYN`;
-    document.getElementById('payBackBtn').href = `ticket.html?id=${order.eventId}`;
-
+    title.textContent = `Оплата заказа №${order.id}`;
+    document.getElementById('paymentEvent').textContent = `Заказ #${order.id}`;
+    document.getElementById('paymentTicketType').textContent = order.items?.[0]?.ticketType || 'Билет';
+    document.getElementById('paymentQty').textContent = order.items?.[0]?.quantity || 1;
+    document.getElementById('paymentTotal').textContent = `${order.totalAmount} BYN`;
     const feedback = document.getElementById('paymentFeedback');
-    document.getElementById('paySuccessBtn').addEventListener('click', () => {
-      order.status = 'PAID';
-      order.statusLabel = 'Оплачено';
-      order.ticketCreated = true;
-      write(STORAGE_KEYS.orders, orders);
-      window.location.href = 'my-tickets.html';
-    });
 
-    document.getElementById('payFailBtn').addEventListener('click', () => {
-      order.status = 'FAILED';
-      order.statusLabel = 'Оплата отклонена';
-      order.ticketCreated = false;
-      write(STORAGE_KEYS.orders, orders);
-      feedback.className = 'alert alert-danger';
-      feedback.textContent = 'Оплата не прошла.';
+    document.getElementById('paySuccessBtn').addEventListener('click', async () => {
+      const payResp = await fetch(`${API_BASE}/user/orders/${order.id}/pay`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ paymentMethod: 'CARD' }) });
+      if (payResp.ok) window.location.href = 'my-tickets.html';
+    });
+    document.getElementById('payFailBtn').addEventListener('click', async () => {
+      await fetch(`${API_BASE}/user/orders/${order.id}/pay-later`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      feedback.className = 'alert alert-warning';
+      feedback.textContent = 'Заказ сохранен в статусе Ожидается оплата.';
     });
   }
 
-  function initMyTicketsPage() {
+  async function initMyTicketsPage() {
     const list = document.getElementById('myTicketsList');
+    const pendingList = document.getElementById('myOrdersPendingList');
     if (!list) return;
     requireAuth();
     const user = getCurrentUser();
-    if (user.role === 'admin') {
-      window.location.href = 'admin.html';
-      return;
-    }
+    if (user.role === 'admin') { window.location.href = 'admin.html'; return; }
 
-    const orders = read(STORAGE_KEYS.orders, []).filter((o) => o.userId === user.id && o.ticketCreated);
-    if (!orders.length) {
-      list.innerHTML = '<li class="list-group-item">Пока нет приобретенных билетов.</li>';
-      return;
-    }
+    const token = read(STORAGE_KEYS.auth, {}).token;
+    const response = await fetch(`${API_BASE}/user/orders`, { headers: { Authorization: `Bearer ${token}` } });
+    const orders = await response.json();
+    const paid = (orders || []).filter((o) => o.paymentStatus === 'PAID');
+    const pending = (orders || []).filter((o) => o.paymentStatus === 'PENDING');
 
-    list.innerHTML = orders.map((o) => `<li class="list-group-item d-flex justify-content-between align-items-center gap-3"><div><strong>${o.eventTitle}</strong><div class="small text-secondary">${new Date(o.createdAt).toLocaleString('ru-RU')} · ${o.qty} шт.</div></div><div class="d-flex align-items-center gap-3"><span class="text-success fw-semibold">${o.total} BYN</span><button class="btn btn-outline-primary btn-sm" data-download-ticket-id="${o.id}" type="button">Скачать PDF</button></div></li>`).join('');
+    list.innerHTML = paid.length ? paid.map((o) => `<li class='list-group-item d-flex justify-content-between'><div><strong>Заказ #${o.id}</strong><div class='small text-secondary'>${new Date(o.createdAt).toLocaleString('ru-RU')} · ${o.paymentStatus}</div></div><span class='text-success fw-semibold'>${o.totalAmount} BYN</span></li>`).join('') : '<li class="list-group-item">Пока нет оплаченных билетов.</li>';
 
-    list.querySelectorAll('[data-download-ticket-id]').forEach((button) => {
-      button.addEventListener('click', async () => {
-        const order = orders.find((item) => item.id === button.dataset.downloadTicketId);
-        if (order) {
-          await downloadTicketPdf(order, user);
-        }
-      });
-    });
+    pendingList.innerHTML = pending.length ? pending.map((o) => `<li class='list-group-item d-flex justify-content-between align-items-center'><div><strong>Заказ #${o.id}</strong><div class='small text-secondary'>Ожидается оплата</div></div><button class='btn btn-primary btn-sm' data-pay-order='${o.id}'>Оплатить</button></li>`).join('') : '<li class="list-group-item">Нет заказов в ожидании оплаты.</li>';
+
+    pendingList.querySelectorAll('[data-pay-order]').forEach((btn) => btn.addEventListener('click', async () => {
+      await fetch(`${API_BASE}/user/orders/${btn.dataset.payOrder}/pay`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ paymentMethod: 'CARD' }) });
+      window.location.reload();
+    }));
   }
+
 
 
   const PDF_CYRILLIC_FONT_URL = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf';

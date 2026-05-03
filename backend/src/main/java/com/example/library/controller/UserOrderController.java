@@ -26,6 +26,18 @@ public class UserOrderController {
         return orderService.getMyTickets(principal.getName());
     }
 
+
+    @PostMapping("/orders/{orderId}/pay")
+    public OrderDtos.OrderResponse payOrder(@PathVariable Long orderId,
+                                            @RequestBody(required = false) OrderDtos.PaymentActionRequest request,
+                                            Principal principal) {
+        return orderService.payOrder(principal.getName(), orderId, request);
+    }
+
+    @PostMapping("/orders/{orderId}/pay-later")
+    public OrderDtos.OrderResponse payLater(@PathVariable Long orderId, Principal principal) {
+        return orderService.postponePayment(principal.getName(), orderId);
+    }
     @GetMapping("/orders")
     public List<OrderDtos.OrderResponse> myOrders(Principal principal) {
         return orderService.myOrders(principal.getName());

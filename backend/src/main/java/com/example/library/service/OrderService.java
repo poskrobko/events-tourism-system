@@ -3,10 +3,12 @@ package com.example.library.service;
 import com.example.library.dto.OrderDtos;
 import com.example.library.model.Order;
 import com.example.library.model.OrderItem;
+import com.example.library.model.Payment;
 import com.example.library.model.TicketType;
 import com.example.library.model.User;
 import com.example.library.repository.OrderItemRepository;
 import com.example.library.repository.OrderRepository;
+import com.example.library.repository.PaymentRepository;
 import com.example.library.repository.TicketTypeRepository;
 import com.example.library.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -21,13 +23,16 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final TicketTypeRepository ticketTypeRepository;
     private final UserRepository userRepository;
+    private final PaymentRepository paymentRepository;
 
     public OrderService(OrderRepository orderRepository, OrderItemRepository orderItemRepository,
-                        TicketTypeRepository ticketTypeRepository, UserRepository userRepository) {
+                        TicketTypeRepository ticketTypeRepository, UserRepository userRepository,
+                        PaymentRepository paymentRepository) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.ticketTypeRepository = ticketTypeRepository;
         this.userRepository = userRepository;
+        this.paymentRepository = paymentRepository;
     }
 
     @Transactional
@@ -54,24 +59,58 @@ public class OrderService {
         item.setUnitPrice(ticketType.getPrice());
         orderItemRepository.save(item);
 
-        ticketType.setQuantitySold(ticketType.getQuantitySold() + request.quantity());
-        ticketTypeRepository.save(ticketType);
-
+        String method = (request.paymentMethod() == null || request.paymentMethod().isBlank()) ? "CARD" : request.paymentMethod();
+        createPendingPayment(order, method);
         return toOrderResponse(order, List.of(item));
+    }
+
+    @Transactional
+    public OrderDtos.OrderResponse payOrder(String userEmail, Long orderId, OrderDtos.PaymentActionRequest request) {
+        Order order = findUserOrder(userEmail, orderId);
+        Payment payment = paymentRepository.findTopByOrderIdOrderByCreatedAtDesc(order.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
+        payment.setStatus("PAID");
+        payment.setPaidAt(Instant.now());
+        if (request != null && request.paymentMethod() != null && !request.paymentMethod().isBlank()) {
+            payment.setPaymentMethod(request.paymentMethod());
+        }
+        paymentRepository.save(payment);
+
+        var items = orderItemRepository.findByOrderId(order.getId());
+        for (var item : items) {
+            TicketType ticketType = item.getTicketType();
+            ticketType.setQuantitySold(ticketType.getQuantitySold() + item.getQuantity());
+            ticketTypeRepository.save(ticketType);
+        }
+        return toOrderResponse(order, items);
+    }
+
+    @Transactional
+    public OrderDtos.OrderResponse postponePayment(String userEmail, Long orderId) {
+        Order order = findUserOrder(userEmail, orderId);
+        Payment payment = paymentRepository.findTopByOrderIdOrderByCreatedAtDesc(order.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
+        payment.setStatus("PENDING");
+        paymentRepository.save(payment);
+        return toOrderResponse(order);
     }
 
     public List<OrderDtos.TicketView> getMyTickets(String userEmail) {
         User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new IllegalArgumentException("User not found"));
-        return orderItemRepository.findByOrderUserId(user.getId()).stream().map(item -> new OrderDtos.TicketView(
-                item.getId(),
-                item.getOrder().getId(),
-                item.getTicketType().getEvent().getId(),
-                item.getTicketType().getEvent().getTitle(),
-                item.getTicketType().getName(),
-                item.getQuantity(),
-                item.getUnitPrice(),
-                item.getOrder().getCreatedAt()
-        )).toList();
+        return orderItemRepository.findByOrderUserId(user.getId()).stream().map(item -> {
+            Payment payment = paymentRepository.findTopByOrderIdOrderByCreatedAtDesc(item.getOrder().getId()).orElse(null);
+            return new OrderDtos.TicketView(
+                    item.getId(),
+                    item.getOrder().getId(),
+                    item.getTicketType().getEvent().getId(),
+                    item.getTicketType().getEvent().getTitle(),
+                    item.getTicketType().getName(),
+                    item.getQuantity(),
+                    item.getUnitPrice(),
+                    item.getOrder().getCreatedAt(),
+                    payment != null ? payment.getStatus() : "PENDING"
+            );
+        }).toList();
     }
 
     public List<OrderDtos.OrderResponse> myOrders(String userEmail) {
@@ -81,12 +120,25 @@ public class OrderService {
                 .toList();
     }
 
-    public List<OrderDtos.OrderResponse> allOrders() {
-        return orderRepository.findAllByOrderByCreatedAtDesc().stream().map(this::toOrderResponse).toList();
+    public List<OrderDtos.OrderResponse> allOrders() { return orderRepository.findAllByOrderByCreatedAtDesc().stream().map(this::toOrderResponse).toList(); }
+    public List<OrderDtos.OrderResponse> ordersForManager(String managerEmail) { return orderRepository.findOrdersByManagerEmail(managerEmail).stream().map(this::toOrderResponse).toList(); }
+
+    private Order findUserOrder(String userEmail, Long orderId) {
+        User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new IllegalArgumentException("Order not found"));
+        if (!order.getUser().getId().equals(user.getId())) throw new IllegalArgumentException("Order does not belong to user");
+        return order;
     }
 
-    public List<OrderDtos.OrderResponse> ordersForManager(String managerEmail) {
-        return orderRepository.findOrdersByManagerEmail(managerEmail).stream().map(this::toOrderResponse).toList();
+    private void createPendingPayment(Order order, String method) {
+        Payment payment = new Payment();
+        payment.setOrder(order);
+        payment.setAmount(order.getTotalAmount());
+        payment.setCurrency("BYN");
+        payment.setPaymentMethod(method);
+        payment.setStatus("PENDING");
+        payment.setCreatedAt(Instant.now());
+        paymentRepository.save(payment);
     }
 
     private OrderDtos.OrderResponse toOrderResponse(Order order) {
@@ -95,6 +147,7 @@ public class OrderService {
     }
 
     private OrderDtos.OrderResponse toOrderResponse(Order order, List<OrderItem> items) {
+        Payment payment = paymentRepository.findTopByOrderIdOrderByCreatedAtDesc(order.getId()).orElse(null);
         return new OrderDtos.OrderResponse(
                 order.getId(),
                 order.getUser().getId(),
@@ -103,7 +156,9 @@ public class OrderService {
                 order.getTotalAmount(),
                 items.stream().map(i -> new OrderDtos.OrderItemResponse(
                         i.getId(), i.getTicketType().getId(), i.getTicketType().getName(), i.getQuantity(), i.getUnitPrice()
-                )).toList()
+                )).toList(),
+                payment != null ? payment.getStatus() : "PENDING",
+                payment != null ? payment.getPaymentMethod() : null
         );
     }
 }
