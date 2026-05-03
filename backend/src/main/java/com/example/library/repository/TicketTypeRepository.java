@@ -14,4 +14,7 @@ public interface TicketTypeRepository extends JpaRepository<TicketType, Long> {
     Optional<BigDecimal> findMinPriceByEventId(Long eventId);
 
     Optional<TicketType> findByIdAndEventCreatedByEmail(Long id, String email);
+
+    @Query("select coalesce(sum(tt.quantityTotal - tt.quantitySold), 0) from TicketType tt where tt.event.id = :eventId")
+    Integer sumAvailableByEventId(Long eventId);
 }

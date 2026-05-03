@@ -24,15 +24,17 @@ public class OrderService {
     private final TicketTypeRepository ticketTypeRepository;
     private final UserRepository userRepository;
     private final PaymentRepository paymentRepository;
+    private final EventService eventService;
 
     public OrderService(OrderRepository orderRepository, OrderItemRepository orderItemRepository,
                         TicketTypeRepository ticketTypeRepository, UserRepository userRepository,
-                        PaymentRepository paymentRepository) {
+                        PaymentRepository paymentRepository, EventService eventService) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.ticketTypeRepository = ticketTypeRepository;
         this.userRepository = userRepository;
         this.paymentRepository = paymentRepository;
+        this.eventService = eventService;
     }
 
     @Transactional
@@ -69,6 +71,20 @@ public class OrderService {
         Order order = findUserOrder(userEmail, orderId);
         Payment payment = paymentRepository.findTopByOrderIdOrderByCreatedAtDesc(order.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
+        if ("PAID".equals(payment.getStatus())) {
+            return toOrderResponse(order);
+        }
+
+        var items = orderItemRepository.findByOrderId(order.getId());
+        for (var item : items) {
+            TicketType ticketType = ticketTypeRepository.findById(item.getTicketType().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Ticket type not found"));
+            int available = ticketType.getQuantityTotal() - ticketType.getQuantitySold();
+            if (item.getQuantity() > available) {
+                throw new IllegalArgumentException("Not enough tickets available");
+            }
+        }
+
         payment.setStatus("PAID");
         payment.setPaidAt(Instant.now());
         if (request != null && request.paymentMethod() != null && !request.paymentMethod().isBlank()) {
@@ -76,11 +92,12 @@ public class OrderService {
         }
         paymentRepository.save(payment);
 
-        var items = orderItemRepository.findByOrderId(order.getId());
         for (var item : items) {
-            TicketType ticketType = item.getTicketType();
+            TicketType ticketType = ticketTypeRepository.findById(item.getTicketType().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Ticket type not found"));
             ticketType.setQuantitySold(ticketType.getQuantitySold() + item.getQuantity());
             ticketTypeRepository.save(ticketType);
+            eventService.refreshEventAvailableTickets(ticketType.getEvent().getId());
         }
         return toOrderResponse(order, items);
     }
@@ -178,7 +195,10 @@ public class OrderService {
                         i.getUnitPrice()
                 )).toList(),
                 payment != null ? payment.getStatus() : "PENDING",
-                payment != null ? payment.getPaymentMethod() : null
+                payment != null ? payment.getPaymentMethod() : null,
+                items.stream().findFirst()
+                        .map(i -> i.getTicketType().getEvent().getEndDateTime().isBefore(java.time.LocalDateTime.now()))
+                        .orElse(false)
         );
     }
 }

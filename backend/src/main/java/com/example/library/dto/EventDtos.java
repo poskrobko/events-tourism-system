@@ -31,7 +31,8 @@ public class EventDtos {
             String imageUrl,
             LocalDateTime startDateTime,
             LocalDateTime endDateTime,
-            BigDecimal minTicketPrice
+            BigDecimal minTicketPrice,
+            Integer availableTickets
     ) {}
 
     public record ProgramItemRequest(

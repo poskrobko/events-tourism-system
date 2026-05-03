@@ -26,6 +26,9 @@
         <div class="col-12"><input id="managerEventImageUrl" class="form-control" type="url" placeholder="Ссылка на изображение (https://...)" /></div>
         <div class="col-md-6"><input id="managerEventStart" class="form-control" type="datetime-local" required /></div>
         <div class="col-md-6"><input id="managerEventEnd" class="form-control" type="datetime-local" required /></div>
+        <div class="col-md-4"><input id="managerTicketName" class="form-control" placeholder="Тип билета (например, Standard)" /></div>
+        <div class="col-md-4"><input id="managerTicketPrice" class="form-control" type="number" min="0" step="0.01" placeholder="Цена билета" /></div>
+        <div class="col-md-4"><input id="managerTicketQuantity" class="form-control" type="number" min="1" placeholder="Доступно билетов" /></div>
         <div class="col-12 d-flex gap-2">
           <button class="btn btn-primary" type="submit">Сохранить</button>
           <button class="btn btn-outline-secondary" type="button" id="managerEventFormReset">Сбросить</button>
@@ -36,7 +39,7 @@
       <h2 class="h5 mb-3">Список моих мероприятий</h2>
       <div class="table-responsive">
         <table class="table align-middle">
-          <thead><tr><th>Название</th><th>Город</th><th>Дата</th><th></th></tr></thead>
+          <thead><tr><th>Название</th><th>Город</th><th>Дата</th><th>Доступно билетов</th><th></th></tr></thead>
           <tbody id="managerEventsTable"></tbody>
         </table>
       </div>

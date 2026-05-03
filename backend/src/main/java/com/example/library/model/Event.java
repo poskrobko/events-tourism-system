@@ -41,6 +41,9 @@ public class Event {
     @Column(nullable = false)
     private LocalDateTime endDateTime;
 
+    @Column(nullable = false)
+    private Integer availableTickets = 0;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_user_id")
     private User createdBy;
@@ -66,6 +69,8 @@ public class Event {
     public void setStartDateTime(LocalDateTime startDateTime) { this.startDateTime = startDateTime; }
     public LocalDateTime getEndDateTime() { return endDateTime; }
     public void setEndDateTime(LocalDateTime endDateTime) { this.endDateTime = endDateTime; }
+    public Integer getAvailableTickets() { return availableTickets; }
+    public void setAvailableTickets(Integer availableTickets) { this.availableTickets = availableTickets; }
     public User getCreatedBy() { return createdBy; }
     public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
 }
