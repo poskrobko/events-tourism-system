@@ -1421,9 +1421,15 @@
 
     const auth = read(STORAGE_KEYS.auth, null);
     const eventsTable = document.getElementById('adminEventsTable');
+    const eventsPagination = document.getElementById('adminEventsPagination');
     const ordersTable = document.getElementById('adminOrdersTable');
+    const ordersPagination = document.getElementById('adminOrdersPagination');
+    const ordersStatusFilter = document.getElementById('adminOrdersStatusFilter');
     const eventForm = document.getElementById('eventCrudForm');
     const scheduleInput = document.getElementById('eventScheduleInput');
+    const ADMIN_PAGE_SIZE = 7;
+    let adminEventsPage = 1;
+    let adminOrdersPage = 1;
 
     const statusRu = { PAID: 'Оплачено', REFUNDED: 'Возвращен', DECLINED: 'Отменен', PENDING: 'В ожидании' };
 
@@ -1431,6 +1437,49 @@
       const response = await fetch(`${API_BASE}/events/${eventId}`);
       if (!response.ok) return null;
       return response.json();
+    }
+
+    function isEventCompleted(event) {
+      const endDate = event.endDateTime || event.startDateTime;
+      return endDate ? new Date(endDate).getTime() < Date.now() : false;
+    }
+
+    function renderTablePagination(container, totalItems, currentPage, onPageChange, pageSize = ADMIN_PAGE_SIZE) {
+      if (!container) return;
+      const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+      container.innerHTML = '';
+      for (let page = 1; page <= totalPages; page += 1) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `btn btn-sm ${page === currentPage ? 'btn-primary' : 'btn-outline-secondary'}`;
+        button.textContent = String(page);
+        button.addEventListener('click', () => onPageChange(page));
+        container.appendChild(button);
+      }
+    }
+
+    function getPageSlice(items, currentPage, pageSize = ADMIN_PAGE_SIZE) {
+      const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+      const safePage = Math.min(Math.max(1, currentPage), totalPages);
+      const start = (safePage - 1) * pageSize;
+      return { pageItems: items.slice(start, start + pageSize), safePage };
+    }
+
+    function renderOrdersTable(orders) {
+      const selectedStatus = ordersStatusFilter?.value || 'ALL';
+      const filteredOrders = selectedStatus === 'ALL'
+        ? orders
+        : orders.filter((order) => order.paymentStatus === selectedStatus);
+
+      const { pageItems, safePage } = getPageSlice(filteredOrders, adminOrdersPage);
+      adminOrdersPage = safePage;
+      const rows = [];
+      pageItems.forEach((order) => (order.items || []).forEach((item) => rows.push(`<tr><td>${order.userFullName || order.userEmail}</td><td>${item.eventTitle}</td><td>${item.quantity}</td><td>${(Number(item.unitPrice||0)*Number(item.quantity||0)).toFixed(2)} BYN</td><td>${statusRu[order.paymentStatus] || order.paymentStatus}</td><td>${new Date(order.createdAt).toLocaleString('ru-RU')}</td></tr>`)));
+      ordersTable.innerHTML = rows.join('') || '<tr><td colspan="6">Заказов по выбранному фильтру нет.</td></tr>';
+      renderTablePagination(ordersPagination, filteredOrders.length, adminOrdersPage, (nextPage) => {
+        adminOrdersPage = nextPage;
+        renderOrdersTable(orders);
+      });
     }
 
     async function loadAdminData() {
@@ -1467,20 +1516,25 @@
       document.getElementById('totalTickets').textContent = Math.max(0, soldTickets);
       document.getElementById('totalRevenue').textContent = `${Math.max(0, revenue).toFixed(2)} BYN`;
 
-      eventsTable.innerHTML = events.map((e) => {
+      const { pageItems: eventsPageItems, safePage } = getPageSlice(events, adminEventsPage);
+      adminEventsPage = safePage;
+      eventsTable.innerHTML = eventsPageItems.map((e) => {
         const details = eventMap.get(e.id);
         const ticketTypes = details?.ticketTypes || [];
         const priceList = ticketTypes.length ? ticketTypes.map((t) => `${t.name}: ${t.price} BYN`).join('<br>') : `${e.minTicketPrice ?? 0} BYN`;
         const totalTickets = ticketTypes.reduce((sum, t) => sum + (t.quantityTotal || 0), 0);
+        const completedBadge = isEventCompleted(e) ? ' <span class="badge text-bg-secondary">Завершено</span>' : '';
         return `<tr>
-          <td>${e.title}</td><td>${e.city}</td><td>${new Date(e.startDateTime).toLocaleString('ru-RU')}</td><td>${priceList}</td><td>${totalTickets}</td>
+          <td>${e.title}${completedBadge}</td><td>${e.city}</td><td>${new Date(e.startDateTime).toLocaleString('ru-RU')}</td><td>${priceList}</td><td>${totalTickets}</td>
           <td class="d-flex gap-2"><button class="btn btn-sm btn-outline-secondary" data-edit="${e.id}">Изменить</button><button class="btn btn-sm btn-outline-danger" data-delete="${e.id}">Удалить</button></td>
         </tr>`;
       }).join('') || '<tr><td colspan="6">Событий пока нет.</td></tr>';
+      renderTablePagination(eventsPagination, events.length, adminEventsPage, (nextPage) => {
+        adminEventsPage = nextPage;
+        loadAdminData();
+      });
 
-      const rows = [];
-      orders.forEach((order) => (order.items || []).forEach((item) => rows.push(`<tr><td>${order.userFullName || order.userEmail}</td><td>${item.eventTitle}</td><td>${item.quantity}</td><td>${(Number(item.unitPrice||0)*Number(item.quantity||0)).toFixed(2)} BYN</td><td>${statusRu[order.paymentStatus] || order.paymentStatus}</td><td>${new Date(order.createdAt).toLocaleString('ru-RU')}</td></tr>`)));
-      ordersTable.innerHTML = rows.join('') || '<tr><td colspan="6">Заказов пока нет.</td></tr>';
+      renderOrdersTable(orders);
 
       eventsTable.querySelectorAll('[data-delete]').forEach((btn) => btn.addEventListener('click', async () => {
         const resp = await fetch(`${API_BASE}/admin/events/${btn.dataset.delete}`, { method: 'DELETE', headers: { Authorization: `Bearer ${auth.token}` } });
@@ -1503,6 +1557,11 @@
         scheduleInput.value = '';
       }));
     }
+
+    ordersStatusFilter?.addEventListener('change', () => {
+      adminOrdersPage = 1;
+      loadAdminData();
+    });
 
     eventForm.addEventListener('submit', async (e) => {
       e.preventDefault();
