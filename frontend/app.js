@@ -641,16 +641,45 @@
     list.innerHTML = orders.map((o) => `<li class="list-group-item d-flex justify-content-between align-items-center gap-3"><div><strong>${o.eventTitle}</strong><div class="small text-secondary">${new Date(o.createdAt).toLocaleString('ru-RU')} · ${o.qty} шт.</div></div><div class="d-flex align-items-center gap-3"><span class="text-success fw-semibold">${o.total} BYN</span><button class="btn btn-outline-primary btn-sm" data-download-ticket-id="${o.id}" type="button">Скачать PDF</button></div></li>`).join('');
 
     list.querySelectorAll('[data-download-ticket-id]').forEach((button) => {
-      button.addEventListener('click', () => {
+      button.addEventListener('click', async () => {
         const order = orders.find((item) => item.id === button.dataset.downloadTicketId);
         if (order) {
-          downloadTicketPdf(order, user);
+          await downloadTicketPdf(order, user);
         }
       });
     });
   }
 
-  function downloadTicketPdf(order, user) {
+
+  const PDF_CYRILLIC_FONT_URL = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf';
+  let pdfCyrillicFontLoaded = false;
+
+  async function ensurePdfCyrillicFont(doc) {
+    if (pdfCyrillicFontLoaded) {
+      doc.setFont('Roboto', 'normal');
+      return;
+    }
+
+    const response = await fetch(PDF_CYRILLIC_FONT_URL);
+    if (!response.ok) {
+      throw new Error('Не удалось загрузить шрифт для PDF.');
+    }
+
+    const fontBuffer = await response.arrayBuffer();
+    const fontBytes = new Uint8Array(fontBuffer);
+    let binary = '';
+    fontBytes.forEach((byte) => {
+      binary += String.fromCharCode(byte);
+    });
+
+    const base64Font = btoa(binary);
+    doc.addFileToVFS('Roboto-Regular.ttf', base64Font);
+    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+    doc.setFont('Roboto', 'normal');
+    pdfCyrillicFontLoaded = true;
+  }
+
+  async function downloadTicketPdf(order, user) {
     const jsPdfLib = window.jspdf?.jsPDF;
     if (!jsPdfLib) {
       alert('Не удалось сформировать PDF. Попробуйте обновить страницу.');
@@ -674,6 +703,13 @@
       '',
       'Покажите этот билет на входе.',
     ];
+
+    try {
+      await ensurePdfCyrillicFont(doc);
+    } catch (error) {
+      alert('Не удалось загрузить шрифт для корректного отображения русских символов в PDF.');
+      return;
+    }
 
     doc.setFontSize(18);
     doc.text(lines[0], 20, 20);
