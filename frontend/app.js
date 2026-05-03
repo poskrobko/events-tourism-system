@@ -675,13 +675,23 @@
     const response = await fetch(`${API_BASE}/user/orders`, { headers: { Authorization: `Bearer ${token}` } });
     const orders = await response.json();
     const now = new Date();
-    const paid = (orders || []).filter((o) => o.paymentStatus === 'PAID' && !o.isEventCompleted);
+    const activePaid = (orders || []).filter((o) => o.paymentStatus === 'PAID' && !o.isEventCompleted);
+    const refunded = (orders || []).filter((o) => o.paymentStatus === 'REFUNDED');
+    const paid = [...activePaid, ...refunded];
     const completed = (orders || []).filter((o) => o.paymentStatus === 'PAID' && o.isEventCompleted);
     const pending = (orders || []).filter((o) => o.paymentStatus === 'PENDING');
-    const paymentStatusLabel = (status) => status === 'PAID' ? 'Оплачено' : (status === 'PENDING' ? 'Ожидается оплата' : status);
+    const paymentStatusLabel = (status) => {
+      if (status === 'PAID') return 'Оплачено';
+      if (status === 'PENDING') return 'Ожидается оплата';
+      if (status === 'REFUNDED') return 'Билет возвращен · Деньги возвращены';
+      return status;
+    };
     const eventLabel = (order) => order.items?.[0]?.eventTitle || `Заказ #${order.id}`;
 
-    list.innerHTML = paid.length ? paid.map((o) => `<li class='list-group-item d-flex justify-content-between align-items-center'><div><strong>${eventLabel(o)}</strong><div class='small text-secondary'>Заказ #${o.id} · ${new Date(o.createdAt).toLocaleString('ru-RU')} · ${paymentStatusLabel(o.paymentStatus)}</div></div><div class='d-flex align-items-center gap-2'><span class='text-success fw-semibold'>${o.totalAmount} BYN</span><button class='btn btn-outline-primary btn-sm' data-download-ticket='${o.id}'>Скачать PDF</button></div></li>`).join('') : '<li class="list-group-item">Пока нет оплаченных билетов.</li>';
+    list.innerHTML = paid.length ? paid.map((o) => {
+      const isRefunded = o.paymentStatus === 'REFUNDED';
+      return `<li class='list-group-item d-flex justify-content-between align-items-center'><div><strong>${eventLabel(o)}</strong><div class='small text-secondary'>Заказ #${o.id} · ${new Date(o.createdAt).toLocaleString('ru-RU')} · ${paymentStatusLabel(o.paymentStatus)}</div></div><div class='d-flex align-items-center gap-2'><span class='${isRefunded ? 'text-secondary' : 'text-success'} fw-semibold'>${o.totalAmount} BYN</span>${isRefunded ? '' : `<button class='btn btn-outline-danger btn-sm' data-refund-ticket='${o.id}'>Вернуть билет</button><button class='btn btn-outline-primary btn-sm' data-download-ticket='${o.id}'>Скачать PDF</button>`}</div></li>`;
+    }).join('') : '<li class="list-group-item">Пока нет оплаченных билетов.</li>';
 
     pendingList.innerHTML = pending.length ? pending.map((o) => `<li class='list-group-item d-flex justify-content-between align-items-center'><div><strong>${eventLabel(o)}</strong><div class='small text-secondary'>Заказ #${o.id} · ${paymentStatusLabel(o.paymentStatus)}</div></div><button class='btn btn-primary btn-sm' data-pay-order='${o.id}'>Оплатить</button></li>`).join('') : '<li class="list-group-item">Нет заказов в ожидании оплаты.</li>';
 
@@ -696,9 +706,35 @@
       window.location.reload();
     }));
 
+    const refundModalEl = document.getElementById('refundConfirmModal');
+    const refundModal = refundModalEl && window.bootstrap?.Modal ? new window.bootstrap.Modal(refundModalEl) : null;
+    const confirmRefundBtn = document.getElementById('confirmRefundBtn');
+    let selectedRefundOrderId = null;
+
+    list.querySelectorAll('[data-refund-ticket]').forEach((btn) => btn.addEventListener('click', async () => {
+      selectedRefundOrderId = btn.dataset.refundTicket;
+      if (refundModal) {
+        refundModal.show();
+        return;
+      }
+      if (window.confirm('Вы уверены, что хотите вернуть билет?')) {
+        await fetch(`${API_BASE}/user/orders/${selectedRefundOrderId}/refund`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+        window.location.reload();
+      }
+    }));
+
+    if (confirmRefundBtn) {
+      confirmRefundBtn.addEventListener('click', async () => {
+        if (!selectedRefundOrderId) return;
+        await fetch(`${API_BASE}/user/orders/${selectedRefundOrderId}/refund`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+        refundModal?.hide();
+        window.location.reload();
+      });
+    }
+
     list.querySelectorAll('[data-download-ticket]').forEach((btn) => btn.addEventListener('click', async () => {
       const order = paid.find((item) => String(item.id) === String(btn.dataset.downloadTicket));
-      if (!order) return;
+      if (!order || order.paymentStatus === 'REFUNDED') return;
       await downloadTicketPdf(order, user);
     }));
   }

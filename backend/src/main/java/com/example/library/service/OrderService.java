@@ -52,6 +52,7 @@ public class OrderService {
         order.setUser(user);
         order.setCreatedAt(Instant.now());
         order.setTotalAmount(ticketType.getPrice().multiply(BigDecimal.valueOf(request.quantity())));
+        order.setStatus("PENDING");
         orderRepository.save(order);
 
         OrderItem item = new OrderItem();
@@ -59,6 +60,7 @@ public class OrderService {
         item.setTicketType(ticketType);
         item.setQuantity(request.quantity());
         item.setUnitPrice(ticketType.getPrice());
+        item.setStatus("ACTIVE");
         orderItemRepository.save(item);
 
         String method = (request.paymentMethod() == null || request.paymentMethod().isBlank()) ? "CARD" : request.paymentMethod();
@@ -91,10 +93,16 @@ public class OrderService {
             payment.setPaymentMethod(request.paymentMethod());
         }
         paymentRepository.save(payment);
+        order.setStatus("PAID");
+        order.setRefundedAt(null);
+        orderRepository.save(order);
 
         for (var item : items) {
             TicketType ticketType = ticketTypeRepository.findById(item.getTicketType().getId())
                     .orElseThrow(() -> new IllegalArgumentException("Ticket type not found"));
+            item.setStatus("PAID");
+            item.setRefundedAt(null);
+            orderItemRepository.save(item);
             ticketType.setQuantitySold(ticketType.getQuantitySold() + item.getQuantity());
             ticketTypeRepository.save(ticketType);
             eventService.refreshEventAvailableTickets(ticketType.getEvent().getId());
@@ -109,6 +117,8 @@ public class OrderService {
                 .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
         payment.setStatus("PENDING");
         paymentRepository.save(payment);
+        order.setStatus("PENDING");
+        orderRepository.save(order);
         return toOrderResponse(order);
     }
 
@@ -119,7 +129,42 @@ public class OrderService {
                 .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
         payment.setStatus("DECLINED");
         paymentRepository.save(payment);
+        order.setStatus("DECLINED");
+        orderRepository.save(order);
         return toOrderResponse(order);
+    }
+
+    @Transactional
+    public OrderDtos.OrderResponse refundOrder(String userEmail, Long orderId) {
+        Order order = findUserOrder(userEmail, orderId);
+        Payment payment = paymentRepository.findTopByOrderIdOrderByCreatedAtDesc(order.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
+        if (!"PAID".equals(payment.getStatus())) {
+            throw new IllegalArgumentException("Only paid orders can be refunded");
+        }
+
+        var items = orderItemRepository.findByOrderId(order.getId());
+        for (var item : items) {
+            TicketType ticketType = ticketTypeRepository.findById(item.getTicketType().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Ticket type not found"));
+            int updatedSold = Math.max(0, ticketType.getQuantitySold() - item.getQuantity());
+            ticketType.setQuantitySold(updatedSold);
+            ticketTypeRepository.save(ticketType);
+            eventService.refreshEventAvailableTickets(ticketType.getEvent().getId());
+        }
+
+        Instant refundedAt = Instant.now();
+        payment.setStatus("REFUNDED");
+        paymentRepository.save(payment);
+        order.setStatus("REFUNDED");
+        order.setRefundedAt(refundedAt);
+        orderRepository.save(order);
+        for (var item : items) {
+            item.setStatus("REFUNDED");
+            item.setRefundedAt(refundedAt);
+            orderItemRepository.save(item);
+        }
+        return toOrderResponse(order, items);
     }
 
     @Transactional
