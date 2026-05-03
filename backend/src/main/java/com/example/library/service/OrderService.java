@@ -105,6 +105,7 @@ public class OrderService {
         return toOrderResponse(order);
     }
 
+    @Transactional
     public List<OrderDtos.TicketView> getMyTickets(String userEmail) {
         User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new IllegalArgumentException("User not found"));
         return orderItemRepository.findByOrderUserId(user.getId()).stream().map(item -> {
@@ -120,9 +121,10 @@ public class OrderService {
                     item.getOrder().getCreatedAt(),
                     payment != null ? payment.getStatus() : "PENDING"
             );
-        }).toList();
+        }).filter(ticket -> "PAID".equals(ticket.paymentStatus())).toList();
     }
 
+    @Transactional
     public List<OrderDtos.OrderResponse> myOrders(String userEmail) {
         User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new IllegalArgumentException("User not found"));
         return orderRepository.findByUserIdOrderByCreatedAtDesc(user.getId()).stream()
@@ -130,7 +132,9 @@ public class OrderService {
                 .toList();
     }
 
+    @Transactional
     public List<OrderDtos.OrderResponse> allOrders() { return orderRepository.findAllByOrderByCreatedAtDesc().stream().map(this::toOrderResponse).toList(); }
+    @Transactional
     public List<OrderDtos.OrderResponse> ordersForManager(String managerEmail) { return orderRepository.findOrdersByManagerEmail(managerEmail).stream().map(this::toOrderResponse).toList(); }
 
     private Order findUserOrder(String userEmail, Long orderId) {
