@@ -486,6 +486,17 @@
     const titleNode = document.getElementById('eventTitle');
     if (!titleNode) return;
     const id = new URLSearchParams(window.location.search).get('id');
+    const paymentDeclineMessage = sessionStorage.getItem('eventflow_payment_declined_message');
+    if (paymentDeclineMessage) {
+      const main = document.querySelector('main.container');
+      if (main) {
+        const alertNode = document.createElement('div');
+        alertNode.className = 'alert alert-danger';
+        alertNode.textContent = paymentDeclineMessage;
+        main.prepend(alertNode);
+      }
+      sessionStorage.removeItem('eventflow_payment_declined_message');
+    }
     fetch(`${API_BASE}/events/${id}`)
       .then(async (response) => {
         const data = await response.json();
@@ -576,7 +587,8 @@
         const ticketTypeLabel = ticketType.options[ticketType.selectedIndex]?.textContent || '';
         const quantityParam = encodeURIComponent(String(qtyInput.value || 1));
         const totalParam = encodeURIComponent(String((ticketTypes.find((item) => String(item.id) === String(ticketType.value))?.price || event.price || 0) * Number(qtyInput.value || 1)));
-        window.location.href = `payment.html?orderId=${encodeURIComponent(data.id)}&eventTitle=${eventTitleParam}&ticketType=${encodeURIComponent(ticketTypeLabel)}&qty=${quantityParam}&total=${totalParam}`;
+        const eventIdParam = encodeURIComponent(String(event.id || ''));
+        window.location.href = `payment.html?orderId=${encodeURIComponent(data.id)}&eventId=${eventIdParam}&eventTitle=${eventTitleParam}&ticketType=${encodeURIComponent(ticketTypeLabel)}&qty=${quantityParam}&total=${totalParam}`;
       } catch (error) {
         feedback.className = 'alert alert-danger mt-3';
         feedback.textContent = error.message;
@@ -618,13 +630,19 @@
     });
     document.getElementById('payDeclineBtn').addEventListener('click', async () => {
       await fetch(`${API_BASE}/user/orders/${order.id}/pay-decline`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
-      feedback.className = 'alert alert-danger';
-      feedback.textContent = 'Оплата отклонена. Заказ переведён в статус Отклонен.';
+      sessionStorage.setItem('eventflow_payment_declined_message', 'Оплата неуспешна. Попробуйте снова или выберите другой билет.');
+      const eventId = firstItem?.eventId || params.get('eventId');
+      if (eventId) {
+        window.location.href = `event-details.html?id=${encodeURIComponent(eventId)}`;
+        return;
+      }
+      window.location.href = 'events.html';
     });
     document.getElementById('payFailBtn').addEventListener('click', async () => {
       await fetch(`${API_BASE}/user/orders/${order.id}/pay-later`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
       feedback.className = 'alert alert-warning';
       feedback.textContent = 'Заказ сохранен в статусе Ожидается оплата.';
+      window.location.href = 'my-tickets.html';
     });
   }
 
@@ -641,14 +659,22 @@
     const orders = await response.json();
     const paid = (orders || []).filter((o) => o.paymentStatus === 'PAID');
     const pending = (orders || []).filter((o) => o.paymentStatus === 'PENDING');
+    const paymentStatusLabel = (status) => status === 'PAID' ? 'Оплачено' : (status === 'PENDING' ? 'Ожидается оплата' : status);
+    const eventLabel = (order) => order.items?.[0]?.eventTitle || `Заказ #${order.id}`;
 
-    list.innerHTML = paid.length ? paid.map((o) => `<li class='list-group-item d-flex justify-content-between'><div><strong>Заказ #${o.id}</strong><div class='small text-secondary'>${new Date(o.createdAt).toLocaleString('ru-RU')} · ${o.paymentStatus}</div></div><span class='text-success fw-semibold'>${o.totalAmount} BYN</span></li>`).join('') : '<li class="list-group-item">Пока нет оплаченных билетов.</li>';
+    list.innerHTML = paid.length ? paid.map((o) => `<li class='list-group-item d-flex justify-content-between align-items-center'><div><strong>${eventLabel(o)}</strong><div class='small text-secondary'>Заказ #${o.id} · ${new Date(o.createdAt).toLocaleString('ru-RU')} · ${paymentStatusLabel(o.paymentStatus)}</div></div><div class='d-flex align-items-center gap-2'><span class='text-success fw-semibold'>${o.totalAmount} BYN</span><button class='btn btn-outline-primary btn-sm' data-download-ticket='${o.id}'>Скачать PDF</button></div></li>`).join('') : '<li class="list-group-item">Пока нет оплаченных билетов.</li>';
 
-    pendingList.innerHTML = pending.length ? pending.map((o) => `<li class='list-group-item d-flex justify-content-between align-items-center'><div><strong>Заказ #${o.id}</strong><div class='small text-secondary'>Ожидается оплата</div></div><button class='btn btn-primary btn-sm' data-pay-order='${o.id}'>Оплатить</button></li>`).join('') : '<li class="list-group-item">Нет заказов в ожидании оплаты.</li>';
+    pendingList.innerHTML = pending.length ? pending.map((o) => `<li class='list-group-item d-flex justify-content-between align-items-center'><div><strong>${eventLabel(o)}</strong><div class='small text-secondary'>Заказ #${o.id} · ${paymentStatusLabel(o.paymentStatus)}</div></div><button class='btn btn-primary btn-sm' data-pay-order='${o.id}'>Оплатить</button></li>`).join('') : '<li class="list-group-item">Нет заказов в ожидании оплаты.</li>';
 
     pendingList.querySelectorAll('[data-pay-order]').forEach((btn) => btn.addEventListener('click', async () => {
       await fetch(`${API_BASE}/user/orders/${btn.dataset.payOrder}/pay`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ paymentMethod: 'CARD' }) });
       window.location.reload();
+    }));
+
+    list.querySelectorAll('[data-download-ticket]').forEach((btn) => btn.addEventListener('click', async () => {
+      const order = paid.find((item) => String(item.id) === String(btn.dataset.downloadTicket));
+      if (!order) return;
+      await downloadTicketPdf(order, user);
     }));
   }
 
@@ -704,7 +730,11 @@
     const purchaseDate = new Date(order.createdAt).toLocaleString('ru-RU');
     const purchaseDateForFile = new Date(order.createdAt).toISOString().slice(0, 10);
     const ticketNumber = String(order.id).replace('o-', '');
-    const eventTitle = order.eventTitle || 'Без названия';
+    const firstItem = order.items?.[0] || null;
+    const eventTitle = firstItem?.eventTitle || order.eventTitle || 'Без названия';
+    const ticketTypeLabel = firstItem?.ticketType || order.ticketTypeLabel || 'Standard';
+    const quantity = firstItem?.quantity || order.qty || 1;
+    const total = order.totalAmount ?? order.total ?? 0;
     const lines = [
       'ЭЛЕКТРОННЫЙ БИЛЕТ',
       '',
@@ -712,9 +742,9 @@
       `Событие: ${eventTitle}`,
       `Покупатель: ${user.fullName || 'Не указан'}`,
       `Email: ${user.email || 'Не указан'}`,
-      `Тип билета: ${order.ticketTypeLabel || 'Standard'}`,
-      `Количество: ${order.qty || 1}`,
-      `Сумма: ${order.total || 0} BYN`,
+      `Тип билета: ${ticketTypeLabel}`,
+      `Количество: ${quantity}`,
+      `Сумма: ${total} BYN`,
       `Дата покупки: ${purchaseDate}`,
       '',
       'Покажите этот билет на входе.',
