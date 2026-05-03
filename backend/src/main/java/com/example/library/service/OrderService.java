@@ -95,6 +95,16 @@ public class OrderService {
         return toOrderResponse(order);
     }
 
+    @Transactional
+    public OrderDtos.OrderResponse declinePayment(String userEmail, Long orderId) {
+        Order order = findUserOrder(userEmail, orderId);
+        Payment payment = paymentRepository.findTopByOrderIdOrderByCreatedAtDesc(order.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
+        payment.setStatus("DECLINED");
+        paymentRepository.save(payment);
+        return toOrderResponse(order);
+    }
+
     public List<OrderDtos.TicketView> getMyTickets(String userEmail) {
         User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new IllegalArgumentException("User not found"));
         return orderItemRepository.findByOrderUserId(user.getId()).stream().map(item -> {
@@ -155,7 +165,13 @@ public class OrderService {
                 order.getCreatedAt(),
                 order.getTotalAmount(),
                 items.stream().map(i -> new OrderDtos.OrderItemResponse(
-                        i.getId(), i.getTicketType().getId(), i.getTicketType().getName(), i.getQuantity(), i.getUnitPrice()
+                        i.getId(),
+                        i.getTicketType().getId(),
+                        i.getTicketType().getEvent().getId(),
+                        i.getTicketType().getEvent().getTitle(),
+                        i.getTicketType().getName(),
+                        i.getQuantity(),
+                        i.getUnitPrice()
                 )).toList(),
                 payment != null ? payment.getStatus() : "PENDING",
                 payment != null ? payment.getPaymentMethod() : null

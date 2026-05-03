@@ -30,6 +30,8 @@ public class OrderDtos {
     public record OrderItemResponse(
             Long id,
             Long ticketTypeId,
+            Long eventId,
+            String eventTitle,
             String ticketType,
             Integer quantity,
             BigDecimal unitPrice
