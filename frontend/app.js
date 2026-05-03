@@ -1438,6 +1438,12 @@
         fetch(`${API_BASE}/events`),
         fetch(`${API_BASE}/admin/orders`, { headers: { Authorization: `Bearer ${auth.token}` } }),
       ]);
+            if (ordersResp.status === 401) {
+        throw new Error('Сессия истекла. Войдите снова.');
+      }
+      if (ordersResp.status === 403) {
+        throw new Error('Доступ запрещён: для админ-панели нужна учётная запись администратора.');
+      }
       if (!eventsResp.ok || !ordersResp.ok) throw new Error('Не удалось загрузить данные админ-панели.');
       const events = await eventsResp.json();
       const orders = await ordersResp.json();
