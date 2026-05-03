@@ -25,5 +25,5 @@ app:
     secret: ${JWT_SECRET:ZGV2LXNlY3JldC1rZXktbXVzdC1iZS1hdC1sZWFzdC0zMi1ieXRlcy1sb25nLXNlY3JldA==}
     access-token-expiration-seconds: ${JWT_ACCESS_EXPIRATION_SECONDS:3600}
   admin:
-    email: ${APP_ADMIN_EMAIL:admin123}
+    email: ${APP_ADMIN_EMAIL:admin@event.local}
     password: ${APP_ADMIN_PASSWORD:admin123}

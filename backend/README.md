@@ -59,7 +59,7 @@ mvn test
 - `DB_PASSWORD` (default: `root`)
 - `JWT_SECRET` (default: dev secret)
 - `JWT_ACCESS_EXPIRATION_SECONDS` (default: `3600`)
-- `APP_ADMIN_EMAIL` (default: `admin123`)
+- `APP_ADMIN_EMAIL` (default: `admin@event.local`)
 - `APP_ADMIN_PASSWORD` (default: `admin123`)
 
 При старте автоматически создается администратор, если пользователя с таким email еще нет.
@@ -166,7 +166,7 @@ java -jar target/events-tourism-backend-0.0.1-SNAPSHOT.jar
 - `DB_PASSWORD` (default: `root`)
 - `JWT_SECRET` (default: dev secret)
 - `JWT_ACCESS_EXPIRATION_SECONDS` (default: `3600`)
-- `APP_ADMIN_EMAIL` (default: `admin123`)
+- `APP_ADMIN_EMAIL` (default: `admin@event.local`)
 - `APP_ADMIN_PASSWORD` (default: `admin123`)
 
 При старте автоматически создается администратор, если пользователя с таким email еще нет.
