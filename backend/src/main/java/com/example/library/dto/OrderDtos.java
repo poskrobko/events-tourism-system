@@ -9,8 +9,11 @@ import java.util.List;
 public class OrderDtos {
     public record PurchaseTicketRequest(
             @NotNull Long ticketTypeId,
-            @NotNull @Min(1) Integer quantity
+            @NotNull @Min(1) Integer quantity,
+            String paymentMethod
     ) {}
+
+    public record PaymentActionRequest(String paymentMethod) {}
 
     public record TicketView(
             Long orderItemId,
@@ -20,7 +23,8 @@ public class OrderDtos {
             String ticketType,
             Integer quantity,
             BigDecimal unitPrice,
-            Instant purchasedAt
+            Instant purchasedAt,
+            String paymentStatus
     ) {}
 
     public record OrderItemResponse(
@@ -37,6 +41,8 @@ public class OrderDtos {
             String userEmail,
             Instant createdAt,
             BigDecimal totalAmount,
-            List<OrderItemResponse> items
+            List<OrderItemResponse> items,
+            String paymentStatus,
+            String paymentMethod
     ) {}
 }
