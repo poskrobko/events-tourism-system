@@ -1,7 +1,9 @@
 package com.example.library.controller;
 
 import com.example.library.dto.OrderDtos;
+import com.example.library.dto.UserDtos;
 import com.example.library.service.OrderService;
+import com.example.library.service.UserManagementService;
 import jakarta.validation.Valid;
 import java.security.Principal;
 import java.util.List;
@@ -11,9 +13,21 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/user")
 public class UserOrderController {
     private final OrderService orderService;
+    private final UserManagementService userManagementService;
 
-    public UserOrderController(OrderService orderService) {
+    public UserOrderController(OrderService orderService, UserManagementService userManagementService) {
         this.orderService = orderService;
+        this.userManagementService = userManagementService;
+    }
+
+    @GetMapping("/profile")
+    public UserDtos.ProfileResponse profile(Principal principal) {
+        return userManagementService.getProfile(principal.getName());
+    }
+
+    @PutMapping("/profile")
+    public UserDtos.ProfileResponse updateProfile(@Valid @RequestBody UserDtos.UpdateProfileRequest request, Principal principal) {
+        return userManagementService.updateProfile(principal.getName(), request);
     }
 
     @PostMapping("/tickets/purchase")
