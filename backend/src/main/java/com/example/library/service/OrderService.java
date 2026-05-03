@@ -14,6 +14,7 @@ import com.example.library.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -42,6 +43,8 @@ public class OrderService {
         User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new IllegalArgumentException("User not found"));
         TicketType ticketType = ticketTypeRepository.findById(request.ticketTypeId())
                 .orElseThrow(() -> new IllegalArgumentException("Ticket type not found"));
+
+        validateTicketPurchaseWindow(ticketType);
 
         int available = ticketType.getQuantityTotal() - ticketType.getQuantitySold();
         if (request.quantity() > available) {
@@ -81,6 +84,8 @@ public class OrderService {
         for (var item : items) {
             TicketType ticketType = ticketTypeRepository.findById(item.getTicketType().getId())
                     .orElseThrow(() -> new IllegalArgumentException("Ticket type not found"));
+            validateTicketPurchaseWindow(ticketType);
+
             int available = ticketType.getQuantityTotal() - ticketType.getQuantitySold();
             if (item.getQuantity() > available) {
                 throw new IllegalArgumentException("Not enough tickets available");
@@ -167,6 +172,21 @@ public class OrderService {
         return toOrderResponse(order, items);
     }
 
+
+    @Transactional
+    public void cancelOrder(String userEmail, Long orderId) {
+        Order order = findUserOrder(userEmail, orderId);
+        Payment payment = paymentRepository.findTopByOrderIdOrderByCreatedAtDesc(order.getId()).orElse(null);
+        String paymentStatus = payment != null ? payment.getStatus() : "PENDING";
+        if (!"PENDING".equals(paymentStatus)) {
+            throw new IllegalArgumentException("Only pending orders can be cancelled");
+        }
+
+        orderItemRepository.deleteByOrderId(order.getId());
+        paymentRepository.deleteByOrderId(order.getId());
+        orderRepository.delete(order);
+    }
+
     @Transactional
     public List<OrderDtos.TicketView> getMyTickets(String userEmail) {
         User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -189,9 +209,32 @@ public class OrderService {
     @Transactional
     public List<OrderDtos.OrderResponse> myOrders(String userEmail) {
         User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        cleanupExpiredUnpaidOrders(user.getId());
         return orderRepository.findByUserIdOrderByCreatedAtDesc(user.getId()).stream()
                 .map(this::toOrderResponse)
                 .toList();
+    }
+
+
+    private void cleanupExpiredUnpaidOrders(Long userId) {
+        var orders = orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        for (var order : orders) {
+            Payment payment = paymentRepository.findTopByOrderIdOrderByCreatedAtDesc(order.getId()).orElse(null);
+            String paymentStatus = payment != null ? payment.getStatus() : "PENDING";
+            if (!"PENDING".equals(paymentStatus)) {
+                continue;
+            }
+
+            boolean eventCompleted = orderItemRepository.findByOrderId(order.getId()).stream()
+                    .anyMatch(item -> item.getTicketType().getEvent().getEndDateTime().isBefore(LocalDateTime.now()));
+            if (!eventCompleted) {
+                continue;
+            }
+
+            orderItemRepository.deleteByOrderId(order.getId());
+            paymentRepository.deleteByOrderId(order.getId());
+            orderRepository.delete(order);
+        }
     }
 
     @Transactional
@@ -204,6 +247,20 @@ public class OrderService {
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new IllegalArgumentException("Order not found"));
         if (!order.getUser().getId().equals(user.getId())) throw new IllegalArgumentException("Order does not belong to user");
         return order;
+    }
+
+
+    private void validateTicketPurchaseWindow(TicketType ticketType) {
+        LocalDateTime eventStart = ticketType.getEvent().getStartDateTime();
+        LocalDateTime now = LocalDateTime.now();
+        if (!now.isBefore(eventStart)) {
+            throw new IllegalArgumentException("Cannot buy tickets for an event that has already started or ended");
+        }
+
+        LocalDateTime purchaseDeadline = eventStart.minusHours(2);
+        if (now.isAfter(purchaseDeadline)) {
+            throw new IllegalArgumentException("Tickets can only be purchased no later than 2 hours before the event starts");
+        }
     }
 
     private void createPendingPayment(Order order, String method) {

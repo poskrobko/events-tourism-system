@@ -367,6 +367,7 @@
     const fromInput = document.getElementById('dateFromFilter');
     const toInput = document.getElementById('dateToFilter');
     const pagination = document.getElementById('eventsPagination');
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
 
     function normalizeEvent(event) {
       const start = new Date(event.startDateTime);
@@ -398,6 +399,16 @@
     } catch (error) {
       grid.innerHTML = `<p class="text-danger">${error.message}</p>`;
       return;
+    }
+
+
+    function hasActiveFilters() {
+      return state.type !== 'all' || state.city !== 'all' || Boolean(state.from) || Boolean(state.to);
+    }
+
+    function syncClearFiltersButton() {
+      if (!clearFiltersBtn) return;
+      clearFiltersBtn.classList.toggle('d-none', !hasActiveFilters());
     }
 
     function applyFilters() {
@@ -437,6 +448,7 @@
         btn.addEventListener('click', () => { state.page = i; render(); });
         pagination.appendChild(btn);
       }
+      syncClearFiltersButton();
     }
 
     function renderTypes() {
@@ -478,6 +490,22 @@
     citySelect.addEventListener('change', () => { state.city = citySelect.value; state.page = 1; render(); });
     fromInput.addEventListener('change', () => { state.from = fromInput.value; state.page = 1; render(); });
     toInput.addEventListener('change', () => { state.to = toInput.value; state.page = 1; render(); });
+
+
+    if (clearFiltersBtn) {
+      clearFiltersBtn.addEventListener('click', () => {
+        state.type = 'all';
+        state.city = 'all';
+        state.from = '';
+        state.to = '';
+        typeSelect.value = 'all';
+        citySelect.value = 'all';
+        fromInput.value = '';
+        toInput.value = '';
+        state.page = 1;
+        render();
+      });
+    }
 
     loadEvents();
   }
@@ -674,11 +702,8 @@
     const token = getAuthToken();
     const response = await fetch(`${API_BASE}/user/orders`, { headers: { Authorization: `Bearer ${token}` } });
     const orders = await response.json();
-    const now = new Date();
-    const activePaid = (orders || []).filter((o) => o.paymentStatus === 'PAID' && !o.isEventCompleted);
-    const refunded = (orders || []).filter((o) => o.paymentStatus === 'REFUNDED');
-    const paid = [...activePaid, ...refunded];
-    const completed = (orders || []).filter((o) => o.paymentStatus === 'PAID' && o.isEventCompleted);
+    const activePaid = (orders || []).filter((o) => (o.paymentStatus === 'PAID' || o.paymentStatus === 'REFUNDED') && !o.isEventCompleted);
+    const completed = (orders || []).filter((o) => (o.paymentStatus === 'PAID' || o.paymentStatus === 'REFUNDED') && o.isEventCompleted);
     const pending = (orders || []).filter((o) => o.paymentStatus === 'PENDING');
     const paymentStatusLabel = (status) => {
       if (status === 'PAID') return 'Оплачено';
@@ -688,21 +713,41 @@
     };
     const eventLabel = (order) => order.items?.[0]?.eventTitle || `Заказ #${order.id}`;
 
-    list.innerHTML = paid.length ? paid.map((o) => {
+    const renderPaginatedList = (items, listEl, pagerEl, renderItem, emptyText, pageSize = 7) => {
+      if (!listEl) return;
+      let currentPage = 1;
+      const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+
+      const draw = () => {
+        const startIdx = (currentPage - 1) * pageSize;
+        const pageItems = items.slice(startIdx, startIdx + pageSize);
+        listEl.innerHTML = pageItems.length ? pageItems.map(renderItem).join('') : `<li class="list-group-item">${emptyText}</li>`;
+        if (!pagerEl) return;
+        if (items.length <= pageSize) { pagerEl.innerHTML = ''; return; }
+        pagerEl.innerHTML = `<button class="btn btn-sm btn-outline-secondary" data-page="prev" ${currentPage === 1 ? 'disabled' : ''}>Назад</button><span class="align-self-center small text-secondary">${currentPage} / ${totalPages}</span><button class="btn btn-sm btn-outline-secondary" data-page="next" ${currentPage === totalPages ? 'disabled' : ''}>Вперед</button>`;
+        pagerEl.querySelector('[data-page="prev"]')?.addEventListener('click', () => { if (currentPage > 1) { currentPage -= 1; draw(); } });
+        pagerEl.querySelector('[data-page="next"]')?.addEventListener('click', () => { if (currentPage < totalPages) { currentPage += 1; draw(); } });
+      };
+      draw();
+    };
+
+    renderPaginatedList(activePaid, list, document.getElementById('myTicketsPagination'), (o) => {
       const isRefunded = o.paymentStatus === 'REFUNDED';
       return `<li class='list-group-item d-flex justify-content-between align-items-center'><div><strong>${eventLabel(o)}</strong><div class='small text-secondary'>Заказ #${o.id} · ${new Date(o.createdAt).toLocaleString('ru-RU')} · ${paymentStatusLabel(o.paymentStatus)}</div></div><div class='d-flex align-items-center gap-2'><span class='${isRefunded ? 'text-secondary' : 'text-success'} fw-semibold'>${o.totalAmount} BYN</span>${isRefunded ? '' : `<button class='btn btn-outline-danger btn-sm' data-refund-ticket='${o.id}'>Вернуть билет</button><button class='btn btn-outline-primary btn-sm' data-download-ticket='${o.id}'>Скачать PDF</button>`}</div></li>`;
-    }).join('') : '<li class="list-group-item">Пока нет оплаченных билетов.</li>';
+    }, 'Пока нет оплаченных билетов.');
 
-    pendingList.innerHTML = pending.length ? pending.map((o) => `<li class='list-group-item d-flex justify-content-between align-items-center'><div><strong>${eventLabel(o)}</strong><div class='small text-secondary'>Заказ #${o.id} · ${paymentStatusLabel(o.paymentStatus)}</div></div><button class='btn btn-primary btn-sm' data-pay-order='${o.id}'>Оплатить</button></li>`).join('') : '<li class="list-group-item">Нет заказов в ожидании оплаты.</li>';
+    renderPaginatedList(pending, pendingList, document.getElementById('myOrdersPagination'), (o) => `<li class='list-group-item d-flex justify-content-between align-items-center'><div><strong>${eventLabel(o)}</strong><div class='small text-secondary'>Заказ #${o.id} · ${paymentStatusLabel(o.paymentStatus)}</div></div><div class='d-flex gap-2'><button class='btn btn-primary btn-sm' data-pay-order='${o.id}'>Оплатить</button><button class='btn btn-outline-danger btn-sm' data-cancel-order='${o.id}'>Отменить покупку</button></div></li>`, 'Нет заказов в ожидании оплаты.');
 
-    if (completedList) {
-      completedList.innerHTML = completed.length
-        ? completed.map((o) => `<li class='list-group-item d-flex justify-content-between align-items-center'><div><strong>${eventLabel(o)}</strong><div class='small text-secondary'>Заказ #${o.id} · Событие завершено</div></div><span class='badge text-bg-secondary'>Завершено</span></li>`).join('')
-        : '<li class="list-group-item">Нет завершенных событий.</li>';
-    }
+    renderPaginatedList(completed, completedList, document.getElementById('myCompletedPagination'), (o) => `<li class='list-group-item d-flex justify-content-between align-items-center'><div><strong>${eventLabel(o)}</strong><div class='small text-secondary'>Заказ #${o.id} · Событие завершено · ${paymentStatusLabel(o.paymentStatus)}</div></div><span class='badge text-bg-secondary'>Завершено</span></li>`, 'Нет завершенных событий.');
 
     pendingList.querySelectorAll('[data-pay-order]').forEach((btn) => btn.addEventListener('click', async () => {
       await fetch(`${API_BASE}/user/orders/${btn.dataset.payOrder}/pay`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ paymentMethod: 'CARD' }) });
+      window.location.reload();
+    }));
+
+    pendingList.querySelectorAll('[data-cancel-order]').forEach((btn) => btn.addEventListener('click', async () => {
+      if (!window.confirm('Отменить покупку и удалить заказ?')) return;
+      await fetch(`${API_BASE}/user/orders/${btn.dataset.cancelOrder}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
       window.location.reload();
     }));
 
@@ -732,11 +777,13 @@
       });
     }
 
-    list.querySelectorAll('[data-download-ticket]').forEach((btn) => btn.addEventListener('click', async () => {
-      const order = paid.find((item) => String(item.id) === String(btn.dataset.downloadTicket));
-      if (!order || order.paymentStatus === 'REFUNDED') return;
-      await downloadTicketPdf(order, user);
-    }));
+    list.querySelectorAll('[data-download-ticket]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const order = activePaid.find((item) => String(item.id) === String(btn.dataset.downloadTicket));
+        if (!order || order.paymentStatus === 'REFUNDED') return;
+        await downloadTicketPdf(order, user);
+      });
+    });
   }
 
 
