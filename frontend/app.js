@@ -966,6 +966,7 @@
         document.getElementById('managerEventCity').value = event.city;
         document.getElementById('managerEventVenue').value = event.venue;
         document.getElementById('managerEventStart').value = event.startDateTime.slice(0, 16);
+        document.getElementById('managerEventImageUrl').value = event.imageUrl || '';
         document.getElementById('managerEventEnd').value = event.endDateTime.slice(0, 16);
       }));
     }
@@ -983,6 +984,7 @@
         mapUrl: '',
         startDateTime: document.getElementById('managerEventStart').value,
         endDateTime: document.getElementById('managerEventEnd').value,
+        imageUrl: document.getElementById('managerEventImageUrl').value.trim() || null,
       };
       const url = eventId ? `${API_BASE}/manager/events/${eventId}` : `${API_BASE}/manager/events`;
       const method = eventId ? 'PUT' : 'POST';
