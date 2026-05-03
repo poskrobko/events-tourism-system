@@ -41,7 +41,7 @@
       write(STORAGE_KEYS.users, [{
         id: 'u-admin',
         fullName: 'Администратор',
-        email: 'admin123',
+        email: 'admin@event.local',
         password: 'admin123',
         role: 'admin',
         phone: '+70000000000',

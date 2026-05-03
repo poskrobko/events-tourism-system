@@ -16,7 +16,7 @@ public class AdminBootstrapService {
     private final String adminPassword;
 
     public AdminBootstrapService(UserRepository userRepository, PasswordEncoder passwordEncoder,
-                                 @Value("${app.admin.email:admin123}") String adminEmail,
+                                 @Value("${app.admin.email:admin@event.local}") String adminEmail,
                                  @Value("${app.admin.password:admin123}") String adminPassword) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -26,7 +26,24 @@ public class AdminBootstrapService {
 
     @PostConstruct
     public void init() {
-        if (userRepository.existsByEmail(adminEmail)) {
+        var existingAdmin = userRepository.findByEmail(adminEmail);
+        if (existingAdmin.isPresent()) {
+            User admin = existingAdmin.get();
+            boolean updated = false;
+
+            if (admin.getRole() != Role.ADMIN) {
+                admin.setRole(Role.ADMIN);
+                updated = true;
+            }
+
+            if (!passwordEncoder.matches(adminPassword, admin.getPassword())) {
+                admin.setPassword(passwordEncoder.encode(adminPassword));
+                updated = true;
+            }
+
+            if (updated) {
+                userRepository.save(admin);
+            }
             return;
         }
 
