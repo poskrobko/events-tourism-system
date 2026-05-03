@@ -549,15 +549,26 @@
         document.getElementById('eventPrice').textContent = `${minTicket} BYN`;
         const buyTicketBtn = document.getElementById('buyTicketBtn');
         const soldOutNotice = document.getElementById('soldOutNotice');
+        const eventEndedNotice = document.getElementById('eventEndedNotice');
+        const eventEndDateTime = details.event?.endDateTime ? new Date(details.event.endDateTime) : new Date(details.event?.startDateTime || event.date);
+        const isEventEnded = !Number.isNaN(eventEndDateTime.getTime()) && eventEndDateTime < new Date();
         const totalAvailable = (details.ticketTypes || []).reduce((sum, tt) => sum + Number(tt.quantityAvailable || 0), 0);
         buyTicketBtn.href = getCurrentUser() ? `ticket.html?id=${event.id}` : 'login.html';
-        if (totalAvailable <= 0) {
+        if (isEventEnded) {
+          buyTicketBtn.classList.add('disabled');
+          buyTicketBtn.setAttribute('aria-disabled', 'true');
+          buyTicketBtn.addEventListener('click', (e) => e.preventDefault());
+          soldOutNotice?.classList.add('d-none');
+          eventEndedNotice?.classList.remove('d-none');
+        } else if (totalAvailable <= 0) {
           buyTicketBtn.classList.add('disabled');
           buyTicketBtn.setAttribute('aria-disabled', 'true');
           buyTicketBtn.addEventListener('click', (e) => e.preventDefault());
           if (soldOutNotice) soldOutNotice.classList.remove('d-none');
-        } else if (soldOutNotice) {
-          soldOutNotice.classList.add('d-none');
+          eventEndedNotice?.classList.add('d-none');
+        } else {
+          soldOutNotice?.classList.add('d-none');
+          eventEndedNotice?.classList.add('d-none');
         }
         const ticketAvailability = document.getElementById('ticketAvailability');
         if (ticketAvailability) {
@@ -745,11 +756,30 @@
       window.location.reload();
     }));
 
+    const cancelPurchaseModalEl = document.getElementById('cancelPurchaseModal');
+    const cancelPurchaseModal = cancelPurchaseModalEl && window.bootstrap?.Modal ? new window.bootstrap.Modal(cancelPurchaseModalEl) : null;
+    const confirmCancelPurchaseBtn = document.getElementById('confirmCancelPurchaseBtn');
+    let selectedCancelOrderId = null;
+
     pendingList.querySelectorAll('[data-cancel-order]').forEach((btn) => btn.addEventListener('click', async () => {
-      if (!window.confirm('Отменить покупку и удалить заказ?')) return;
-      await fetch(`${API_BASE}/user/orders/${btn.dataset.cancelOrder}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      selectedCancelOrderId = btn.dataset.cancelOrder;
+      if (cancelPurchaseModal) {
+        cancelPurchaseModal.show();
+        return;
+      }
+      if (!window.confirm('Вы уверены, что хотите отменить покупку?')) return;
+      await fetch(`${API_BASE}/user/orders/${selectedCancelOrderId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
       window.location.reload();
     }));
+
+    if (confirmCancelPurchaseBtn) {
+      confirmCancelPurchaseBtn.addEventListener('click', async () => {
+        if (!selectedCancelOrderId) return;
+        await fetch(`${API_BASE}/user/orders/${selectedCancelOrderId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+        cancelPurchaseModal?.hide();
+        window.location.reload();
+      });
+    }
 
     const refundModalEl = document.getElementById('refundConfirmModal');
     const refundModal = refundModalEl && window.bootstrap?.Modal ? new window.bootstrap.Modal(refundModalEl) : null;
