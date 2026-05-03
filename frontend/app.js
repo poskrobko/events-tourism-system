@@ -536,22 +536,65 @@
       }
 
       const orders = read(STORAGE_KEYS.orders, []);
-      orders.push({
+      const order = {
         id: `o-${Date.now()}`,
         userId: user.id,
         eventId: event.id,
         eventTitle: event.title,
         qty: Number(qtyInput.value),
         typeMultiplier: Number(ticketType.value),
+        ticketTypeLabel: ticketType.options[ticketType.selectedIndex].text.split(' ×')[0],
         total: event.price * Number(ticketType.value) * Number(qtyInput.value),
         createdAt: new Date().toISOString(),
-        status: 'Оплачено',
-      });
+        status: 'PENDING',
+        statusLabel: 'Ожидает оплаты',
+        ticketCreated: false,
+      };
+      orders.push(order);
       write(STORAGE_KEYS.orders, orders);
-      const feedback = form.querySelector('[data-feedback]');
-      feedback.className = 'alert alert-success mt-3';
-      feedback.textContent = 'Билет успешно приобретен. Переходим в «Мои билеты»...';
-      setTimeout(() => { window.location.href = 'my-tickets.html'; }, 500);
+      window.location.href = `payment.html?orderId=${encodeURIComponent(order.id)}`;
+    });
+  }
+
+
+  function initPaymentPage() {
+    const title = document.getElementById('paymentTitle');
+    if (!title) return;
+    requireAuth();
+
+    const orderId = new URLSearchParams(window.location.search).get('orderId');
+    const user = getCurrentUser();
+    const orders = read(STORAGE_KEYS.orders, []);
+    const order = orders.find((o) => o.id === orderId && o.userId === user.id);
+
+    if (!order) {
+      window.location.href = 'my-tickets.html';
+      return;
+    }
+
+    title.textContent = `Оплата заказа №${String(order.id).replace('o-', '')}`;
+    document.getElementById('paymentEvent').textContent = order.eventTitle;
+    document.getElementById('paymentTicketType').textContent = order.ticketTypeLabel || 'Standard';
+    document.getElementById('paymentQty').textContent = order.qty;
+    document.getElementById('paymentTotal').textContent = `${order.total} BYN`;
+    document.getElementById('payBackBtn').href = `ticket.html?id=${order.eventId}`;
+
+    const feedback = document.getElementById('paymentFeedback');
+    document.getElementById('paySuccessBtn').addEventListener('click', () => {
+      order.status = 'PAID';
+      order.statusLabel = 'Оплачено';
+      order.ticketCreated = true;
+      write(STORAGE_KEYS.orders, orders);
+      window.location.href = 'my-tickets.html';
+    });
+
+    document.getElementById('payFailBtn').addEventListener('click', () => {
+      order.status = 'FAILED';
+      order.statusLabel = 'Оплата отклонена';
+      order.ticketCreated = false;
+      write(STORAGE_KEYS.orders, orders);
+      feedback.className = 'alert alert-danger';
+      feedback.textContent = 'Оплата не прошла.';
     });
   }
 
@@ -565,7 +608,7 @@
       return;
     }
 
-    const orders = read(STORAGE_KEYS.orders, []).filter((o) => o.userId === user.id);
+    const orders = read(STORAGE_KEYS.orders, []).filter((o) => o.userId === user.id && o.ticketCreated);
     if (!orders.length) {
       list.innerHTML = '<li class="list-group-item">Пока нет приобретенных билетов.</li>';
       return;
@@ -1108,6 +1151,7 @@
   renderEvents();
   initEventDetailsPage();
   initTicketPage();
+  initPaymentPage();
   initMyTicketsPage();
   initProfilePage();
   initAdminPage();
