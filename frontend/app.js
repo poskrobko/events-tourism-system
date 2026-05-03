@@ -418,7 +418,7 @@
       grid.innerHTML = pageItems.map((event) => `
         <div class="col-md-6 col-lg-4">
           <article class="card event-card h-100">
-            <img src="${event.image}" class="card-img-top" alt="${event.title}" style="height:190px; object-fit:cover" />
+            <img src="${event.image}" class="card-img-top" alt="${event.title}" loading="lazy" decoding="async" fetchpriority="low" style="height:190px; object-fit:cover" />
             <div class="card-body d-flex flex-column">
               <span class="badge badge-status mb-2">${event.type}</span>
               <h2 class="h5">${event.title}</h2>
@@ -501,6 +501,9 @@
         document.getElementById('eventTime').textContent = `🕖 ${event.time}`;
         document.getElementById('eventCity').textContent = `📍 ${event.city}`;
         const eventImage = document.getElementById('eventImage');
+        eventImage.loading = 'eager';
+        eventImage.decoding = 'async';
+        eventImage.fetchPriority = 'high';
         eventImage.src = event.image;
         eventImage.onerror = () => { eventImage.src = DEFAULT_EVENT_IMAGE; };
         const minTicket = details.ticketTypes?.[0]?.price ?? event.price;
@@ -569,7 +572,11 @@
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || 'Не удалось создать заказ.');
-        window.location.href = `payment.html?orderId=${encodeURIComponent(data.id)}`;
+        const eventTitleParam = encodeURIComponent(event.title || '');
+        const ticketTypeLabel = ticketType.options[ticketType.selectedIndex]?.textContent || '';
+        const quantityParam = encodeURIComponent(String(qtyInput.value || 1));
+        const totalParam = encodeURIComponent(String((ticketTypes.find((item) => String(item.id) === String(ticketType.value))?.price || event.price || 0) * Number(qtyInput.value || 1)));
+        window.location.href = `payment.html?orderId=${encodeURIComponent(data.id)}&eventTitle=${eventTitleParam}&ticketType=${encodeURIComponent(ticketTypeLabel)}&qty=${quantityParam}&total=${totalParam}`;
       } catch (error) {
         feedback.className = 'alert alert-danger mt-3';
         feedback.textContent = error.message;
@@ -583,7 +590,8 @@
     if (!title) return;
     requireAuth();
 
-    const orderId = new URLSearchParams(window.location.search).get('orderId');
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get('orderId');
     const token = getAuthToken();
     const response = await fetch(`${API_BASE}/user/orders`, { headers: { Authorization: `Bearer ${token}` } });
     const orders = await response.json();
@@ -592,10 +600,16 @@
 
     title.textContent = `Оплата заказа №${order.id}`;
     const firstItem = order.items?.[0] || null;
-    document.getElementById('paymentEvent').textContent = firstItem?.eventTitle || `Заказ #${order.id}`;
-    document.getElementById('paymentTicketType').textContent = firstItem?.ticketType || 'Билет';
-    document.getElementById('paymentQty').textContent = firstItem?.quantity || 1;
-    document.getElementById('paymentTotal').textContent = `${order.totalAmount ?? 0} BYN`;
+    const fallbackEventTitle = params.get('eventTitle') || '';
+    const fallbackTicketType = params.get('ticketType') || '';
+    const fallbackQty = Number(params.get('qty') || 1);
+    const fallbackTotal = params.get('total');
+
+    document.getElementById('paymentEvent').textContent = firstItem?.eventTitle || fallbackEventTitle || `Заказ #${order.id}`;
+    document.getElementById('paymentTicketType').textContent = firstItem?.ticketType || fallbackTicketType || 'Билет';
+    document.getElementById('paymentQty').textContent = firstItem?.quantity || fallbackQty || 1;
+    const totalAmount = order.totalAmount ?? fallbackTotal ?? 0;
+    document.getElementById('paymentTotal').textContent = `${totalAmount} BYN`;
     const feedback = document.getElementById('paymentFeedback');
 
     document.getElementById('paySuccessBtn').addEventListener('click', async () => {
