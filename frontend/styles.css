@@ -113,3 +113,35 @@ textarea:focus {
 footer {
   color: #756e67;
 }
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.25rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.status-pill--pending {
+  background: #fff3cd;
+  color: #8a5a00;
+}
+
+.status-pill--paid {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-pill--refunded {
+  background: #f3e8ff;
+  color: #6b21a8;
+}
+
+.status-pill--default {
+  background: #e9ecef;
+  color: #495057;
+}

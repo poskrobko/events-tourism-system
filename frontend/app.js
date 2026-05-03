@@ -722,6 +722,13 @@
       if (status === 'REFUNDED') return 'Билет возвращен · Деньги возвращены';
       return status;
     };
+    const paymentStatusClass = (status) => {
+      if (status === 'PAID') return 'status-pill status-pill--paid';
+      if (status === 'PENDING') return 'status-pill status-pill--pending';
+      if (status === 'REFUNDED') return 'status-pill status-pill--refunded';
+      return 'status-pill status-pill--default';
+    };
+    const paymentStatusBadge = (status) => `<span class='${paymentStatusClass(status)}'>${paymentStatusLabel(status)}</span>`;
     const eventLabel = (order) => order.items?.[0]?.eventTitle || `Заказ #${order.id}`;
 
     const renderPaginatedList = (items, listEl, pagerEl, renderItem, emptyText, pageSize = 7) => {
@@ -744,12 +751,12 @@
 
     renderPaginatedList(activePaid, list, document.getElementById('myTicketsPagination'), (o) => {
       const isRefunded = o.paymentStatus === 'REFUNDED';
-      return `<li class='list-group-item d-flex justify-content-between align-items-center'><div><strong>${eventLabel(o)}</strong><div class='small text-secondary'>Заказ #${o.id} · ${new Date(o.createdAt).toLocaleString('ru-RU')} · ${paymentStatusLabel(o.paymentStatus)}</div></div><div class='d-flex align-items-center gap-2'><span class='${isRefunded ? 'text-secondary' : 'text-success'} fw-semibold'>${o.totalAmount} BYN</span>${isRefunded ? '' : `<button class='btn btn-outline-danger btn-sm' data-refund-ticket='${o.id}'>Вернуть билет</button><button class='btn btn-outline-primary btn-sm' data-download-ticket='${o.id}'>Скачать PDF</button>`}</div></li>`;
+      return `<li class='list-group-item d-flex justify-content-between align-items-center'><div><strong>${eventLabel(o)}</strong><div class='small text-secondary'>Заказ #${o.id} · ${new Date(o.createdAt).toLocaleString('ru-RU')} · ${paymentStatusBadge(o.paymentStatus)}</div></div><div class='d-flex align-items-center gap-2'><span class='${isRefunded ? 'text-secondary' : 'text-success'} fw-semibold'>${o.totalAmount} BYN</span>${isRefunded ? '' : `<button class='btn btn-outline-danger btn-sm' data-refund-ticket='${o.id}'>Вернуть билет</button><button class='btn btn-outline-primary btn-sm' data-download-ticket='${o.id}'>Скачать PDF</button>`}</div></li>`;
     }, 'Пока нет оплаченных билетов.');
 
-    renderPaginatedList(pending, pendingList, document.getElementById('myOrdersPagination'), (o) => `<li class='list-group-item d-flex justify-content-between align-items-center'><div><strong>${eventLabel(o)}</strong><div class='small text-secondary'>Заказ #${o.id} · ${paymentStatusLabel(o.paymentStatus)}</div></div><div class='d-flex gap-2'><button class='btn btn-primary btn-sm' data-pay-order='${o.id}'>Оплатить</button><button class='btn btn-outline-danger btn-sm' data-cancel-order='${o.id}'>Отменить покупку</button></div></li>`, 'Нет заказов в ожидании оплаты.');
+    renderPaginatedList(pending, pendingList, document.getElementById('myOrdersPagination'), (o) => `<li class='list-group-item d-flex justify-content-between align-items-center'><div><strong>${eventLabel(o)}</strong><div class='small text-secondary'>Заказ #${o.id} · ${paymentStatusBadge(o.paymentStatus)}</div></div><div class='d-flex gap-2'><button class='btn btn-primary btn-sm' data-pay-order='${o.id}'>Оплатить</button><button class='btn btn-outline-danger btn-sm' data-cancel-order='${o.id}'>Отменить покупку</button></div></li>`, 'Нет заказов в ожидании оплаты.');
 
-    renderPaginatedList(completed, completedList, document.getElementById('myCompletedPagination'), (o) => `<li class='list-group-item d-flex justify-content-between align-items-center'><div><strong>${eventLabel(o)}</strong><div class='small text-secondary'>Заказ #${o.id} · Событие завершено · ${paymentStatusLabel(o.paymentStatus)}</div></div><span class='badge text-bg-secondary'>Завершено</span></li>`, 'Нет завершенных событий.');
+    renderPaginatedList(completed, completedList, document.getElementById('myCompletedPagination'), (o) => `<li class='list-group-item d-flex justify-content-between align-items-center'><div><strong>${eventLabel(o)}</strong><div class='small text-secondary'>Заказ #${o.id} · Событие завершено · ${paymentStatusBadge(o.paymentStatus)}</div></div><span class='badge text-bg-secondary'>Завершено</span></li>`, 'Нет завершенных событий.');
 
     pendingList.querySelectorAll('[data-pay-order]').forEach((btn) => btn.addEventListener('click', async () => {
       await fetch(`${API_BASE}/user/orders/${btn.dataset.payOrder}/pay`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ paymentMethod: 'CARD' }) });
