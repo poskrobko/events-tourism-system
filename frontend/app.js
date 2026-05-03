@@ -11,6 +11,16 @@
   const EVENT_TYPES = ['Бизнес', 'Фестиваль', 'Музыка', 'Творчество', 'Концерты', 'Образование', 'Спорт'];
   const API_BASE = 'http://localhost:8080/api';
 
+  const DEFAULT_EVENT_IMAGE = 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1170&auto=format&fit=crop';
+
+  function resolveEventImage(imageValue) {
+    const raw = String(imageValue || '').trim();
+    if (!raw) return DEFAULT_EVENT_IMAGE;
+    if (/^(https?:)?\/\//i.test(raw) || raw.startsWith('data:image/')) return raw;
+    const normalized = raw.replace(/^\/+/, '');
+    return `${window.location.origin}/images/${normalized}`;
+  }
+
 
   function read(key, fallback) {
     try {
@@ -325,7 +335,7 @@
       city: event.city,
       date: start.toISOString().slice(0, 10),
       time: start.toTimeString().slice(0, 5),
-      image: event.imageUrl || 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1170&auto=format&fit=crop',
+      image: resolveEventImage(event.imageUrl),
       description: event.description,
       venue: event.venue,
       price: Number(event.minPrice || 0),
@@ -363,7 +373,7 @@
         city: event.city,
         date: event.startDateTime ? event.startDateTime.slice(0, 10) : '',
         time: start.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
-        image: event.imageUrl || 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1170&auto=format&fit=crop',
+        image: resolveEventImage(event.imageUrl),
         description: event.description || '',
         price: Number(event.minTicketPrice || 0),
         schedule: [],
@@ -482,7 +492,9 @@
         document.getElementById('eventDate').textContent = `📅 ${new Date(event.date).toLocaleDateString('ru-RU')}`;
         document.getElementById('eventTime').textContent = `🕖 ${event.time}`;
         document.getElementById('eventCity').textContent = `📍 ${event.city}`;
-        document.getElementById('eventImage').src = event.image;
+        const eventImage = document.getElementById('eventImage');
+        eventImage.src = event.image;
+        eventImage.onerror = () => { eventImage.src = DEFAULT_EVENT_IMAGE; };
         document.getElementById('eventPrice').textContent = `${event.price} BYN`;
         const buyTicketBtn = document.getElementById('buyTicketBtn');
         buyTicketBtn.href = getCurrentUser() ? `ticket.html?id=${event.id}` : 'login.html';
