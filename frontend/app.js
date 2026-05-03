@@ -1502,10 +1502,9 @@
 
       document.getElementById('totalEvents').textContent = events.length;
       const soldTickets = orders.reduce((sum, order) => {
-        const qty = (order.items || []).reduce((s, item) => s + (item.quantity || 0), 0);
-        if (order.paymentStatus === 'PAID') return sum + qty;
-        if (order.paymentStatus === 'REFUNDED') return sum - qty;
-        return sum;
+        if (order.paymentStatus !== 'PAID') return sum;
+        const qty = (order.items || []).reduce((s, item) => s + Number(item.quantity || 0), 0);
+        return sum + qty;
       }, 0);
       const revenue = orders.reduce((sum, order) => {
         const amount = Number(order.totalAmount || 0);
