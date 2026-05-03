@@ -36,11 +36,11 @@ public class OrderDtos {
             Integer quantity,
             BigDecimal unitPrice
     ) {}
-
     public record OrderResponse(
             Long id,
             Long userId,
             String userEmail,
+            String userFullName,
             Instant createdAt,
             BigDecimal totalAmount,
             List<OrderItemResponse> items,
