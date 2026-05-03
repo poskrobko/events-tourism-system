@@ -237,6 +237,7 @@ public class OrderService {
         }
     }
 
+
     @Transactional
     public List<OrderDtos.OrderResponse> allOrders() { return orderRepository.findAllByOrderByCreatedAtDesc().stream().map(this::toOrderResponse).toList(); }
     @Transactional
@@ -285,6 +286,7 @@ public class OrderService {
                 order.getId(),
                 order.getUser().getId(),
                 order.getUser().getEmail(),
+                order.getUser().getFullName(),
                 order.getCreatedAt(),
                 order.getTotalAmount(),
                 items.stream().map(i -> new OrderDtos.OrderItemResponse(

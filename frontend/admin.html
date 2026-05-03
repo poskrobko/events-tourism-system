@@ -45,7 +45,8 @@
           <div class="col-md-2"><input id="eventCityInput" class="form-control" placeholder="Город" required /></div>
           <div class="col-md-2"><input id="eventDateInput" class="form-control" type="date" required /></div>
           <div class="col-md-2"><input id="eventTimeInput" class="form-control" type="time" required /></div>
-          <div class="col-md-2"><input id="eventPriceInput" class="form-control" type="number" min="1" placeholder="Цена" required /></div>
+          <div class="col-md-2"><input id="eventPriceInput" class="form-control" type="number" min="0" placeholder="Цена" required /></div>
+          <div class="col-md-2"><input id="eventTicketTypeInput" class="form-control" placeholder="Тип билета" required /></div>
           <div class="col-md-2"><input id="eventTicketLimitInput" class="form-control" type="number" min="1" placeholder="Кол-во билетов" required /></div>
           <div class="col-md-8"><input id="eventImageInput" class="form-control" type="url" placeholder="URL изображения" required /></div>
           <div class="col-12"><textarea id="eventDescriptionInput" class="form-control" placeholder="Описание" required></textarea></div>
@@ -72,7 +73,7 @@
       <h2 class="h5 mb-3">Заказы пользователей</h2>
       <div class="table-responsive">
         <table class="table align-middle">
-          <thead><tr><th>Событие</th><th>Кол-во</th><th>Сумма</th><th>Статус</th><th>Дата</th></tr></thead>
+          <thead><tr><th>Пользователь</th><th>Событие</th><th>Кол-во</th><th>Сумма</th><th>Статус</th><th>Дата</th></tr></thead>
           <tbody id="adminOrdersTable"></tbody>
         </table>
       </div>
