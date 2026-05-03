@@ -23,6 +23,12 @@ public class UserManagementService {
         return userRepository.findAll().stream().map(this::toResponse).toList();
     }
 
+    public UserDtos.ProfileResponse getProfile(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        return toProfileResponse(user);
+    }
+
     @Transactional
     public UserDtos.UserResponse createUser(UserDtos.CreateUserRequest request) {
         if (userRepository.existsByEmail(request.email())) {
@@ -55,6 +61,20 @@ public class UserManagementService {
     }
 
     @Transactional
+    public UserDtos.ProfileResponse updateProfile(String email, UserDtos.UpdateProfileRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        String normalizedEmail = request.email().trim().toLowerCase();
+        if (!user.getEmail().equalsIgnoreCase(normalizedEmail) && userRepository.existsByEmail(normalizedEmail)) {
+            throw new IllegalArgumentException("Email already used");
+        }
+        user.setEmail(normalizedEmail);
+        user.setFullName((request.firstName().trim() + " " + request.lastName().trim()).trim());
+        user.setAvatarUrl(request.avatarUrl() == null ? null : request.avatarUrl().trim());
+        return toProfileResponse(userRepository.save(user));
+    }
+
+    @Transactional
     public void deleteUser(Long userId, String adminEmail) {
         User admin = userRepository.findByEmail(adminEmail)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
@@ -70,6 +90,13 @@ public class UserManagementService {
     }
 
     private UserDtos.UserResponse toResponse(User user) {
-        return new UserDtos.UserResponse(user.getId(), user.getEmail(), user.getFullName(), user.getRole());
+        return new UserDtos.UserResponse(user.getId(), user.getEmail(), user.getFullName(), user.getAvatarUrl(), user.getRole());
+    }
+
+    private UserDtos.ProfileResponse toProfileResponse(User user) {
+        String[] parts = user.getFullName() == null ? new String[0] : user.getFullName().trim().split("\\s+");
+        String firstName = parts.length > 0 ? parts[0] : "";
+        String lastName = parts.length > 1 ? String.join(" ", java.util.Arrays.copyOfRange(parts, 1, parts.length)) : "";
+        return new UserDtos.ProfileResponse(user.getId(), user.getEmail(), firstName, lastName, user.getAvatarUrl());
     }
 }

@@ -923,36 +923,80 @@
       return;
     }
 
-    const fullNameParts = user.fullName.split(' ');
-    document.getElementById('profileName').textContent = user.fullName;
-    document.getElementById('profileEmail').textContent = user.email;
-    document.getElementById('profileFirstName').value = fullNameParts[0] || '';
-    document.getElementById('profileLastName').value = fullNameParts.slice(1).join(' ');
-    document.getElementById('profileEmailInput').value = user.email;
-    document.getElementById('profilePhone').value = user.phone || '';
+    const feedback = form.querySelector('[data-feedback]');
+    const avatarImage = document.getElementById('profileAvatar');
+    const avatarFileInput = document.getElementById('profileAvatarFile');
+    let avatarValue = '';
+
+    function readFileAsDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('Не удалось загрузить изображение.'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function renderProfile(profile) {
+      document.getElementById('profileName').textContent = `${profile.firstName} ${profile.lastName}`.trim();
+      document.getElementById('profileEmail').textContent = profile.email;
+      document.getElementById('profileFirstName').value = profile.firstName || '';
+      document.getElementById('profileLastName').value = profile.lastName || '';
+      document.getElementById('profileEmailInput').value = profile.email;
+      avatarValue = profile.avatarUrl || '';
+      avatarImage.src = avatarValue || `https://ui-avatars.com/api/?name=${encodeURIComponent((profile.firstName || 'User') + ' ' + (profile.lastName || ''))}&background=FFD150&color=3d2a00&size=120`;
+    }
+
+    fetch(`${API_BASE}/user/profile`, { headers: { Authorization: `Bearer ${getAuthToken()}` } })
+      .then((response) => response.json().then((data) => ({ ok: response.ok, data })))
+      .then(({ ok, data }) => {
+        if (!ok) throw new Error(data.message || 'Не удалось загрузить профиль.');
+        renderProfile(data);
+      })
+      .catch((error) => {
+        feedback.className = 'alert alert-danger mt-3';
+        feedback.textContent = error.message;
+      });
 
     form.dataset.handled = 'custom';
-    form.addEventListener('submit', (e) => {
+    avatarFileInput.addEventListener('change', async () => {
+      const [file] = avatarFileInput.files || [];
+      if (!file) return;
+      try {
+        avatarValue = await readFileAsDataUrl(file);
+        avatarImage.src = avatarValue;
+      } catch (error) {
+        feedback.className = 'alert alert-danger mt-3';
+        feedback.textContent = error.message;
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!form.checkValidity()) {
         form.classList.add('was-validated');
         return;
       }
-
-      const users = read(STORAGE_KEYS.users, []);
-      const idx = users.findIndex((u) => u.id === user.id);
-      users[idx] = {
-        ...users[idx],
-        fullName: `${document.getElementById('profileFirstName').value.trim()} ${document.getElementById('profileLastName').value.trim()}`.trim(),
-        email: document.getElementById('profileEmailInput').value.trim(),
-        phone: document.getElementById('profilePhone').value.trim(),
-      };
-      write(STORAGE_KEYS.users, users);
-      document.getElementById('profileName').textContent = users[idx].fullName;
-      document.getElementById('profileEmail').textContent = users[idx].email;
-      const feedback = form.querySelector('[data-feedback]');
-      feedback.className = 'alert alert-success mt-3';
-      feedback.textContent = 'Профиль успешно обновлен.';
+      try {
+        const response = await fetch(`${API_BASE}/user/profile`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getAuthToken()}` },
+          body: JSON.stringify({
+            firstName: document.getElementById('profileFirstName').value.trim(),
+            lastName: document.getElementById('profileLastName').value.trim(),
+            email: document.getElementById('profileEmailInput').value.trim().toLowerCase(),
+            avatarUrl: avatarValue || null,
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Не удалось обновить профиль.');
+        renderProfile(data);
+        feedback.className = 'alert alert-success mt-3';
+        feedback.textContent = 'Профиль успешно обновлен.';
+      } catch (error) {
+        feedback.className = 'alert alert-danger mt-3';
+        feedback.textContent = error.message;
+      }
     });
   }
 
