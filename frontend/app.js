@@ -482,10 +482,14 @@
     const titleNode = document.getElementById('eventTitle');
     if (!titleNode) return;
     const id = new URLSearchParams(window.location.search).get('id');
-    fetch(`${API_BASE}/events`)
-      .then((response) => response.json())
-      .then((events) => {
-        const event = events.map(mapApiEventToUi).find((item) => item.id === id) || events.map(mapApiEventToUi)[0];
+    fetch(`${API_BASE}/events/${id}`)
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || data.error || 'Не удалось загрузить детали события.');
+        return data;
+      })
+      .then((details) => {
+        const event = mapApiEventToUi(details.event);
         document.getElementById('eventType').textContent = event.type;
         titleNode.textContent = event.title;
         document.getElementById('eventDescription').textContent = event.description;
@@ -495,10 +499,17 @@
         const eventImage = document.getElementById('eventImage');
         eventImage.src = event.image;
         eventImage.onerror = () => { eventImage.src = DEFAULT_EVENT_IMAGE; };
-        document.getElementById('eventPrice').textContent = `${event.price} BYN`;
+        const minTicket = details.ticketTypes?.[0]?.price ?? event.price;
+        document.getElementById('eventPrice').textContent = `${minTicket} BYN`;
         const buyTicketBtn = document.getElementById('buyTicketBtn');
         buyTicketBtn.href = getCurrentUser() ? `ticket.html?id=${event.id}` : 'login.html';
-        document.getElementById('eventSchedule').innerHTML = event.schedule.map((s) => `<li class="list-group-item">${s}</li>`).join('');
+        const program = details.program || [];
+        document.getElementById('eventSchedule').innerHTML = program.map((item) => (
+          `<li class="list-group-item"><strong>${item.title}</strong><br><small>${new Date(item.startDateTime).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })} - ${new Date(item.endDateTime).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</small>${item.description ? `<br>${item.description}` : ''}</li>`
+        )).join('') || '<li class="list-group-item text-muted">Программа пока не добавлена</li>';
+      })
+      .catch((error) => {
+        document.getElementById('eventSchedule').innerHTML = `<li class="list-group-item text-danger">${error.message}</li>`;
       });
   }
 
@@ -515,17 +526,28 @@
     const totalNode = document.getElementById('ticketTotal');
     const buyerEmail = document.getElementById('buyerEmail');
     const ticketType = document.getElementById('ticketType');
+    let ticketTypes = [];
     title.textContent = event.title;
     buyerEmail.value = user.email;
 
     function updateTotal() {
-      const multi = Number(ticketType.value || 1);
+      const selectedType = ticketTypes.find((item) => String(item.id) === String(ticketType.value));
+      const price = selectedType ? Number(selectedType.price) : Number(event.price || 0);
       const qty = Number(qtyInput.value || 1);
-      totalNode.textContent = `${event.price * multi * qty} BYN`;
+      totalNode.textContent = `${price * qty} BYN`;
     }
     qtyInput.addEventListener('input', updateTotal);
     ticketType.addEventListener('change', updateTotal);
-    updateTotal();
+    fetch(`${API_BASE}/events/${id}/tickets`)
+      .then((response) => response.json())
+      .then((data) => {
+        ticketTypes = data || [];
+        if (ticketTypes.length) {
+          ticketType.innerHTML = ticketTypes.map((item) => `<option value="${item.id}">${item.name} — ${item.price} BYN</option>`).join('');
+        }
+        updateTotal();
+      })
+      .catch(() => updateTotal());
 
     form.dataset.handled = 'custom';
     form.addEventListener('submit', (e) => {
@@ -542,8 +564,8 @@
         eventId: event.id,
         eventTitle: event.title,
         qty: Number(qtyInput.value),
-        typeMultiplier: Number(ticketType.value),
-        total: event.price * Number(ticketType.value) * Number(qtyInput.value),
+        ticketTypeId: Number(ticketType.value),
+        total: Number((totalNode.textContent || '0').replace(' BYN', '')),
         createdAt: new Date().toISOString(),
         status: 'Оплачено',
       });
