@@ -325,7 +325,7 @@
       city: event.city,
       date: start.toISOString().slice(0, 10),
       time: start.toTimeString().slice(0, 5),
-      image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1170&auto=format&fit=crop',
+      image: event.imageUrl || 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1170&auto=format&fit=crop',
       description: event.description,
       venue: event.venue,
       price: Number(event.minPrice || 0),
@@ -339,8 +339,9 @@
 
     const state = {
       page: 1,
-      perPage: 10,
+      perPage: 12,
       type: 'all',
+      city: 'all',
       from: '',
       to: '',
       events: [],
@@ -348,6 +349,7 @@
     let events = read(STORAGE_KEYS.events, []);
 
     const typeSelect = document.getElementById('typeFilter');
+    const citySelect = document.getElementById('cityFilter');
     const fromInput = document.getElementById('dateFromFilter');
     const toInput = document.getElementById('dateToFilter');
     const pagination = document.getElementById('eventsPagination');
@@ -361,7 +363,10 @@
         city: event.city,
         date: event.startDateTime ? event.startDateTime.slice(0, 10) : '',
         time: start.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
-        image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1170&auto=format&fit=crop',
+        image: event.imageUrl || 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1170&auto=format&fit=crop',
+        description: event.description || '',
+        price: Number(event.minTicketPrice || 0),
+        schedule: [],
       };
     }
 
@@ -384,6 +389,7 @@
     function applyFilters() {
       return state.events
         .filter((event) => state.type === 'all' || event.type === state.type)
+        .filter((event) => state.city === 'all' || event.city === state.city)
         .filter((event) => !state.from || event.date >= state.from)
         .filter((event) => !state.to || event.date <= state.to);
     }
@@ -429,6 +435,16 @@
         typeSelect.appendChild(option);
       });
     }
+    function renderCities() {
+      const cities = Array.from(new Set(state.events.map((e) => e.city))).sort();
+      citySelect.innerHTML = '<option value="all">Все города</option>';
+      cities.forEach((city) => {
+        const option = document.createElement('option');
+        option.value = city;
+        option.textContent = city;
+        citySelect.appendChild(option);
+      });
+    }
 
     async function loadEvents() {
       try {
@@ -437,6 +453,7 @@
         if (!response.ok) throw new Error(data.message || data.error || 'Не удалось загрузить события.');
         state.events = data.map(normalizeEvent);
         renderTypes();
+        renderCities();
         render();
       } catch (error) {
         grid.innerHTML = `<p class="text-danger">${error.message}</p>`;
@@ -444,6 +461,7 @@
     }
 
     typeSelect.addEventListener('change', () => { state.type = typeSelect.value; state.page = 1; render(); });
+    citySelect.addEventListener('change', () => { state.city = citySelect.value; state.page = 1; render(); });
     fromInput.addEventListener('change', () => { state.from = fromInput.value; state.page = 1; render(); });
     toInput.addEventListener('change', () => { state.to = toInput.value; state.page = 1; render(); });
 
@@ -454,18 +472,22 @@
     const titleNode = document.getElementById('eventTitle');
     if (!titleNode) return;
     const id = new URLSearchParams(window.location.search).get('id');
-    const event = read(STORAGE_KEYS.events, []).find((item) => item.id === id) || read(STORAGE_KEYS.events, [])[0];
-    document.getElementById('eventType').textContent = event.type;
-    titleNode.textContent = event.title;
-    document.getElementById('eventDescription').textContent = event.description;
-    document.getElementById('eventDate').textContent = `📅 ${new Date(event.date).toLocaleDateString('ru-RU')}`;
-    document.getElementById('eventTime').textContent = `🕖 ${event.time}`;
-    document.getElementById('eventCity').textContent = `📍 ${event.city}`;
-    document.getElementById('eventImage').src = event.image;
-    document.getElementById('eventPrice').textContent = `${event.price} BYN`;
-    const buyTicketBtn = document.getElementById('buyTicketBtn');
-    buyTicketBtn.href = getCurrentUser() ? `ticket.html?id=${event.id}` : 'login.html';
-    document.getElementById('eventSchedule').innerHTML = event.schedule.map((s) => `<li class="list-group-item">${s}</li>`).join('');
+    fetch(`${API_BASE}/events`)
+      .then((response) => response.json())
+      .then((events) => {
+        const event = events.map(mapApiEventToUi).find((item) => item.id === id) || events.map(mapApiEventToUi)[0];
+        document.getElementById('eventType').textContent = event.type;
+        titleNode.textContent = event.title;
+        document.getElementById('eventDescription').textContent = event.description;
+        document.getElementById('eventDate').textContent = `📅 ${new Date(event.date).toLocaleDateString('ru-RU')}`;
+        document.getElementById('eventTime').textContent = `🕖 ${event.time}`;
+        document.getElementById('eventCity').textContent = `📍 ${event.city}`;
+        document.getElementById('eventImage').src = event.image;
+        document.getElementById('eventPrice').textContent = `${event.price} BYN`;
+        const buyTicketBtn = document.getElementById('buyTicketBtn');
+        buyTicketBtn.href = getCurrentUser() ? `ticket.html?id=${event.id}` : 'login.html';
+        document.getElementById('eventSchedule').innerHTML = event.schedule.map((s) => `<li class="list-group-item">${s}</li>`).join('');
+      });
   }
 
   function initTicketPage() {

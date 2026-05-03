@@ -14,6 +14,7 @@ public class EventDtos {
             @NotNull BigDecimal latitude,
             @NotNull BigDecimal longitude,
             String mapUrl,
+            String imageUrl,
             @NotNull LocalDateTime startDateTime,
             @NotNull LocalDateTime endDateTime
     ) {}
@@ -27,6 +28,7 @@ public class EventDtos {
             BigDecimal latitude,
             BigDecimal longitude,
             String mapUrl,
+            String imageUrl,
             LocalDateTime startDateTime,
             LocalDateTime endDateTime,
             BigDecimal minTicketPrice

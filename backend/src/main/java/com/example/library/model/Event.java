@@ -32,6 +32,9 @@ public class Event {
     @Column(length = 1024)
     private String mapUrl;
 
+    @Column(length = 2048)
+    private String imageUrl;
+
     @Column(nullable = false)
     private LocalDateTime startDateTime;
 
@@ -57,6 +60,8 @@ public class Event {
     public void setLongitude(BigDecimal longitude) { this.longitude = longitude; }
     public String getMapUrl() { return mapUrl; }
     public void setMapUrl(String mapUrl) { this.mapUrl = mapUrl; }
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public LocalDateTime getStartDateTime() { return startDateTime; }
     public void setStartDateTime(LocalDateTime startDateTime) { this.startDateTime = startDateTime; }
     public LocalDateTime getEndDateTime() { return endDateTime; }
