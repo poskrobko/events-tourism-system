@@ -52,12 +52,16 @@
 
   function getCurrentUser() {
     const auth = read(STORAGE_KEYS.auth, null);
-    if (!auth) return null;
+    if (!auth || !auth.token) return null;
     return read(STORAGE_KEYS.users, []).find((u) => u.id === auth.userId) || null;
   }
 
+  function getAuthToken() {
+    return read(STORAGE_KEYS.auth, {})?.token || '';
+  }
+
   function requireAuth(redirect = 'login.html') {
-    if (!getCurrentUser()) window.location.href = redirect;
+    if (!getCurrentUser() || !getAuthToken()) window.location.href = redirect;
   }
 
   function requireAdmin() {
@@ -560,7 +564,7 @@
       try {
         const response = await fetch(`${API_BASE}/user/tickets/purchase`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${read(STORAGE_KEYS.auth, {}).token}` },
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getAuthToken()}` },
           body: JSON.stringify({ ticketTypeId: Number(ticketType.value), quantity: Number(qtyInput.value), paymentMethod: 'CARD' }),
         });
         const data = await response.json();
@@ -580,22 +584,28 @@
     requireAuth();
 
     const orderId = new URLSearchParams(window.location.search).get('orderId');
-    const token = read(STORAGE_KEYS.auth, {}).token;
+    const token = getAuthToken();
     const response = await fetch(`${API_BASE}/user/orders`, { headers: { Authorization: `Bearer ${token}` } });
     const orders = await response.json();
     const order = (orders || []).find((o) => String(o.id) === String(orderId));
     if (!order) { window.location.href = 'my-tickets.html'; return; }
 
     title.textContent = `Оплата заказа №${order.id}`;
-    document.getElementById('paymentEvent').textContent = `Заказ #${order.id}`;
-    document.getElementById('paymentTicketType').textContent = order.items?.[0]?.ticketType || 'Билет';
-    document.getElementById('paymentQty').textContent = order.items?.[0]?.quantity || 1;
-    document.getElementById('paymentTotal').textContent = `${order.totalAmount} BYN`;
+    const firstItem = order.items?.[0] || null;
+    document.getElementById('paymentEvent').textContent = firstItem?.eventTitle || `Заказ #${order.id}`;
+    document.getElementById('paymentTicketType').textContent = firstItem?.ticketType || 'Билет';
+    document.getElementById('paymentQty').textContent = firstItem?.quantity || 1;
+    document.getElementById('paymentTotal').textContent = `${order.totalAmount ?? 0} BYN`;
     const feedback = document.getElementById('paymentFeedback');
 
     document.getElementById('paySuccessBtn').addEventListener('click', async () => {
       const payResp = await fetch(`${API_BASE}/user/orders/${order.id}/pay`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ paymentMethod: 'CARD' }) });
       if (payResp.ok) window.location.href = 'my-tickets.html';
+    });
+    document.getElementById('payDeclineBtn').addEventListener('click', async () => {
+      await fetch(`${API_BASE}/user/orders/${order.id}/pay-decline`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      feedback.className = 'alert alert-danger';
+      feedback.textContent = 'Оплата отклонена. Заказ переведён в статус Отклонен.';
     });
     document.getElementById('payFailBtn').addEventListener('click', async () => {
       await fetch(`${API_BASE}/user/orders/${order.id}/pay-later`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
@@ -612,7 +622,7 @@
     const user = getCurrentUser();
     if (user.role === 'admin') { window.location.href = 'admin.html'; return; }
 
-    const token = read(STORAGE_KEYS.auth, {}).token;
+    const token = getAuthToken();
     const response = await fetch(`${API_BASE}/user/orders`, { headers: { Authorization: `Bearer ${token}` } });
     const orders = await response.json();
     const paid = (orders || []).filter((o) => o.paymentStatus === 'PAID');

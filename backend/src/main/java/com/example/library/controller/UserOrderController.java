@@ -38,6 +38,11 @@ public class UserOrderController {
     public OrderDtos.OrderResponse payLater(@PathVariable Long orderId, Principal principal) {
         return orderService.postponePayment(principal.getName(), orderId);
     }
+
+    @PostMapping("/orders/{orderId}/pay-decline")
+    public OrderDtos.OrderResponse declinePayment(@PathVariable Long orderId, Principal principal) {
+        return orderService.declinePayment(principal.getName(), orderId);
+    }
     @GetMapping("/orders")
     public List<OrderDtos.OrderResponse> myOrders(Principal principal) {
         return orderService.myOrders(principal.getName());
