@@ -1349,7 +1349,7 @@
       const title = titleInput.value?.trim() || '';
       const description = descriptions[index]?.value?.trim() || '';
       const time = times[index]?.value || '';
-      if (!title || !description || !time) return [];
+      if (!title || !time) return [];
       return [{ title, description, time, sortOrder: index }];
     });
   }
@@ -1423,9 +1423,9 @@
       const wrapper = document.createElement('div');
       wrapper.className = 'row g-3 ticket-row';
       wrapper.innerHTML = `
-        <div class="col-md-4"><input class="form-control manager-ticket-name" placeholder="Тип билета (например, Standard)" /></div>
-        <div class="col-md-4"><input class="form-control manager-ticket-price" type="number" min="0" step="0.01" placeholder="Цена билета" /></div>
-        <div class="col-md-3"><input class="form-control manager-ticket-quantity" type="number" min="1" placeholder="Доступно билетов" /></div>
+        <div class="col-md-4"><input class="form-control manager-ticket-name" placeholder="Тип билета" required /></div>
+        <div class="col-md-4"><input class="form-control manager-ticket-price" type="number" min="0" step="0.01" placeholder="Цена" required /></div>
+        <div class="col-md-3"><input class="form-control manager-ticket-quantity" type="number" min="1" placeholder="Кол-во билетов" required /></div>
         <div class="col-md-1 d-grid"><button class="btn btn-outline-danger remove-ticket-row ticket-add-btn ms-auto" type="button">−</button></div>`;
       wrapper.querySelector('.remove-ticket-row').addEventListener('click', () => wrapper.remove());
       managerTicketRows?.appendChild(wrapper);
@@ -1434,9 +1434,9 @@
       const wrapper = document.createElement('div');
       wrapper.className = 'row g-2 program-row';
       wrapper.innerHTML = `
-        <div class="col-md-4"><input class="form-control manager-program-title" placeholder="Заголовок пункта" /></div>
-        <div class="col-md-5"><input class="form-control manager-program-description" placeholder="Описание пункта" /></div>
-        <div class="col-md-2"><input class="form-control manager-program-time" type="time" /></div>
+        <div class="col-md-4"><input class="form-control manager-program-title" placeholder="Заголовок пункта" required /></div>
+        <div class="col-md-5"><input class="form-control manager-program-description" placeholder="Описание пункта (необязательно)" /></div>
+        <div class="col-md-2"><input class="form-control manager-program-time" type="time" required /></div>
         <div class="col-md-1 d-grid"><button class="btn btn-outline-danger remove-program-row ticket-add-btn ms-auto" type="button">−</button></div>`;
       wrapper.querySelector('.remove-program-row').addEventListener('click', () => wrapper.remove());
       managerProgramRows?.appendChild(wrapper);
@@ -1471,10 +1471,10 @@
         document.getElementById('managerEventTitle').value = event.title;
         document.getElementById('managerEventDescription').value = event.description;
         document.getElementById('managerEventCity').value = event.city;
-        document.getElementById('managerEventVenue').value = event.venue;
-        document.getElementById('managerEventStart').value = event.startDateTime.slice(0, 16);
+        document.getElementById('managerEventType').value = 'Образование';
+        document.getElementById('managerEventDate').value = event.startDateTime.slice(0, 10);
+        document.getElementById('managerEventTime').value = event.startDateTime.slice(11, 16);
         document.getElementById('managerEventImageUrl').value = event.imageUrl || '';
-        document.getElementById('managerEventEnd').value = event.endDateTime.slice(0, 16);
         try {
           const programResp = await fetch(`${API_BASE}/events/${event.id}/program`);
           const program = programResp.ok ? await programResp.json() : [];
@@ -1483,9 +1483,9 @@
             const wrapper = document.createElement('div');
             wrapper.className = 'row g-2 program-row';
             wrapper.innerHTML = `
-              <div class="col-md-4"><input class="form-control manager-program-title" value="${(item.title || '').replace(/\"/g, '&quot;')}" /></div>
+              <div class="col-md-4"><input class="form-control manager-program-title" value="${(item.title || '').replace(/\"/g, '&quot;')}" required /></div>
               <div class="col-md-5"><input class="form-control manager-program-description" value="${(item.description || '').replace(/\"/g, '&quot;')}" /></div>
-              <div class="col-md-2"><input class="form-control manager-program-time" type="time" value="${String(item.startDateTime || '').slice(11, 16)}" /></div>
+              <div class="col-md-2"><input class="form-control manager-program-time" type="time" value="${String(item.startDateTime || '').slice(11, 16)}" required /></div>
               <div class="col-md-1 d-grid">${index === 0 ? '<button id="managerAddProgramRow" class="btn btn-outline-secondary ticket-add-btn ms-auto" type="button">+</button>' : '<button class="btn btn-outline-danger remove-program-row ticket-add-btn ms-auto" type="button">−</button>'}</div>`;
             managerProgramRows.appendChild(wrapper);
           });
@@ -1503,17 +1503,24 @@
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        return;
+      }
       const eventId = document.getElementById('managerEventId').value;
+      const date = document.getElementById('managerEventDate').value;
+      const time = document.getElementById('managerEventTime').value;
+      const startDateTime = `${date}T${time}`;
       const payload = {
         title: document.getElementById('managerEventTitle').value.trim(),
         description: document.getElementById('managerEventDescription').value.trim(),
         city: document.getElementById('managerEventCity').value.trim(),
-        venue: document.getElementById('managerEventVenue').value.trim(),
+        venue: document.getElementById('managerEventCity').value.trim(),
         latitude: 53.9,
         longitude: 27.5667,
         mapUrl: '',
-        startDateTime: document.getElementById('managerEventStart').value,
-        endDateTime: document.getElementById('managerEventEnd').value,
+        startDateTime,
+        endDateTime: startDateTime,
         imageUrl: document.getElementById('managerEventImageUrl').value.trim() || null,
       };
       const url = eventId ? `${API_BASE}/manager/events/${eventId}` : `${API_BASE}/manager/events`;
@@ -1529,7 +1536,7 @@
       }
       const savedEvent = await response.json();
       const programRows = collectProgramRows(managerProgramRows, { title: '.manager-program-title', description: '.manager-program-description', time: '.manager-program-time' });
-      await syncManagerProgram(savedEvent.id, programRows, payload.startDateTime.slice(0, 10));
+      await syncManagerProgram(savedEvent.id, programRows, date);
       if (!eventId) {
         const tickets = collectTicketRows(managerTicketRows, {
           name: '.manager-ticket-name',
@@ -1546,6 +1553,7 @@
       }
       form.reset();
       document.getElementById('managerEventId').value = '';
+      form.classList.remove('was-validated');
       await loadManagerEvents();
       await renderEvents();
     });
@@ -1553,6 +1561,7 @@
     resetBtn.addEventListener('click', () => {
       form.reset();
       document.getElementById('managerEventId').value = '';
+      form.classList.remove('was-validated');
     });
 
     await loadManagerEvents();
@@ -1595,7 +1604,7 @@
       wrapper.className = 'row g-2 program-row';
       wrapper.innerHTML = `
         <div class="col-md-4"><input class="form-control admin-program-title" placeholder="Заголовок пункта" required /></div>
-        <div class="col-md-5"><input class="form-control admin-program-description" placeholder="Описание пункта" required /></div>
+        <div class="col-md-5"><input class="form-control admin-program-description" placeholder="Описание пункта (необязательно)" /></div>
         <div class="col-md-2"><input class="form-control admin-program-time" type="time" required /></div>
         <div class="col-md-1 d-grid"><button class="btn btn-outline-danger remove-program-row ticket-add-btn ms-auto" type="button">−</button></div>`;
       wrapper.querySelector('.remove-program-row').addEventListener('click', () => wrapper.remove());
@@ -1744,7 +1753,7 @@
         try {
           const programResp = await fetch(`${API_BASE}/events/${event.id}/program`);
           const program = programResp.ok ? await programResp.json() : [];
-          adminProgramRows.innerHTML = (program || []).map((item) => `<div class="row g-2 program-row"><div class="col-md-4"><input class="form-control admin-program-title" value="${(item.title || "").replace(/"/g, "&quot;")}" required /></div><div class="col-md-5"><input class="form-control admin-program-description" value="${(item.description || "").replace(/"/g, "&quot;")}" required /></div><div class="col-md-2"><input class="form-control admin-program-time" type="time" value="${String(item.startDateTime || "").slice(11, 16)}" required /></div><div class="col-md-1 d-grid"><button class="btn btn-outline-danger remove-program-row ticket-add-btn ms-auto" type="button">−</button></div></div>`).join('');
+          adminProgramRows.innerHTML = (program || []).map((item) => `<div class="row g-2 program-row"><div class="col-md-4"><input class="form-control admin-program-title" value="${(item.title || "").replace(/"/g, "&quot;")}" required /></div><div class="col-md-5"><input class="form-control admin-program-description" value="${(item.description || "").replace(/"/g, "&quot;")}" /></div><div class="col-md-2"><input class="form-control admin-program-time" type="time" value="${String(item.startDateTime || "").slice(11, 16)}" required /></div><div class="col-md-1 d-grid"><button class="btn btn-outline-danger remove-program-row ticket-add-btn ms-auto" type="button">−</button></div></div>`).join('');
           adminProgramRows.querySelectorAll('.remove-program-row').forEach((b) => b.addEventListener('click', () => b.closest('.program-row')?.remove()));
         } catch {
           adminProgramRows.innerHTML = '';
