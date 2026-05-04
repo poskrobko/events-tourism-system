@@ -15,6 +15,9 @@ public class EventProgramItem {
     private Event event;
 
     @Column(nullable = false)
+    private Integer sortOrder = 0;
+
+    @Column(nullable = false)
     private String title;
 
     @Column(nullable = false)
@@ -29,6 +32,8 @@ public class EventProgramItem {
     public Long getId() { return id; }
     public Event getEvent() { return event; }
     public void setEvent(Event event) { this.event = event; }
+    public Integer getSortOrder() { return sortOrder; }
+    public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
     public LocalDateTime getStartDateTime() { return startDateTime; }

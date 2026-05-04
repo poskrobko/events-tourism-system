@@ -65,7 +65,7 @@ public class EventService {
     public EventDtos.EventDetailsResponse getEventDetails(Long eventId) {
         Event event = getEvent(eventId);
         var eventResponse = toResponse(event);
-        var program = programRepository.findByEventIdOrderByStartDateTimeAsc(eventId).stream().map(this::toProgramResponse).toList();
+        var program = programRepository.findByEventIdOrderBySortOrderAscStartDateTimeAscIdAsc(eventId).stream().map(this::toProgramResponse).toList();
         var tickets = ticketTypeRepository.findByEventIdOrderByPriceAsc(eventId).stream().map(this::toTicketResponse).toList();
         return new EventDtos.EventDetailsResponse(eventResponse, program, tickets, buildGoogleCalendarUrl(event));
     }
@@ -118,6 +118,7 @@ public class EventService {
         item.setTitle(request.title());
         item.setStartDateTime(request.startDateTime());
         item.setEndDateTime(request.endDateTime());
+        item.setSortOrder(request.sortOrder() == null ? 0 : request.sortOrder());
         item.setDescription(request.description());
         return toProgramResponse(programRepository.save(item));
     }
@@ -129,12 +130,13 @@ public class EventService {
         item.setTitle(request.title());
         item.setStartDateTime(request.startDateTime());
         item.setEndDateTime(request.endDateTime());
+        item.setSortOrder(request.sortOrder() == null ? 0 : request.sortOrder());
         item.setDescription(request.description());
         return toProgramResponse(programRepository.save(item));
     }
 
     public List<EventDtos.ProgramItemResponse> listProgram(Long eventId) {
-        return programRepository.findByEventIdOrderByStartDateTimeAsc(eventId).stream().map(this::toProgramResponse).toList();
+        return programRepository.findByEventIdOrderBySortOrderAscStartDateTimeAscIdAsc(eventId).stream().map(this::toProgramResponse).toList();
     }
 
     @Transactional
@@ -144,6 +146,7 @@ public class EventService {
         item.setTitle(request.title());
         item.setStartDateTime(request.startDateTime());
         item.setEndDateTime(request.endDateTime());
+        item.setSortOrder(request.sortOrder() == null ? 0 : request.sortOrder());
         item.setDescription(request.description());
         return toProgramResponse(programRepository.save(item));
     }
@@ -155,6 +158,7 @@ public class EventService {
         item.setTitle(request.title());
         item.setStartDateTime(request.startDateTime());
         item.setEndDateTime(request.endDateTime());
+        item.setSortOrder(request.sortOrder() == null ? 0 : request.sortOrder());
         item.setDescription(request.description());
         return toProgramResponse(programRepository.save(item));
     }
@@ -272,7 +276,7 @@ public class EventService {
 
     private EventDtos.ProgramItemResponse toProgramResponse(EventProgramItem item) {
         return new EventDtos.ProgramItemResponse(
-                item.getId(), item.getEvent().getId(), item.getTitle(), item.getStartDateTime(), item.getEndDateTime(), item.getDescription()
+                item.getId(), item.getEvent().getId(), item.getTitle(), item.getStartDateTime(), item.getEndDateTime(), item.getSortOrder(), item.getDescription()
         );
     }
 

@@ -41,6 +41,7 @@ public class EventDtos {
             @NotBlank String title,
             @NotNull LocalDateTime startDateTime,
             @NotNull LocalDateTime endDateTime,
+            Integer sortOrder,
             String description
     ) {}
 
@@ -50,6 +51,7 @@ public class EventDtos {
             String title,
             LocalDateTime startDateTime,
             LocalDateTime endDateTime,
+            Integer sortOrder,
             String description
     ) {}
 
