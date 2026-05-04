@@ -563,10 +563,10 @@
         document.getElementById('eventPrice').textContent = `${minTicket} BYN`;
         const buyTicketBtn = document.getElementById('buyTicketBtn');
         const soldOutNotice = document.getElementById('soldOutNotice');
-        const eventEndedNotice = document.getElementById('eventEndedNotice');
+        const eventStartedNotice = document.getElementById('eventStartedNotice');
         const eventCanceledNotice = document.getElementById('eventCanceledNotice');
-        const eventEndDateTime = details.event?.endDateTime ? new Date(details.event.endDateTime) : new Date(details.event?.startDateTime || event.date);
-        const isEventEnded = !Number.isNaN(eventEndDateTime.getTime()) && eventEndDateTime < new Date();
+        const eventStartDateTime = new Date(details.event?.startDateTime || event.date);
+        const isEventStarted = !Number.isNaN(eventStartDateTime.getTime()) && eventStartDateTime <= new Date();
         const totalAvailable = (details.ticketTypes || []).reduce((sum, tt) => sum + Number(tt.quantityAvailable || 0), 0);
         buyTicketBtn.href = getCurrentUser() ? `ticket.html?id=${event.id}` : 'login.html';
         if (isEventCanceled(event.id)) {
@@ -575,25 +575,25 @@
           buyTicketBtn.addEventListener('click', (e) => e.preventDefault());
           eventCanceledNotice?.classList.remove('d-none');
           soldOutNotice?.classList.add('d-none');
-          eventEndedNotice?.classList.add('d-none');
-        } else if (isEventEnded) {
+          eventStartedNotice?.classList.add('d-none');
+        } else if (isEventStarted) {
           buyTicketBtn.classList.add('disabled');
           buyTicketBtn.setAttribute('aria-disabled', 'true');
           buyTicketBtn.addEventListener('click', (e) => e.preventDefault());
           eventCanceledNotice?.classList.add('d-none');
           soldOutNotice?.classList.add('d-none');
-          eventEndedNotice?.classList.remove('d-none');
+          eventStartedNotice?.classList.remove('d-none');
         } else if (totalAvailable <= 0) {
           buyTicketBtn.classList.add('disabled');
           buyTicketBtn.setAttribute('aria-disabled', 'true');
           buyTicketBtn.addEventListener('click', (e) => e.preventDefault());
           eventCanceledNotice?.classList.add('d-none');
           if (soldOutNotice) soldOutNotice.classList.remove('d-none');
-          eventEndedNotice?.classList.add('d-none');
+          eventStartedNotice?.classList.add('d-none');
         } else {
           eventCanceledNotice?.classList.add('d-none');
           soldOutNotice?.classList.add('d-none');
-          eventEndedNotice?.classList.add('d-none');
+          eventStartedNotice?.classList.add('d-none');
         }
         const ticketAvailability = document.getElementById('ticketAvailability');
         if (ticketAvailability) {
@@ -655,6 +655,14 @@
         return;
       }
       const feedback = form.querySelector('[data-feedback]');
+      const selectedType = ticketTypes.find((item) => String(item.id) === String(ticketType.value));
+      const requestedQty = Number(qtyInput.value || 1);
+      const availableQty = Number(selectedType?.quantityAvailable ?? 0);
+      if (selectedType && requestedQty > availableQty) {
+        feedback.className = 'alert alert-danger mt-3';
+        feedback.textContent = 'Количество свободных билетов на мероприятие ограничено. Выбери доступное количество билетов';
+        return;
+      }
       try {
         const response = await fetch(`${API_BASE}/user/tickets/purchase`, {
           method: 'POST',
@@ -1471,7 +1479,7 @@
       if (!response.ok) throw new Error('Не удалось загрузить события.');
       const events = await response.json();
       table.innerHTML = events.map((event) => `<tr>
-        <td>${event.title}${isEventCanceled(event.id) ? ' <span class="badge text-bg-danger">Отменён</span>' : ''}</td><td>${event.city}</td><td>${new Date(event.startDateTime).toLocaleString('ru-RU')}</td><td>${event.availableTickets ?? 0}</td>
+        <td>${event.title}${Number(event.availableTickets || 0) <= 0 ? ' <span class="badge text-bg-warning">Sold out</span>' : ''}${isEventCanceled(event.id) ? ' <span class="badge text-bg-danger">Отменён</span>' : ''}</td><td>${event.city}</td><td>${new Date(event.startDateTime).toLocaleString('ru-RU')}</td><td>${event.availableTickets ?? 0}</td>
         <td class="d-flex gap-2">
           <button class="btn btn-sm btn-outline-secondary" data-edit="${event.id}">Изменить</button>
           <button class="btn btn-sm btn-outline-warning" data-cancel="${event.id}">Отменить</button>
@@ -1740,7 +1748,7 @@
         const totalTickets = Number(e.availableTickets || 0);
         const managerLabel = e.managerFullName || e.managerEmail || '—';
         return `<tr>
-          <td>${e.title}${isEventCompleted(e) ? ' <span class="badge text-bg-secondary">Завершено</span>' : ''}${isEventCanceled(e.id) ? ' <span class="badge text-bg-danger">Отменён</span>' : ''}</td><td>${e.city}</td><td>${managerLabel}</td><td>${new Date(e.startDateTime).toLocaleString('ru-RU')}</td><td>${priceList}</td><td>${totalTickets}</td>
+          <td>${e.title}${totalTickets <= 0 ? ' <span class="badge text-bg-warning">Sold out</span>' : ''}${isEventCompleted(e) ? ' <span class="badge text-bg-secondary">Завершено</span>' : ''}${isEventCanceled(e.id) ? ' <span class="badge text-bg-danger">Отменён</span>' : ''}</td><td>${e.city}</td><td>${managerLabel}</td><td>${new Date(e.startDateTime).toLocaleString('ru-RU')}</td><td>${priceList}</td><td>${totalTickets}</td>
           <td class="d-flex gap-2"><button class="btn btn-sm btn-outline-secondary" data-edit="${e.id}">Изменить</button><button class="btn btn-sm btn-outline-warning" data-cancel="${e.id}">Отменить</button><button class="btn btn-sm btn-outline-danger" data-delete="${e.id}">Удалить</button></td>
         </tr>`;
       }).join('') || '<tr><td colspan="7">Событий пока нет.</td></tr>';
