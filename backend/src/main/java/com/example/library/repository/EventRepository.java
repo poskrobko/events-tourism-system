@@ -4,12 +4,11 @@ import com.example.library.model.Event;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface EventRepository extends JpaRepository<Event, Long> {
     @EntityGraph(attributePaths = "createdBy")
-    List<Event> findAllByOrderByStartDateTimeAsc(Pageable pageable);
+    List<Event> findAllByOrderByStartDateTimeAsc();
 
     @EntityGraph(attributePaths = "createdBy")
     Optional<Event> findById(Long id);
