@@ -27,8 +27,8 @@ public class AdminController {
     }
 
     @PostMapping("/events")
-    public EventDtos.EventResponse createEvent(@Valid @RequestBody EventDtos.EventRequest request) {
-        return eventService.createEvent(request);
+    public EventDtos.EventResponse createEvent(@Valid @RequestBody EventDtos.EventRequest request, Principal principal) {
+        return eventService.createEventAsManager(request, principal.getName());
     }
 
     @PutMapping("/events/{eventId}")

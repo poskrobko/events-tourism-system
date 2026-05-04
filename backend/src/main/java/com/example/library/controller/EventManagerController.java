@@ -22,6 +22,11 @@ public class EventManagerController {
         this.orderService = orderService;
     }
 
+    @GetMapping("/events")
+    public List<EventDtos.EventResponse> myEvents(Principal principal) {
+        return eventService.listEventsForManager(principal.getName());
+    }
+
     @PostMapping("/events")
     public EventDtos.EventResponse createEvent(@Valid @RequestBody EventDtos.EventRequest request, Principal principal) {
         return eventService.createEventAsManager(request, principal.getName());

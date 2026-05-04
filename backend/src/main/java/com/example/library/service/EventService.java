@@ -45,6 +45,12 @@ public class EventService {
                 .toList();
     }
 
+    public List<EventDtos.EventResponse> listEventsForManager(String managerEmail) {
+        return eventRepository.findByCreatedByEmailOrderByStartDateTimeAsc(managerEmail).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
     private boolean matchesTicketFilters(Long eventId, BigDecimal minPrice, BigDecimal maxPrice, String ticketType) {
         if (minPrice == null && maxPrice == null && (ticketType == null || ticketType.isBlank())) {
             return true;
@@ -257,7 +263,10 @@ public class EventService {
         BigDecimal minPrice = ticketTypeRepository.findMinPriceByEventId(e.getId()).orElse(null);
         return new EventDtos.EventResponse(
                 e.getId(), e.getTitle(), e.getDescription(), e.getCity(), e.getVenue(),
-                e.getLatitude(), e.getLongitude(), e.getMapUrl(), e.getImageUrl(), e.getStartDateTime(), e.getEndDateTime(), minPrice, e.getAvailableTickets()
+                e.getLatitude(), e.getLongitude(), e.getMapUrl(), e.getImageUrl(), e.getStartDateTime(), e.getEndDateTime(), minPrice,
+                e.getAvailableTickets(),
+                e.getCreatedBy() != null ? e.getCreatedBy().getEmail() : null,
+                e.getCreatedBy() != null ? e.getCreatedBy().getFullName() : null
         );
     }
 
