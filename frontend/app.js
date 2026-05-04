@@ -1440,8 +1440,22 @@
     const addManagerTicketRowBtn = document.getElementById('managerAddTicketRow');
     const addManagerProgramRowBtn = document.getElementById('managerAddProgramRow');
     const managerEventsPagination = document.getElementById('managerEventsPagination');
+    const managerOrdersTable = document.getElementById('managerOrdersTable');
+    const managerOrdersPagination = document.getElementById('managerOrdersPagination');
+    const managerOrdersStatusFilter = document.getElementById('managerOrdersStatusFilter');
     const MANAGER_PAGE_SIZE = 7;
     let managerEventsPage = 1;
+    let managerOrdersPage = 1;
+    let managerOrdersCache = [];
+    let managerEventIdsCache = new Set();
+
+    const statusRu = { PAID: 'Оплачено', REFUNDED: 'Возвращен', DECLINED: 'Отменен', PENDING: 'В ожидании' };
+    const statusBadgeClass = {
+      PAID: 'text-bg-success',
+      REFUNDED: 'text-bg-secondary',
+      DECLINED: 'text-bg-danger',
+      PENDING: 'text-bg-warning',
+    };
 
     function renderManagerPagination(totalItems, currentPage, onPageChange) {
       if (!managerEventsPagination) return;
@@ -1463,6 +1477,50 @@
       const safePage = Math.min(Math.max(1, managerEventsPage), totalPages);
       const start = (safePage - 1) * MANAGER_PAGE_SIZE;
       return { pageItems: items.slice(start, start + MANAGER_PAGE_SIZE), safePage };
+    }
+
+    function getOrdersPageSlice(items) {
+      const totalPages = Math.max(1, Math.ceil(items.length / MANAGER_PAGE_SIZE));
+      const safePage = Math.min(Math.max(1, managerOrdersPage), totalPages);
+      const start = (safePage - 1) * MANAGER_PAGE_SIZE;
+      return { pageItems: items.slice(start, start + MANAGER_PAGE_SIZE), safePage };
+    }
+
+    function renderOrdersPagination(totalItems, currentPage, onPageChange) {
+      if (!managerOrdersPagination) return;
+      managerOrdersPagination.innerHTML = '';
+      const totalPages = Math.max(1, Math.ceil(totalItems / MANAGER_PAGE_SIZE));
+      for (let page = 1; page <= totalPages; page += 1) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `btn btn-sm ${page === currentPage ? 'btn-primary' : 'btn-outline-secondary'}`;
+        button.textContent = String(page);
+        button.addEventListener('click', () => onPageChange(page));
+        managerOrdersPagination.appendChild(button);
+      }
+    }
+
+    function renderManagerOrdersTable(orders, managerEventIds) {
+      if (!managerOrdersTable) return;
+      const selectedStatus = managerOrdersStatusFilter?.value || 'ALL';
+      const managerOrders = orders
+        .map((order) => ({
+          ...order,
+          items: (order.items || []).filter((item) => managerEventIds.has(String(item?.eventId ?? item?.event?.id))),
+        }))
+        .filter((order) => order.items.length > 0);
+      const filteredOrders = selectedStatus === 'ALL'
+        ? managerOrders
+        : managerOrders.filter((order) => order.paymentStatus === selectedStatus);
+      const { pageItems, safePage } = getOrdersPageSlice(filteredOrders);
+      managerOrdersPage = safePage;
+      const rows = [];
+      pageItems.forEach((order) => (order.items || []).forEach((item) => rows.push(`<tr><td>${order.userFullName || order.userEmail}</td><td>${item.eventTitle}</td><td>${item.quantity}</td><td>${(Number(item.unitPrice || 0) * Number(item.quantity || 0)).toFixed(2)} BYN</td><td><span class="badge ${statusBadgeClass[order.paymentStatus] || 'text-bg-light'}">${statusRu[order.paymentStatus] || order.paymentStatus}</span></td><td>${new Date(order.createdAt).toLocaleString('ru-RU')}</td></tr>`)));
+      managerOrdersTable.innerHTML = rows.join('') || '<tr><td colspan="6">Заказов по выбранному фильтру нет.</td></tr>';
+      renderOrdersPagination(filteredOrders.length, managerOrdersPage, (nextPage) => {
+        managerOrdersPage = nextPage;
+        renderManagerOrdersTable(managerOrdersCache, managerEventIds);
+      });
     }
 
     function buildProgramItemsFromRows(rows, date) {
@@ -1538,6 +1596,7 @@
 
       document.getElementById('managerTotalEvents').textContent = events.length;
       const managerEventIds = new Set(events.map((event) => String(event.id)));
+      managerEventIdsCache = managerEventIds;
       const managerRevenue = orders.reduce((sum, order) => {
         const orderItems = Array.isArray(order.items) ? order.items : [];
         const managerOrderAmount = orderItems.reduce((itemSum, item) => {
@@ -1552,6 +1611,8 @@
         return sum;
       }, 0);
       document.getElementById('managerTotalRevenue').textContent = `${Math.max(0, managerRevenue).toFixed(2)} BYN`;
+      managerOrdersCache = orders;
+      renderManagerOrdersTable(managerOrdersCache, managerEventIds);
 
       const { pageItems, safePage } = getManagerPageSlice(events);
       managerEventsPage = safePage;
@@ -1676,6 +1737,10 @@
       resetManagerDynamicRows();
       document.getElementById('managerEventId').value = '';
       form.classList.remove('was-validated');
+    });
+    managerOrdersStatusFilter?.addEventListener('change', async () => {
+      managerOrdersPage = 1;
+      renderManagerOrdersTable(managerOrdersCache, managerEventIdsCache);
     });
 
     await loadManagerEvents();

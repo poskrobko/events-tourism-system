@@ -68,6 +68,25 @@
       </div>
       <div id="managerEventsPagination" class="d-flex flex-wrap gap-2 mt-3"></div>
     </div>
+    <div class="card page-card p-4 mt-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 class="h5 mb-0">Заказы пользователей</h2>
+        <select id="managerOrdersStatusFilter" class="form-select form-select-sm w-auto">
+          <option value="ALL">Все статусы</option>
+          <option value="PAID">Оплачено</option>
+          <option value="PENDING">В ожидании</option>
+          <option value="REFUNDED">Возвращен</option>
+          <option value="DECLINED">Отменен</option>
+        </select>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead><tr><th>Пользователь</th><th>Событие</th><th>Кол-во</th><th>Сумма</th><th>Статус</th><th>Дата</th></tr></thead>
+          <tbody id="managerOrdersTable"></tbody>
+        </table>
+      </div>
+      <div id="managerOrdersPagination" class="d-flex flex-wrap gap-2 mt-3"></div>
+    </div>
   </main>
   <script src="app.js"></script>
 </body>
