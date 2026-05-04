@@ -22,6 +22,14 @@
     return `${window.location.origin}/images/${normalized}`;
   }
 
+  
+  function isEventCompleted(event) {
+    const endDate = event.endDateTime || event.startDateTime;
+    return endDate ? new Date(endDate).getTime() < Date.now() : false;
+  }
+  
+  
+
 
   function normalizeEventType(value) {
     const type = String(value || '').trim();
@@ -1724,11 +1732,6 @@
       DECLINED: 'text-bg-danger',
       PENDING: 'text-bg-warning',
     };
-
-    function isEventCompleted(event) {
-      const endDate = event.endDateTime || event.startDateTime;
-      return endDate ? new Date(endDate).getTime() < Date.now() : false;
-    }
 
     function renderTablePagination(container, totalItems, currentPage, onPageChange, pageSize = ADMIN_PAGE_SIZE) {
       if (!container) return;
