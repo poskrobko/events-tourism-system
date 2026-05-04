@@ -9,7 +9,7 @@
     canceledEvents: 'eventflow_canceled_events_v1',
   };
 
-  const EVENT_TYPES = ['Бизнес', 'Фестиваль', 'Музыка', 'Творчество', 'Концерты', 'Образование', 'Спорт'];
+  const EVENT_TYPES = ['Бизнес', 'Фестиваль', 'Музыка', 'Творчество', 'Концерты', 'Образование', 'Спорт', 'Другое'];
   const API_BASE = 'http://localhost:8080/api';
 
   const DEFAULT_EVENT_IMAGE = 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1170&auto=format&fit=crop';
@@ -22,6 +22,13 @@
     return `${window.location.origin}/images/${normalized}`;
   }
 
+
+  function normalizeEventType(value) {
+    const type = String(value || '').trim();
+    if (!type) return 'Другое';
+    if (type === 'Пинск' || type.toLowerCase() === 'pub club') return 'Другое';
+    return EVENT_TYPES.includes(type) ? type : 'Другое';
+  }
 
   function read(key, fallback) {
     try {
@@ -325,6 +332,7 @@
   }
 
 
+
   async function fetchEventsFromApi() {
     const response = await fetch(`${API_BASE}/events`);
     if (!response.ok) throw new Error('Не удалось загрузить события из базы данных.');
@@ -336,7 +344,7 @@
     return {
       id: String(event.id),
       title: event.title,
-      type: 'Событие',
+      type: normalizeEventType(event.venue),
       city: event.city,
       date: start.toISOString().slice(0, 10),
       time: start.toTimeString().slice(0, 5),
@@ -375,7 +383,7 @@
       return {
         id: event.id,
         title: event.title,
-        type: event.venue || 'Событие',
+        type: normalizeEventType(event.venue),
         city: event.city,
         date: event.startDateTime ? event.startDateTime.slice(0, 10) : '',
         time: start.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
@@ -456,7 +464,9 @@
     }
 
     function renderTypes() {
-      const types = Array.from(new Set(state.events.map((e) => e.type))).sort();
+      const types = Array.from(new Set(state.events.map((e) => normalizeEventType(e.type))))
+        .filter((type) => type !== 'Пинск' && type.toLowerCase() !== 'pub club')
+        .sort();
       typeSelect.innerHTML = '<option value="all">Все типы</option>';
       types.forEach((type) => {
         const option = document.createElement('option');
@@ -1483,7 +1493,7 @@
         document.getElementById('managerEventTitle').value = event.title;
         document.getElementById('managerEventDescription').value = event.description;
         document.getElementById('managerEventCity').value = event.city;
-        document.getElementById('managerEventType').value = 'Образование';
+        document.getElementById('managerEventType').value = normalizeEventType(event.venue);
         document.getElementById('managerEventDate').value = event.startDateTime.slice(0, 10);
         document.getElementById('managerEventTime').value = event.startDateTime.slice(11, 16);
         document.getElementById('managerEventImageUrl').value = event.imageUrl || '';
@@ -1527,7 +1537,7 @@
         title: document.getElementById('managerEventTitle').value.trim(),
         description: document.getElementById('managerEventDescription').value.trim(),
         city: document.getElementById('managerEventCity').value.trim(),
-        venue: document.getElementById('managerEventCity').value.trim(),
+        venue: normalizeEventType(document.getElementById('managerEventType').value),
         latitude: 53.9,
         longitude: 27.5667,
         mapUrl: '',
