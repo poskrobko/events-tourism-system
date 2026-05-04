@@ -54,14 +54,19 @@
         </div>
       </form>
     </div>
+    <div class="row g-4 mb-4">
+      <div class="col-md-6"><div class="card page-card p-3"><p class="mb-1 text-secondary">Всего мероприятий менеджера</p><h2 id="managerTotalEvents" class="h3 mb-0">0</h2></div></div>
+      <div class="col-md-6"><div class="card page-card p-3"><p class="mb-1 text-secondary">Выручка менеджера</p><h2 id="managerTotalRevenue" class="h3 mb-0">0 BYN</h2></div></div>
+    </div>
     <div class="card page-card p-4">
       <h2 class="h5 mb-3">Список моих мероприятий</h2>
       <div class="table-responsive">
         <table class="table align-middle">
-          <thead><tr><th>Название</th><th>Город</th><th>Дата</th><th>Доступно билетов</th><th></th></tr></thead>
+          <thead><tr><th>Название</th><th>Город</th><th>Дата</th><th>Цена</th><th>Доступно билетов</th><th></th></tr></thead>
           <tbody id="managerEventsTable"></tbody>
         </table>
       </div>
+      <div id="managerEventsPagination" class="d-flex flex-wrap gap-2 mt-3"></div>
     </div>
   </main>
   <script src="app.js"></script>
