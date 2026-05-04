@@ -45,9 +45,14 @@
           <div class="col-md-2"><input id="eventCityInput" class="form-control" placeholder="Город" required /></div>
           <div class="col-md-2"><input id="eventDateInput" class="form-control" type="date" required /></div>
           <div class="col-md-2"><input id="eventTimeInput" class="form-control" type="time" required /></div>
-          <div class="col-md-2"><input id="eventPriceInput" class="form-control" type="number" min="0" placeholder="Цена" required /></div>
-          <div class="col-md-2"><input id="eventTicketTypeInput" class="form-control" placeholder="Тип билета" required /></div>
-          <div class="col-md-2"><input id="eventTicketLimitInput" class="form-control" type="number" min="1" placeholder="Кол-во билетов" required /></div>
+          <div class="col-12">
+            <div id="adminTicketRows" class="row g-3">
+              <div class="col-md-4"><input class="form-control admin-ticket-type" placeholder="Тип билета" required /></div>
+              <div class="col-md-4"><input class="form-control admin-ticket-price" type="number" min="0" placeholder="Цена" required /></div>
+              <div class="col-md-3"><input class="form-control admin-ticket-limit" type="number" min="1" placeholder="Кол-во билетов" required /></div>
+              <div class="col-md-1 d-grid"><button id="adminAddTicketRow" class="btn btn-outline-secondary ticket-add-btn ms-auto" type="button">+</button></div>
+            </div>
+          </div>
           <div class="col-md-8"><input id="eventImageInput" class="form-control" type="url" placeholder="URL изображения" required /></div>
           <div class="col-12"><textarea id="eventDescriptionInput" class="form-control" placeholder="Описание" required></textarea></div>
           <div class="col-12"><textarea id="eventScheduleInput" class="form-control" rows="4" placeholder="Программа мероприятия, каждый пункт с новой строки" required></textarea></div>

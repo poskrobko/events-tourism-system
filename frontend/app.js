@@ -6,6 +6,7 @@
     auth: 'eventflow_auth_v1',
     events: 'eventflow_events_v1',
     orders: 'eventflow_orders_v1',
+    canceledEvents: 'eventflow_canceled_events_v1',
   };
 
   const EVENT_TYPES = ['Бизнес', 'Фестиваль', 'Музыка', 'Творчество', 'Концерты', 'Образование', 'Спорт'];
@@ -432,6 +433,7 @@
             <img src="${event.image}" class="card-img-top" alt="${event.title}" loading="lazy" decoding="async" fetchpriority="low" style="height:190px; object-fit:cover" />
             <div class="card-body d-flex flex-column">
               <span class="badge badge-status mb-2">${event.type}</span>
+              ${isEventCanceled(event.id) ? '<span class="badge text-bg-danger mb-2">Отменён</span>' : ''}
               <h2 class="h5">${event.title}</h2>
               <p class="text-secondary mb-3">${new Date(event.date).toLocaleDateString('ru-RU')} · ${event.city} · ${event.time}</p>
               <a href="event-details.html?id=${event.id}" class="btn btn-primary w-100 mt-auto">Подробнее</a>
@@ -550,23 +552,34 @@
         const buyTicketBtn = document.getElementById('buyTicketBtn');
         const soldOutNotice = document.getElementById('soldOutNotice');
         const eventEndedNotice = document.getElementById('eventEndedNotice');
+        const eventCanceledNotice = document.getElementById('eventCanceledNotice');
         const eventEndDateTime = details.event?.endDateTime ? new Date(details.event.endDateTime) : new Date(details.event?.startDateTime || event.date);
         const isEventEnded = !Number.isNaN(eventEndDateTime.getTime()) && eventEndDateTime < new Date();
         const totalAvailable = (details.ticketTypes || []).reduce((sum, tt) => sum + Number(tt.quantityAvailable || 0), 0);
         buyTicketBtn.href = getCurrentUser() ? `ticket.html?id=${event.id}` : 'login.html';
-        if (isEventEnded) {
+        if (isEventCanceled(event.id)) {
           buyTicketBtn.classList.add('disabled');
           buyTicketBtn.setAttribute('aria-disabled', 'true');
           buyTicketBtn.addEventListener('click', (e) => e.preventDefault());
+          eventCanceledNotice?.classList.remove('d-none');
+          soldOutNotice?.classList.add('d-none');
+          eventEndedNotice?.classList.add('d-none');
+        } else if (isEventEnded) {
+          buyTicketBtn.classList.add('disabled');
+          buyTicketBtn.setAttribute('aria-disabled', 'true');
+          buyTicketBtn.addEventListener('click', (e) => e.preventDefault());
+          eventCanceledNotice?.classList.add('d-none');
           soldOutNotice?.classList.add('d-none');
           eventEndedNotice?.classList.remove('d-none');
         } else if (totalAvailable <= 0) {
           buyTicketBtn.classList.add('disabled');
           buyTicketBtn.setAttribute('aria-disabled', 'true');
           buyTicketBtn.addEventListener('click', (e) => e.preventDefault());
+          eventCanceledNotice?.classList.add('d-none');
           if (soldOutNotice) soldOutNotice.classList.remove('d-none');
           eventEndedNotice?.classList.add('d-none');
         } else {
+          eventCanceledNotice?.classList.add('d-none');
           soldOutNotice?.classList.add('d-none');
           eventEndedNotice?.classList.add('d-none');
         }
@@ -1313,6 +1326,37 @@
     renderUsers();
   }
 
+  function collectTicketRows(container, selectors) {
+    if (!container) return [];
+    const names = Array.from(container.querySelectorAll(selectors.name));
+    const prices = Array.from(container.querySelectorAll(selectors.price));
+    const quantities = Array.from(container.querySelectorAll(selectors.quantity));
+    return names.flatMap((nameInput, index) => {
+      const name = nameInput.value?.trim() || '';
+      const price = Number(prices[index]?.value);
+      const quantity = Number(quantities[index]?.value);
+      if (!name || !Number.isFinite(price) || price < 0 || !Number.isInteger(quantity) || quantity <= 0) return [];
+      return [{ name, price, quantityTotal: quantity }];
+    });
+  }
+
+  function getCanceledEventIds() {
+    const value = read(STORAGE_KEYS.canceledEvents, []);
+    return Array.isArray(value) ? value.map(String) : [];
+  }
+
+  function isEventCanceled(eventId) {
+    return getCanceledEventIds().includes(String(eventId));
+  }
+
+  function setEventCanceled(eventId, canceled = true) {
+    const ids = new Set(getCanceledEventIds());
+    const normalizedId = String(eventId);
+    if (canceled) ids.add(normalizedId);
+    else ids.delete(normalizedId);
+    write(STORAGE_KEYS.canceledEvents, Array.from(ids));
+  }
+
   async function initManagerEventsPage() {
     const wrap = document.getElementById('managerEventsPanel');
     if (!wrap) return;
@@ -1327,6 +1371,20 @@
     const form = document.getElementById('managerEventForm');
     const table = document.getElementById('managerEventsTable');
     const resetBtn = document.getElementById('managerEventFormReset');
+    const managerTicketRows = document.getElementById('managerTicketRows');
+    const addManagerTicketRowBtn = document.getElementById('managerAddTicketRow');
+
+    addManagerTicketRowBtn?.addEventListener('click', () => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'row g-3 ticket-row';
+      wrapper.innerHTML = `
+        <div class="col-md-4"><input class="form-control manager-ticket-name" placeholder="Тип билета (например, Standard)" /></div>
+        <div class="col-md-4"><input class="form-control manager-ticket-price" type="number" min="0" step="0.01" placeholder="Цена билета" /></div>
+        <div class="col-md-3"><input class="form-control manager-ticket-quantity" type="number" min="1" placeholder="Доступно билетов" /></div>
+        <div class="col-md-1 d-grid"><button class="btn btn-outline-danger remove-ticket-row ticket-add-btn ms-auto" type="button">−</button></div>`;
+      wrapper.querySelector('.remove-ticket-row').addEventListener('click', () => wrapper.remove());
+      managerTicketRows?.appendChild(wrapper);
+    });
 
     async function loadManagerEvents() {
       const response = await fetch(`${API_BASE}/manager/events`, {
@@ -1335,9 +1393,10 @@
       if (!response.ok) throw new Error('Не удалось загрузить события.');
       const events = await response.json();
       table.innerHTML = events.map((event) => `<tr>
-        <td>${event.title}</td><td>${event.city}</td><td>${new Date(event.startDateTime).toLocaleString('ru-RU')}</td><td>${event.availableTickets ?? 0}</td>
+        <td>${event.title}${isEventCanceled(event.id) ? ' <span class="badge text-bg-danger">Отменён</span>' : ''}</td><td>${event.city}</td><td>${new Date(event.startDateTime).toLocaleString('ru-RU')}</td><td>${event.availableTickets ?? 0}</td>
         <td class="d-flex gap-2">
           <button class="btn btn-sm btn-outline-secondary" data-edit="${event.id}">Изменить</button>
+          <button class="btn btn-sm btn-outline-warning" data-cancel="${event.id}">Отменить</button>
           <button class="btn btn-sm btn-outline-danger" data-delete="${event.id}">Удалить</button>
         </td></tr>`).join('') || '<tr><td colspan="5">Событий пока нет.</td></tr>';
 
@@ -1360,6 +1419,15 @@
         document.getElementById('managerEventStart').value = event.startDateTime.slice(0, 16);
         document.getElementById('managerEventImageUrl').value = event.imageUrl || '';
         document.getElementById('managerEventEnd').value = event.endDateTime.slice(0, 16);
+        document.getElementById('managerEventSchedule').value = Array.isArray(event.program)
+          ? event.program.map((item) => item.description).join('\n')
+          : '';
+      }));
+
+      table.querySelectorAll('[data-cancel]').forEach((btn) => btn.addEventListener('click', async () => {
+        setEventCanceled(btn.dataset.cancel, true);
+        await loadManagerEvents();
+        await renderEvents();
       }));
     }
 
@@ -1377,6 +1445,7 @@
         startDateTime: document.getElementById('managerEventStart').value,
         endDateTime: document.getElementById('managerEventEnd').value,
         imageUrl: document.getElementById('managerEventImageUrl').value.trim() || null,
+        schedule: document.getElementById('managerEventSchedule').value.split('\n').map((line) => line.trim()).filter(Boolean),
       };
       const url = eventId ? `${API_BASE}/manager/events/${eventId}` : `${API_BASE}/manager/events`;
       const method = eventId ? 'PUT' : 'POST';
@@ -1391,14 +1460,16 @@
       }
       const savedEvent = await response.json();
       if (!eventId) {
-        const ticketName = document.getElementById('managerTicketName').value.trim();
-        const ticketPrice = Number(document.getElementById('managerTicketPrice').value);
-        const ticketQuantity = Number(document.getElementById('managerTicketQuantity').value);
-        if (ticketName && Number.isFinite(ticketPrice) && ticketPrice >= 0 && Number.isInteger(ticketQuantity) && ticketQuantity > 0) {
+        const tickets = collectTicketRows(managerTicketRows, {
+          name: '.manager-ticket-name',
+          price: '.manager-ticket-price',
+          quantity: '.manager-ticket-quantity',
+        });
+        for (const ticket of tickets) {
           await fetch(`${API_BASE}/manager/events/${savedEvent.id}/tickets`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
-            body: JSON.stringify({ name: ticketName, price: ticketPrice, quantityTotal: ticketQuantity }),
+            body: JSON.stringify(ticket),
           });
         }
       }
@@ -1429,9 +1500,23 @@
     const ordersStatusFilter = document.getElementById('adminOrdersStatusFilter');
     const eventForm = document.getElementById('eventCrudForm');
     const scheduleInput = document.getElementById('eventScheduleInput');
+    const adminTicketRows = document.getElementById('adminTicketRows');
+    const addAdminTicketRowBtn = document.getElementById('adminAddTicketRow');
     const ADMIN_PAGE_SIZE = 7;
     let adminEventsPage = 1;
     let adminOrdersPage = 1;
+
+    addAdminTicketRowBtn?.addEventListener('click', () => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'row g-3 ticket-row';
+      wrapper.innerHTML = `
+        <div class="col-md-4"><input class="form-control admin-ticket-type" placeholder="Тип билета" required /></div>
+        <div class="col-md-4"><input class="form-control admin-ticket-price" type="number" min="0" placeholder="Цена" required /></div>
+        <div class="col-md-3"><input class="form-control admin-ticket-limit" type="number" min="1" placeholder="Кол-во билетов" required /></div>
+        <div class="col-md-1 d-grid"><button class="btn btn-outline-danger remove-ticket-row ticket-add-btn ms-auto" type="button">−</button></div>`;
+      wrapper.querySelector('.remove-ticket-row').addEventListener('click', () => wrapper.remove());
+      adminTicketRows?.appendChild(wrapper);
+    });
 
     const statusRu = { PAID: 'Оплачено', REFUNDED: 'Возвращен', DECLINED: 'Отменен', PENDING: 'В ожидании' };
 
@@ -1515,8 +1600,8 @@
         const totalTickets = Number(e.availableTickets || 0);
         const managerLabel = e.managerFullName || e.managerEmail || '—';
         return `<tr>
-          <td>${e.title}${isEventCompleted(e) ? ' <span class="badge text-bg-secondary">Завершено</span>' : ''}</td><td>${e.city}</td><td>${managerLabel}</td><td>${new Date(e.startDateTime).toLocaleString('ru-RU')}</td><td>${priceList}</td><td>${totalTickets}</td>
-          <td class="d-flex gap-2"><button class="btn btn-sm btn-outline-secondary" data-edit="${e.id}">Изменить</button><button class="btn btn-sm btn-outline-danger" data-delete="${e.id}">Удалить</button></td>
+          <td>${e.title}${isEventCompleted(e) ? ' <span class="badge text-bg-secondary">Завершено</span>' : ''}${isEventCanceled(e.id) ? ' <span class="badge text-bg-danger">Отменён</span>' : ''}</td><td>${e.city}</td><td>${managerLabel}</td><td>${new Date(e.startDateTime).toLocaleString('ru-RU')}</td><td>${priceList}</td><td>${totalTickets}</td>
+          <td class="d-flex gap-2"><button class="btn btn-sm btn-outline-secondary" data-edit="${e.id}">Изменить</button><button class="btn btn-sm btn-outline-warning" data-cancel="${e.id}">Отменить</button><button class="btn btn-sm btn-outline-danger" data-delete="${e.id}">Удалить</button></td>
         </tr>`;
       }).join('') || '<tr><td colspan="7">Событий пока нет.</td></tr>';
       renderTablePagination(eventsPagination, events.length, adminEventsPage, (nextPage) => {
@@ -1541,10 +1626,15 @@
         const start = event.startDateTime?.slice(0, 16) || '';
         document.getElementById('eventDateInput').value = start.slice(0, 10);
         document.getElementById('eventTimeInput').value = start.slice(11, 16);
-        document.getElementById('eventPriceInput').value = event.minTicketPrice || 0;
         document.getElementById('eventImageInput').value = event.imageUrl || '';
         document.getElementById('eventDescriptionInput').value = event.description || '';
         scheduleInput.value = '';
+      }));
+
+      eventsTable.querySelectorAll('[data-cancel]').forEach((btn) => btn.addEventListener('click', async () => {
+        setEventCanceled(btn.dataset.cancel, true);
+        await loadAdminData();
+        await renderEvents();
       }));
     }
 
@@ -1576,7 +1666,18 @@
       if (!response.ok) return alert('Не удалось сохранить событие.');
       const saved = await response.json();
       if (!eventId) {
-        await fetch(`${API_BASE}/admin/events/${saved.id}/tickets`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` }, body: JSON.stringify({ name: document.getElementById('eventTicketTypeInput').value.trim(), price: Number(document.getElementById('eventPriceInput').value), quantityTotal: Number(document.getElementById('eventTicketLimitInput').value) }) });
+        const tickets = collectTicketRows(adminTicketRows, {
+          name: '.admin-ticket-type',
+          price: '.admin-ticket-price',
+          quantity: '.admin-ticket-limit',
+        });
+        for (const ticket of tickets) {
+          await fetch(`${API_BASE}/admin/events/${saved.id}/tickets`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
+            body: JSON.stringify(ticket),
+          });
+        }
       }
       eventForm.reset(); document.getElementById('eventId').value = ''; eventForm.classList.remove('was-validated');
       await loadAdminData();
