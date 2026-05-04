@@ -1409,6 +1409,31 @@
     const managerProgramRows = document.getElementById('managerProgramRows');
     const addManagerTicketRowBtn = document.getElementById('managerAddTicketRow');
     const addManagerProgramRowBtn = document.getElementById('managerAddProgramRow');
+    const managerEventsPagination = document.getElementById('managerEventsPagination');
+    const MANAGER_PAGE_SIZE = 7;
+    let managerEventsPage = 1;
+
+    function renderManagerPagination(totalItems, currentPage, onPageChange) {
+      if (!managerEventsPagination) return;
+      managerEventsPagination.innerHTML = '';
+      const totalPages = Math.max(1, Math.ceil(totalItems / MANAGER_PAGE_SIZE));
+      if (totalPages <= 1) return;
+      for (let page = 1; page <= totalPages; page += 1) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `btn btn-sm ${page === currentPage ? 'btn-primary' : 'btn-outline-secondary'}`;
+        button.textContent = String(page);
+        button.addEventListener('click', () => onPageChange(page));
+        managerEventsPagination.appendChild(button);
+      }
+    }
+
+    function getManagerPageSlice(items) {
+      const totalPages = Math.max(1, Math.ceil(items.length / MANAGER_PAGE_SIZE));
+      const safePage = Math.min(Math.max(1, managerEventsPage), totalPages);
+      const start = (safePage - 1) * MANAGER_PAGE_SIZE;
+      return { pageItems: items.slice(start, start + MANAGER_PAGE_SIZE), safePage };
+    }
 
     function buildProgramItemsFromRows(rows, date) {
       return rows.map((row) => ({
@@ -1473,18 +1498,37 @@
     }
 
     async function loadManagerEvents() {
-      const response = await fetch(`${API_BASE}/manager/events`, {
-        headers: { Authorization: `Bearer ${auth.token}` },
-      });
-      if (!response.ok) throw new Error('Не удалось загрузить события.');
-      const events = await response.json();
-      table.innerHTML = events.map((event) => `<tr>
-        <td>${event.title}${Number(event.availableTickets || 0) <= 0 ? ' <span class="badge text-bg-warning">Sold out</span>' : ''}${isEventCanceled(event.id) ? ' <span class="badge text-bg-danger">Отменён</span>' : ''}</td><td>${event.city}</td><td>${new Date(event.startDateTime).toLocaleString('ru-RU')}</td><td>${event.availableTickets ?? 0}</td>
+      const [eventsResponse, ordersResponse] = await Promise.all([
+        fetch(`${API_BASE}/manager/events`, { headers: { Authorization: `Bearer ${auth.token}` } }),
+        fetch(`${API_BASE}/manager/orders`, { headers: { Authorization: `Bearer ${auth.token}` } }),
+      ]);
+      if (!eventsResponse.ok || !ordersResponse.ok) throw new Error('Не удалось загрузить события менеджера.');
+      const events = await eventsResponse.json();
+      const orders = await ordersResponse.json();
+
+      document.getElementById('managerTotalEvents').textContent = events.length;
+      const managerRevenue = orders.reduce((sum, order) => {
+        const amount = Number(order.totalAmount || 0);
+        if (order.paymentStatus === 'PAID') return sum + amount;
+        if (order.paymentStatus === 'REFUNDED') return sum - amount;
+        return sum;
+      }, 0);
+      document.getElementById('managerTotalRevenue').textContent = `${Math.max(0, managerRevenue).toFixed(2)} BYN`;
+
+      const { pageItems, safePage } = getManagerPageSlice(events);
+      managerEventsPage = safePage;
+      table.innerHTML = pageItems.map((event) => `<tr>
+        <td>${event.title}${Number(event.availableTickets || 0) <= 0 ? ' <span class="badge text-bg-warning">Sold out</span>' : ''}${isEventCanceled(event.id) ? ' <span class="badge text-bg-danger">Отменён</span>' : ''}</td><td>${event.city}</td><td>${new Date(event.startDateTime).toLocaleString('ru-RU')}</td><td>${Number(event.minTicketPrice || 0).toFixed(2)} BYN</td><td>${event.availableTickets ?? 0}</td>
         <td class="d-flex gap-2">
           <button class="btn btn-sm btn-outline-secondary" data-edit="${event.id}">Изменить</button>
           <button class="btn btn-sm btn-outline-warning" data-cancel="${event.id}">Отменить</button>
           <button class="btn btn-sm btn-outline-danger" data-delete="${event.id}">Удалить</button>
-        </td></tr>`).join('') || '<tr><td colspan="5">Событий пока нет.</td></tr>';
+        </td></tr>`).join('') || '<tr><td colspan="6">Событий пока нет.</td></tr>';
+
+      renderManagerPagination(events.length, managerEventsPage, (nextPage) => {
+        managerEventsPage = nextPage;
+        loadManagerEvents();
+      });
 
       table.querySelectorAll('[data-delete]').forEach((btn) => btn.addEventListener('click', async () => {
         const resp = await fetch(`${API_BASE}/manager/events/${btn.dataset.delete}`, { method: 'DELETE', headers: { Authorization: `Bearer ${auth.token}` } });
@@ -1769,7 +1813,7 @@
         const event = events.find((ev) => String(ev.id) === btn.dataset.edit);
         document.getElementById('eventId').value = event.id;
         document.getElementById('eventTitleInput').value = event.title;
-        document.getElementById('eventTypeInput').value = 'Образование';
+        document.getElementById('eventTypeInput').value = normalizeEventType(event.venue);
         document.getElementById('eventCityInput').value = event.city;
         const start = event.startDateTime?.slice(0, 16) || '';
         document.getElementById('eventDateInput').value = start.slice(0, 10);
@@ -1777,12 +1821,22 @@
         document.getElementById('eventImageInput').value = event.imageUrl || '';
         document.getElementById('eventDescriptionInput').value = event.description || '';
         try {
-          const programResp = await fetch(`${API_BASE}/events/${event.id}/program`);
+          const [programResp, ticketsResp] = await Promise.all([
+            fetch(`${API_BASE}/events/${event.id}/program`),
+            fetch(`${API_BASE}/events/${event.id}/tickets`),
+          ]);
           const program = programResp.ok ? await programResp.json() : [];
-          adminProgramRows.innerHTML = (program || []).map((item) => `<div class="row g-2 program-row"><div class="col-md-4"><input class="form-control admin-program-title" value="${(item.title || "").replace(/"/g, "&quot;")}" required /></div><div class="col-md-5"><input class="form-control admin-program-description" value="${(item.description || "").replace(/"/g, "&quot;")}" /></div><div class="col-md-2"><input class="form-control admin-program-time" type="time" value="${String(item.startDateTime || "").slice(11, 16)}" required /></div><div class="col-md-1 d-grid"><button class="btn btn-outline-danger remove-program-row ticket-add-btn ms-auto" type="button">−</button></div></div>`).join('');
+          const tickets = ticketsResp.ok ? await ticketsResp.json() : [];
+          adminProgramRows.innerHTML = (program || [{ title: '', description: '', startDateTime: '' }]).map((item, index) => `<div class="row g-2 program-row"><div class="col-md-4"><input class="form-control admin-program-title" value="${(item.title || "").replace(/"/g, "&quot;")}" placeholder="Заголовок пункта" required /></div><div class="col-md-5"><input class="form-control admin-program-description" value="${(item.description || "").replace(/"/g, "&quot;")}" placeholder="Описание пункта (необязательно)" /></div><div class="col-md-2"><input class="form-control admin-program-time" type="time" value="${String(item.startDateTime || "").slice(11, 16)}" required /></div><div class="col-md-1 d-grid">${index === 0 ? '<button id="adminAddProgramRow" class="btn btn-outline-secondary ticket-add-btn ms-auto" type="button">+</button>' : '<button class="btn btn-outline-danger remove-program-row ticket-add-btn ms-auto" type="button">−</button>'}</div></div>`).join('');
+          adminProgramRows.querySelector('#adminAddProgramRow')?.addEventListener('click', () => addAdminProgramRowBtn?.click());
           adminProgramRows.querySelectorAll('.remove-program-row').forEach((b) => b.addEventListener('click', () => b.closest('.program-row')?.remove()));
+
+          adminTicketRows.innerHTML = (tickets || [{ name: '', price: '', quantityTotal: '' }]).map((item, index) => `<div class="row g-3 ticket-row"><div class="col-md-4"><input class="form-control admin-ticket-type" value="${(item.name || "").replace(/"/g, "&quot;")}" placeholder="Тип билета" required /></div><div class="col-md-4"><input class="form-control admin-ticket-price" type="number" min="0" value="${Number(item.price || 0)}" placeholder="Цена" required /></div><div class="col-md-3"><input class="form-control admin-ticket-limit" type="number" min="1" value="${Number(item.quantityTotal || 0)}" placeholder="Кол-во билетов" required /></div><div class="col-md-1 d-grid">${index === 0 ? '<button id="adminAddTicketRow" class="btn btn-outline-secondary ticket-add-btn ms-auto" type="button">+</button>' : '<button class="btn btn-outline-danger remove-ticket-row ticket-add-btn ms-auto" type="button">−</button>'}</div></div>`).join('');
+          adminTicketRows.querySelector('#adminAddTicketRow')?.addEventListener('click', () => addAdminTicketRowBtn?.click());
+          adminTicketRows.querySelectorAll('.remove-ticket-row').forEach((b) => b.addEventListener('click', () => b.closest('.ticket-row')?.remove()));
         } catch {
           adminProgramRows.innerHTML = '';
+          adminTicketRows.innerHTML = '';
         }
       }));
 
@@ -1809,7 +1863,7 @@
         title: document.getElementById('eventTitleInput').value.trim(),
         description: document.getElementById('eventDescriptionInput').value.trim(),
         city: document.getElementById('eventCityInput').value.trim(),
-        venue: document.getElementById('eventCityInput').value.trim(),
+        venue: normalizeEventType(document.getElementById('eventTypeInput').value),
         latitude: 53.9, longitude: 27.5667, mapUrl: '',
         imageUrl: document.getElementById('eventImageInput').value.trim() || null,
         startDateTime,
