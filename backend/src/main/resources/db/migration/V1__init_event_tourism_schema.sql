@@ -22,6 +22,7 @@ create table if not exists events (
 create table if not exists event_program_items (
     id bigserial primary key,
     event_id bigint not null references events(id) on delete cascade,
+    sort_order integer not null default 0,
     title varchar(255) not null,
     start_date_time timestamp not null,
     end_date_time timestamp not null,
