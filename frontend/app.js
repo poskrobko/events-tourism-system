@@ -443,12 +443,14 @@
       `).join('') || '<p class="text-secondary">По фильтрам ничего не найдено.</p>';
 
       pagination.innerHTML = '';
-      for (let i = 1; i <= totalPages; i += 1) {
-        const btn = document.createElement('button');
-        btn.className = `btn btn-sm ${i === state.page ? 'btn-primary' : 'btn-outline-secondary'}`;
-        btn.textContent = String(i);
-        btn.addEventListener('click', () => { state.page = i; render(); });
-        pagination.appendChild(btn);
+      if (filtered.length > state.perPage) {
+        for (let i = 1; i <= totalPages; i += 1) {
+          const btn = document.createElement('button');
+          btn.className = `btn btn-sm ${i === state.page ? 'btn-primary' : 'btn-outline-secondary'}`;
+          btn.textContent = String(i);
+          btn.addEventListener('click', () => { state.page = i; render(); });
+          pagination.appendChild(btn);
+        }
       }
       syncClearFiltersButton();
     }
@@ -1442,6 +1444,16 @@
       managerProgramRows?.appendChild(wrapper);
     });
 
+    function resetManagerDynamicRows() {
+      const keepFirstRow = (container, selector) => {
+        if (!container) return;
+        const rows = Array.from(container.querySelectorAll(selector));
+        rows.slice(1).forEach((row) => row.remove());
+      };
+      keepFirstRow(managerTicketRows, '.ticket-row');
+      keepFirstRow(managerProgramRows, '.program-row');
+    }
+
     async function loadManagerEvents() {
       const response = await fetch(`${API_BASE}/manager/events`, {
         headers: { Authorization: `Bearer ${auth.token}` },
@@ -1552,6 +1564,7 @@
         }
       }
       form.reset();
+      resetManagerDynamicRows();
       document.getElementById('managerEventId').value = '';
       form.classList.remove('was-validated');
       await loadManagerEvents();
@@ -1560,6 +1573,7 @@
 
     resetBtn.addEventListener('click', () => {
       form.reset();
+      resetManagerDynamicRows();
       document.getElementById('managerEventId').value = '';
       form.classList.remove('was-validated');
     });

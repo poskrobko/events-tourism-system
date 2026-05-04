@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -36,7 +35,7 @@ public class EventService {
 
     public List<EventDtos.EventResponse> listEvents(LocalDateTime dateFrom, LocalDateTime dateTo, String city,
                                                     BigDecimal minPrice, BigDecimal maxPrice, String ticketType) {
-        return eventRepository.findAllByOrderByStartDateTimeAsc(PageRequest.of(0, 12)).stream()
+        return eventRepository.findAllByOrderByStartDateTimeAsc().stream()
                 .filter(event -> dateFrom == null || !event.getStartDateTime().isBefore(dateFrom))
                 .filter(event -> dateTo == null || !event.getStartDateTime().isAfter(dateTo))
                 .filter(event -> city == null || event.getCity().equalsIgnoreCase(city))
