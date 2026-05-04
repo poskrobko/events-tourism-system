@@ -32,7 +32,9 @@ public class EventDtos {
             LocalDateTime startDateTime,
             LocalDateTime endDateTime,
             BigDecimal minTicketPrice,
-            Integer availableTickets
+            Integer availableTickets,
+            String managerEmail,
+            String managerFullName
     ) {}
 
     public record ProgramItemRequest(

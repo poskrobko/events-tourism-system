@@ -1329,7 +1329,9 @@
     const resetBtn = document.getElementById('managerEventFormReset');
 
     async function loadManagerEvents() {
-      const response = await fetch(`${API_BASE}/events`);
+      const response = await fetch(`${API_BASE}/manager/events`, {
+        headers: { Authorization: `Bearer ${auth.token}` },
+      });
       if (!response.ok) throw new Error('Не удалось загрузить события.');
       const events = await response.json();
       table.innerHTML = events.map((event) => `<tr>
@@ -1433,12 +1435,6 @@
 
     const statusRu = { PAID: 'Оплачено', REFUNDED: 'Возвращен', DECLINED: 'Отменен', PENDING: 'В ожидании' };
 
-    async function fetchEventDetails(eventId) {
-      const response = await fetch(`${API_BASE}/events/${eventId}`);
-      if (!response.ok) return null;
-      return response.json();
-    }
-
     function isEventCompleted(event) {
       const endDate = event.endDateTime || event.startDateTime;
       return endDate ? new Date(endDate).getTime() < Date.now() : false;
@@ -1491,9 +1487,6 @@
       const events = await eventsResp.json();
       const orders = await ordersResp.json();
 
-      const detailsList = await Promise.all(events.map((event) => fetchEventDetails(event.id)));
-      const eventMap = new Map(detailsList.filter(Boolean).map((d) => [d.event.id, d]));
-
       document.getElementById('totalEvents').textContent = events.length;
       const soldTickets = orders.reduce((sum, order) => {
         if (order.paymentStatus !== 'PAID') return sum;
@@ -1512,16 +1505,14 @@
       const { pageItems: eventsPageItems, safePage } = getPageSlice(events, adminEventsPage);
       adminEventsPage = safePage;
       eventsTable.innerHTML = eventsPageItems.map((e) => {
-        const details = eventMap.get(e.id);
-        const ticketTypes = details?.ticketTypes || [];
-        const priceList = ticketTypes.length ? ticketTypes.map((t) => `${t.name}: ${t.price} BYN`).join('<br>') : `${e.minTicketPrice ?? 0} BYN`;
-        const totalTickets = ticketTypes.reduce((sum, t) => sum + (t.quantityTotal || 0), 0);
-        const completedBadge = isEventCompleted(e) ? ' <span class="badge text-bg-secondary">Завершено</span>' : '';
+        const priceList = `${e.minTicketPrice ?? 0} BYN`;
+        const totalTickets = Number(e.availableTickets || 0);
+        const managerLabel = e.managerFullName || e.managerEmail || '—';
         return `<tr>
-          <td>${e.title}${completedBadge}</td><td>${e.city}</td><td>${new Date(e.startDateTime).toLocaleString('ru-RU')}</td><td>${priceList}</td><td>${totalTickets}</td>
+          <td>${e.title}${isEventCompleted(e) ? ' <span class="badge text-bg-secondary">Завершено</span>' : ''}</td><td>${e.city}</td><td>${managerLabel}</td><td>${new Date(e.startDateTime).toLocaleString('ru-RU')}</td><td>${priceList}</td><td>${totalTickets}</td>
           <td class="d-flex gap-2"><button class="btn btn-sm btn-outline-secondary" data-edit="${e.id}">Изменить</button><button class="btn btn-sm btn-outline-danger" data-delete="${e.id}">Удалить</button></td>
         </tr>`;
-      }).join('') || '<tr><td colspan="6">Событий пока нет.</td></tr>';
+      }).join('') || '<tr><td colspan="7">Событий пока нет.</td></tr>';
       renderTablePagination(eventsPagination, events.length, adminEventsPage, (nextPage) => {
         adminEventsPage = nextPage;
         loadAdminData();
