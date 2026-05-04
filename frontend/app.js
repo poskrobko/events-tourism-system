@@ -1790,7 +1790,7 @@
       const { pageItems: eventsPageItems, safePage } = getPageSlice(events, adminEventsPage);
       adminEventsPage = safePage;
       eventsTable.innerHTML = eventsPageItems.map((e) => {
-        const priceList = `${e.minTicketPrice ?? 0} BYN`;
+        const priceList = `от ${e.minTicketPrice ?? 0} BYN`;
         const totalTickets = Number(e.availableTickets || 0);
         const managerLabel = e.managerFullName || e.managerEmail || '—';
         return `<tr>
