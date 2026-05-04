@@ -90,7 +90,12 @@
     }
 
     if (user.role === 'admin') {
-      links.push({ href: 'admin.html', label: 'Админ' }, { href: 'users.html', label: 'Пользователи' });
+      links.push(
+        { href: 'admin.html', label: 'Админ' },
+        { href: 'users.html', label: 'Пользователи' },
+        { href: 'my-tickets.html', label: 'Мои билеты' },
+        { href: 'profile.html', label: 'Профиль' },
+      );
     } else if (user.role === 'manager') {
       links.push({ href: 'my-events.html', label: 'Мои мероприятия' }, { href: 'my-tickets.html', label: 'Мои билеты' }, { href: 'profile.html', label: 'Профиль' });
     } else {
@@ -443,6 +448,7 @@
             <div class="card-body d-flex flex-column">
               <span class="badge badge-status mb-2">${event.type}</span>
               ${Number(event.availableTickets || 0) <= 0 ? '<span class="badge text-bg-warning mb-2">Sold out</span>' : ''}
+              ${isEventCompleted(event) ? '<span class="badge text-bg-secondary mb-2">Завершено</span>' : ''}
               ${isEventCanceled(event.id) ? '<span class="badge text-bg-danger mb-2">Отменён</span>' : ''}
               <h2 class="h5">${event.title}</h2>
               <p class="text-secondary mb-3">${new Date(event.date).toLocaleDateString('ru-RU')} · ${event.city} · ${event.time}</p>
@@ -636,8 +642,33 @@
       const qty = Number(qtyInput.value || 1);
       totalNode.textContent = `${price * qty} BYN`;
     }
-    qtyInput.addEventListener('input', updateTotal);
-    ticketType.addEventListener('change', updateTotal);
+
+    function validateRequestedQty(showFeedback = false) {
+      const feedback = form.querySelector('[data-feedback]');
+      const selectedType = ticketTypes.find((item) => String(item.id) === String(ticketType.value));
+      const requestedQty = Number(qtyInput.value || 1);
+      const availableQty = Number(selectedType?.quantityAvailable ?? 0);
+      const exceedsAvailable = Boolean(selectedType) && requestedQty > availableQty;
+      qtyInput.setCustomValidity(exceedsAvailable ? 'invalid-quantity' : '');
+
+      if (feedback && showFeedback && exceedsAvailable) {
+        feedback.className = 'alert alert-danger mt-3';
+        feedback.textContent = 'Количество свободных билетов на мероприятие ограничено. Выбери доступное количество билетов';
+      } else if (feedback && !exceedsAvailable) {
+        feedback.className = '';
+        feedback.textContent = '';
+      }
+
+      return { exceedsAvailable, selectedType, requestedQty };
+    }
+    qtyInput.addEventListener('input', () => {
+      updateTotal();
+      validateRequestedQty();
+    });
+    ticketType.addEventListener('change', () => {
+      updateTotal();
+      validateRequestedQty();
+    });
     fetch(`${API_BASE}/events/${id}/tickets`)
       .then((response) => response.json())
       .then((data) => {
@@ -652,17 +683,10 @@
     form.dataset.handled = 'custom';
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (!form.checkValidity()) {
-        form.classList.add('was-validated');
-        return;
-      }
       const feedback = form.querySelector('[data-feedback]');
-      const selectedType = ticketTypes.find((item) => String(item.id) === String(ticketType.value));
-      const requestedQty = Number(qtyInput.value || 1);
-      const availableQty = Number(selectedType?.quantityAvailable ?? 0);
-      if (selectedType && requestedQty > availableQty) {
-        feedback.className = 'alert alert-danger mt-3';
-        feedback.textContent = 'Количество свободных билетов на мероприятие ограничено. Выбери доступное количество билетов';
+      const { exceedsAvailable } = validateRequestedQty(true);
+      if (!form.checkValidity() || exceedsAvailable) {
+        form.classList.add('was-validated');
         return;
       }
       try {
@@ -743,7 +767,6 @@
     if (!list) return;
     requireAuth();
     const user = getCurrentUser();
-    if (user.role === 'admin') { window.location.href = 'admin.html'; return; }
 
     const token = getAuthToken();
     const response = await fetch(`${API_BASE}/user/orders`, { headers: { Authorization: `Bearer ${token}` } });
@@ -953,10 +976,6 @@
     if (!form) return;
     requireAuth();
     const user = getCurrentUser();
-    if (user.role === 'admin') {
-      window.location.href = 'admin.html';
-      return;
-    }
 
     const feedback = form.querySelector('[data-feedback]');
     const avatarImage = document.getElementById('profileAvatar');
@@ -1291,6 +1310,7 @@
       const email = document.getElementById('managerEmail').value.trim().toLowerCase();
       const fullName = `${document.getElementById('managerFirstName').value.trim()} ${document.getElementById('managerLastName').value.trim()}`.trim();
       const password = document.getElementById('managerPassword').value;
+      const role = document.getElementById('managerRole').value;
       const feedback = createForm.querySelector('[data-feedback]');
       const auth = read(STORAGE_KEYS.auth, null);
 
@@ -1301,7 +1321,7 @@
             'Content-Type': 'application/json',
             Authorization: `Bearer ${auth.token}`,
           },
-          body: JSON.stringify({ email, password, fullName }),
+          body: JSON.stringify({ email, password, fullName, role: role === 'admin' ? 'ADMIN' : 'EVENT_MANAGER' }),
         })
           .then(async (response) => {
             const data = await response.json().catch(() => ({}));
@@ -1334,7 +1354,7 @@
         email,
         password,
         phone: '',
-        role: 'manager',
+        role,
       });
       write(STORAGE_KEYS.users, users);
 
@@ -1509,10 +1529,18 @@
       const orders = await ordersResponse.json();
 
       document.getElementById('managerTotalEvents').textContent = events.length;
+      const managerEventIds = new Set(events.map((event) => String(event.id)));
       const managerRevenue = orders.reduce((sum, order) => {
-        const amount = Number(order.totalAmount || 0);
-        if (order.paymentStatus === 'PAID') return sum + amount;
-        if (order.paymentStatus === 'REFUNDED') return sum - amount;
+        const orderItems = Array.isArray(order.items) ? order.items : [];
+        const managerOrderAmount = orderItems.reduce((itemSum, item) => {
+          const itemEventId = item?.eventId ?? item?.event?.id;
+          if (!managerEventIds.has(String(itemEventId))) return itemSum;
+          const quantity = Number(item.quantity || 0);
+          const unitPrice = Number(item.unitPrice || 0);
+          return itemSum + (quantity * unitPrice);
+        }, 0);
+        if (order.paymentStatus === 'PAID') return sum + managerOrderAmount;
+        if (order.paymentStatus === 'REFUNDED') return sum - managerOrderAmount;
         return sum;
       }, 0);
       document.getElementById('managerTotalRevenue').textContent = `${Math.max(0, managerRevenue).toFixed(2)} BYN`;
@@ -1520,7 +1548,7 @@
       const { pageItems, safePage } = getManagerPageSlice(events);
       managerEventsPage = safePage;
       table.innerHTML = pageItems.map((event) => `<tr>
-        <td>${event.title}${Number(event.availableTickets || 0) <= 0 ? ' <span class="badge text-bg-warning">Sold out</span>' : ''}${isEventCanceled(event.id) ? ' <span class="badge text-bg-danger">Отменён</span>' : ''}</td><td>${event.city}</td><td>${new Date(event.startDateTime).toLocaleString('ru-RU')}</td><td>${Number(event.minTicketPrice || 0).toFixed(2)} BYN</td><td>${event.availableTickets ?? 0}</td>
+        <td>${event.title}${Number(event.availableTickets || 0) <= 0 ? ' <span class="badge text-bg-warning">Sold out</span>' : ''}${isEventCanceled(event.id) ? ' <span class="badge text-bg-danger">Отменён</span>' : ''}</td><td>${event.city}</td><td>${new Date(event.startDateTime).toLocaleString('ru-RU')}</td><td>от ${Number(event.minTicketPrice || 0).toFixed(2)} BYN</td><td>${event.availableTickets ?? 0}</td>
         <td class="d-flex gap-2">
           <button class="btn btn-sm btn-outline-secondary" data-edit="${event.id}">Изменить</button>
           <button class="btn btn-sm btn-outline-warning" data-cancel="${event.id}">Отменить</button>
@@ -1690,6 +1718,12 @@
     });
 
     const statusRu = { PAID: 'Оплачено', REFUNDED: 'Возвращен', DECLINED: 'Отменен', PENDING: 'В ожидании' };
+    const statusBadgeClass = {
+      PAID: 'text-bg-success',
+      REFUNDED: 'text-bg-secondary',
+      DECLINED: 'text-bg-danger',
+      PENDING: 'text-bg-warning',
+    };
 
     function isEventCompleted(event) {
       const endDate = event.endDateTime || event.startDateTime;
@@ -1755,7 +1789,7 @@
       const { pageItems, safePage } = getPageSlice(filteredOrders, adminOrdersPage);
       adminOrdersPage = safePage;
       const rows = [];
-      pageItems.forEach((order) => (order.items || []).forEach((item) => rows.push(`<tr><td>${order.userFullName || order.userEmail}</td><td>${item.eventTitle}</td><td>${item.quantity}</td><td>${(Number(item.unitPrice||0)*Number(item.quantity||0)).toFixed(2)} BYN</td><td>${statusRu[order.paymentStatus] || order.paymentStatus}</td><td>${new Date(order.createdAt).toLocaleString('ru-RU')}</td></tr>`)));
+      pageItems.forEach((order) => (order.items || []).forEach((item) => rows.push(`<tr><td>${order.userFullName || order.userEmail}</td><td>${item.eventTitle}</td><td>${item.quantity}</td><td>${(Number(item.unitPrice||0)*Number(item.quantity||0)).toFixed(2)} BYN</td><td><span class="badge ${statusBadgeClass[order.paymentStatus] || 'text-bg-light'}">${statusRu[order.paymentStatus] || order.paymentStatus}</span></td><td>${new Date(order.createdAt).toLocaleString('ru-RU')}</td></tr>`)));
       ordersTable.innerHTML = rows.join('') || '<tr><td colspan="6">Заказов по выбранному фильтру нет.</td></tr>';
       renderTablePagination(ordersPagination, filteredOrders.length, adminOrdersPage, (nextPage) => {
         adminOrdersPage = nextPage;
