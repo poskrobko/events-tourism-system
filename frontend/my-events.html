@@ -17,30 +17,35 @@
   <main id="managerEventsPanel" class="container py-5">
     <div class="card page-card p-4 mb-4">
       <h1 class="h3 mb-3">Мои мероприятия</h1>
-      <form id="managerEventForm" class="row g-3">
+      <form id="managerEventForm" class="row g-3 needs-validation" novalidate>
         <input type="hidden" id="managerEventId" />
-        <div class="col-md-6"><input id="managerEventTitle" class="form-control" placeholder="Название" required /></div>
-        <div class="col-md-6"><input id="managerEventCity" class="form-control" placeholder="Город" required /></div>
-        <div class="col-12"><input id="managerEventVenue" class="form-control" placeholder="Место проведения" required /></div>
-        <div class="col-12"><textarea id="managerEventDescription" class="form-control" placeholder="Описание" required></textarea></div>
-        <div class="col-12"><input id="managerEventImageUrl" class="form-control" type="url" placeholder="Ссылка на изображение (https://...)" /></div>
-        <div class="col-md-6"><input id="managerEventStart" class="form-control" type="datetime-local" required /></div>
-        <div class="col-md-6"><input id="managerEventEnd" class="form-control" type="datetime-local" required /></div>
+        <div class="col-md-4"><input id="managerEventTitle" class="form-control" placeholder="Название" required /></div>
+        <div class="col-md-2">
+          <select id="managerEventType" class="form-select" required>
+            <option value="">Тип</option>
+            <option>Бизнес</option><option>Фестиваль</option><option>Музыка</option><option>Творчество</option><option>Концерты</option><option>Образование</option><option>Спорт</option>
+          </select>
+        </div>
+        <div class="col-md-2"><input id="managerEventCity" class="form-control" placeholder="Город" required /></div>
+        <div class="col-md-2"><input id="managerEventDate" class="form-control" type="date" required /></div>
+        <div class="col-md-2"><input id="managerEventTime" class="form-control" type="time" required /></div>
+        <div class="col-12">
+          <div id="managerTicketRows" class="row g-3">
+            <div class="col-md-4"><input class="form-control manager-ticket-name" placeholder="Тип билета" required /></div>
+            <div class="col-md-4"><input class="form-control manager-ticket-price" type="number" min="0" step="0.01" placeholder="Цена" required /></div>
+            <div class="col-md-3"><input class="form-control manager-ticket-quantity" type="number" min="1" placeholder="Кол-во билетов" required /></div>
+            <div class="col-md-1 d-grid"><button id="managerAddTicketRow" class="btn btn-outline-secondary ticket-add-btn ms-auto" type="button">+</button></div>
+          </div>
+        </div>
+        <div class="col-md-8"><input id="managerEventImageUrl" class="form-control" type="url" placeholder="URL изображения" required /></div>
+        <div class="col-12"><textarea id="managerEventDescription" class="form-control" placeholder="Описание"></textarea></div>
         <div class="col-12">
           <label class="form-label mb-2">Программа мероприятия</label>
           <div id="managerProgramRows" class="row g-2">
-            <div class="col-md-4"><input class="form-control manager-program-title" placeholder="Заголовок пункта" /></div>
-            <div class="col-md-5"><input class="form-control manager-program-description" placeholder="Описание пункта" /></div>
-            <div class="col-md-2"><input class="form-control manager-program-time" type="time" /></div>
+            <div class="col-md-4"><input class="form-control manager-program-title" placeholder="Заголовок пункта" required /></div>
+            <div class="col-md-5"><input class="form-control manager-program-description" placeholder="Описание пункта (необязательно)" /></div>
+            <div class="col-md-2"><input class="form-control manager-program-time" type="time" required /></div>
             <div class="col-md-1 d-grid"><button id="managerAddProgramRow" class="btn btn-outline-secondary ticket-add-btn ms-auto" type="button">+</button></div>
-          </div>
-        </div>
-        <div class="col-12">
-          <div id="managerTicketRows" class="row g-3">
-            <div class="col-md-4"><input class="form-control manager-ticket-name" placeholder="Тип билета (например, Standard)" /></div>
-            <div class="col-md-4"><input class="form-control manager-ticket-price" type="number" min="0" step="0.01" placeholder="Цена билета" /></div>
-            <div class="col-md-3"><input class="form-control manager-ticket-quantity" type="number" min="1" placeholder="Доступно билетов" /></div>
-            <div class="col-md-1 d-grid"><button id="managerAddTicketRow" class="btn btn-outline-secondary ticket-add-btn ms-auto" type="button">+</button></div>
           </div>
         </div>
         <div class="col-12 d-flex gap-2">
