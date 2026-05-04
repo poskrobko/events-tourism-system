@@ -390,6 +390,7 @@
         image: resolveEventImage(event.imageUrl),
         description: event.description || '',
         price: Number(event.minTicketPrice || 0),
+        availableTickets: Number(event.availableTickets ?? 0),
         schedule: [],
       };
     }
@@ -441,6 +442,7 @@
             <img src="${event.image}" class="card-img-top" alt="${event.title}" loading="lazy" decoding="async" fetchpriority="low" style="height:190px; object-fit:cover" />
             <div class="card-body d-flex flex-column">
               <span class="badge badge-status mb-2">${event.type}</span>
+              ${Number(event.availableTickets || 0) <= 0 ? '<span class="badge text-bg-warning mb-2">Sold out</span>' : ''}
               ${isEventCanceled(event.id) ? '<span class="badge text-bg-danger mb-2">Отменён</span>' : ''}
               <h2 class="h5">${event.title}</h2>
               <p class="text-secondary mb-3">${new Date(event.date).toLocaleDateString('ru-RU')} · ${event.city} · ${event.time}</p>
