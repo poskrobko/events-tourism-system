@@ -591,7 +591,7 @@
         }
         const program = details.program || [];
         document.getElementById('eventSchedule').innerHTML = program.map((item) => (
-          `<li class="list-group-item"><strong>${item.title}</strong><br><small>${new Date(item.startDateTime).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })} - ${new Date(item.endDateTime).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</small>${item.description ? `<br>${item.description}` : ''}</li>`
+          `<li class="list-group-item"><strong>${item.title}</strong> <small class="text-muted">${String(item.startDateTime || '').slice(11, 16)}</small>${item.description ? `<br>${item.description}` : ''}</li>`
         )).join('') || '<li class="list-group-item text-muted">Программа пока не добавлена</li>';
       })
       .catch((error) => {
@@ -1340,6 +1340,20 @@
     });
   }
 
+  function collectProgramRows(container, selectors) {
+    if (!container) return [];
+    const titles = Array.from(container.querySelectorAll(selectors.title));
+    const descriptions = Array.from(container.querySelectorAll(selectors.description));
+    const times = Array.from(container.querySelectorAll(selectors.time));
+    return titles.flatMap((titleInput, index) => {
+      const title = titleInput.value?.trim() || '';
+      const description = descriptions[index]?.value?.trim() || '';
+      const time = times[index]?.value || '';
+      if (!title || !description || !time) return [];
+      return [{ title, description, time, sortOrder: index }];
+    });
+  }
+
   function getCanceledEventIds() {
     const value = read(STORAGE_KEYS.canceledEvents, []);
     return Array.isArray(value) ? value.map(String) : [];
@@ -1372,7 +1386,38 @@
     const table = document.getElementById('managerEventsTable');
     const resetBtn = document.getElementById('managerEventFormReset');
     const managerTicketRows = document.getElementById('managerTicketRows');
+    const managerProgramRows = document.getElementById('managerProgramRows');
     const addManagerTicketRowBtn = document.getElementById('managerAddTicketRow');
+    const addManagerProgramRowBtn = document.getElementById('managerAddProgramRow');
+
+    function buildProgramItemsFromRows(rows, date) {
+      return rows.map((row) => ({
+        title: row.title,
+        startDateTime: `${date}T${row.time}`,
+        endDateTime: `${date}T${row.time}`,
+        sortOrder: row.sortOrder,
+        description: row.description,
+      }));
+    }
+
+    async function syncManagerProgram(eventId, rows, date) {
+      const existingProgramResp = await fetch(`${API_BASE}/events/${eventId}/program`);
+      const existingProgram = existingProgramResp.ok ? await existingProgramResp.json() : [];
+      for (const item of existingProgram) {
+        await fetch(`${API_BASE}/manager/program/${item.id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${auth.token}` },
+        });
+      }
+      const programItems = buildProgramItemsFromRows(rows, date);
+      for (const programItem of programItems) {
+        await fetch(`${API_BASE}/manager/events/${eventId}/program`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
+          body: JSON.stringify(programItem),
+        });
+      }
+    }
 
     addManagerTicketRowBtn?.addEventListener('click', () => {
       const wrapper = document.createElement('div');
@@ -1384,6 +1429,17 @@
         <div class="col-md-1 d-grid"><button class="btn btn-outline-danger remove-ticket-row ticket-add-btn ms-auto" type="button">−</button></div>`;
       wrapper.querySelector('.remove-ticket-row').addEventListener('click', () => wrapper.remove());
       managerTicketRows?.appendChild(wrapper);
+    });
+    addManagerProgramRowBtn?.addEventListener('click', () => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'row g-2 program-row';
+      wrapper.innerHTML = `
+        <div class="col-md-4"><input class="form-control manager-program-title" placeholder="Заголовок пункта" /></div>
+        <div class="col-md-5"><input class="form-control manager-program-description" placeholder="Описание пункта" /></div>
+        <div class="col-md-2"><input class="form-control manager-program-time" type="time" /></div>
+        <div class="col-md-1 d-grid"><button class="btn btn-outline-danger remove-program-row ticket-add-btn ms-auto" type="button">−</button></div>`;
+      wrapper.querySelector('.remove-program-row').addEventListener('click', () => wrapper.remove());
+      managerProgramRows?.appendChild(wrapper);
     });
 
     async function loadManagerEvents() {
@@ -1409,7 +1465,7 @@
         await loadManagerEvents();
       }));
 
-      table.querySelectorAll('[data-edit]').forEach((btn) => btn.addEventListener('click', () => {
+      table.querySelectorAll('[data-edit]').forEach((btn) => btn.addEventListener('click', async () => {
         const event = events.find((e) => String(e.id) === btn.dataset.edit);
         document.getElementById('managerEventId').value = event.id;
         document.getElementById('managerEventTitle').value = event.title;
@@ -1419,9 +1475,23 @@
         document.getElementById('managerEventStart').value = event.startDateTime.slice(0, 16);
         document.getElementById('managerEventImageUrl').value = event.imageUrl || '';
         document.getElementById('managerEventEnd').value = event.endDateTime.slice(0, 16);
-        document.getElementById('managerEventSchedule').value = Array.isArray(event.program)
-          ? event.program.map((item) => item.description).join('\n')
-          : '';
+        try {
+          const programResp = await fetch(`${API_BASE}/events/${event.id}/program`);
+          const program = programResp.ok ? await programResp.json() : [];
+          managerProgramRows.innerHTML = '';
+          (program || []).forEach((item, index) => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'row g-2 program-row';
+            wrapper.innerHTML = `
+              <div class="col-md-4"><input class="form-control manager-program-title" value="${(item.title || '').replace(/\"/g, '&quot;')}" /></div>
+              <div class="col-md-5"><input class="form-control manager-program-description" value="${(item.description || '').replace(/\"/g, '&quot;')}" /></div>
+              <div class="col-md-2"><input class="form-control manager-program-time" type="time" value="${String(item.startDateTime || '').slice(11, 16)}" /></div>
+              <div class="col-md-1 d-grid">${index === 0 ? '<button id="managerAddProgramRow" class="btn btn-outline-secondary ticket-add-btn ms-auto" type="button">+</button>' : '<button class="btn btn-outline-danger remove-program-row ticket-add-btn ms-auto" type="button">−</button>'}</div>`;
+            managerProgramRows.appendChild(wrapper);
+          });
+        } catch {
+          managerProgramRows.innerHTML = '';
+        }
       }));
 
       table.querySelectorAll('[data-cancel]').forEach((btn) => btn.addEventListener('click', async () => {
@@ -1445,7 +1515,6 @@
         startDateTime: document.getElementById('managerEventStart').value,
         endDateTime: document.getElementById('managerEventEnd').value,
         imageUrl: document.getElementById('managerEventImageUrl').value.trim() || null,
-        schedule: document.getElementById('managerEventSchedule').value.split('\n').map((line) => line.trim()).filter(Boolean),
       };
       const url = eventId ? `${API_BASE}/manager/events/${eventId}` : `${API_BASE}/manager/events`;
       const method = eventId ? 'PUT' : 'POST';
@@ -1459,6 +1528,8 @@
         return;
       }
       const savedEvent = await response.json();
+      const programRows = collectProgramRows(managerProgramRows, { title: '.manager-program-title', description: '.manager-program-description', time: '.manager-program-time' });
+      await syncManagerProgram(savedEvent.id, programRows, payload.startDateTime.slice(0, 10));
       if (!eventId) {
         const tickets = collectTicketRows(managerTicketRows, {
           name: '.manager-ticket-name',
@@ -1499,9 +1570,10 @@
     const ordersPagination = document.getElementById('adminOrdersPagination');
     const ordersStatusFilter = document.getElementById('adminOrdersStatusFilter');
     const eventForm = document.getElementById('eventCrudForm');
-    const scheduleInput = document.getElementById('eventScheduleInput');
+    const adminProgramRows = document.getElementById('adminProgramRows');
     const adminTicketRows = document.getElementById('adminTicketRows');
     const addAdminTicketRowBtn = document.getElementById('adminAddTicketRow');
+    const addAdminProgramRowBtn = document.getElementById('adminAddProgramRow');
     const ADMIN_PAGE_SIZE = 7;
     let adminEventsPage = 1;
     let adminOrdersPage = 1;
@@ -1516,6 +1588,18 @@
         <div class="col-md-1 d-grid"><button class="btn btn-outline-danger remove-ticket-row ticket-add-btn ms-auto" type="button">−</button></div>`;
       wrapper.querySelector('.remove-ticket-row').addEventListener('click', () => wrapper.remove());
       adminTicketRows?.appendChild(wrapper);
+    });
+
+    addAdminProgramRowBtn?.addEventListener('click', () => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'row g-2 program-row';
+      wrapper.innerHTML = `
+        <div class="col-md-4"><input class="form-control admin-program-title" placeholder="Заголовок пункта" required /></div>
+        <div class="col-md-5"><input class="form-control admin-program-description" placeholder="Описание пункта" required /></div>
+        <div class="col-md-2"><input class="form-control admin-program-time" type="time" required /></div>
+        <div class="col-md-1 d-grid"><button class="btn btn-outline-danger remove-program-row ticket-add-btn ms-auto" type="button">−</button></div>`;
+      wrapper.querySelector('.remove-program-row').addEventListener('click', () => wrapper.remove());
+      adminProgramRows?.appendChild(wrapper);
     });
 
     const statusRu = { PAID: 'Оплачено', REFUNDED: 'Возвращен', DECLINED: 'Отменен', PENDING: 'В ожидании' };
@@ -1544,6 +1628,35 @@
       const safePage = Math.min(Math.max(1, currentPage), totalPages);
       const start = (safePage - 1) * pageSize;
       return { pageItems: items.slice(start, start + pageSize), safePage };
+    }
+
+    function buildProgramItemsFromRows(rows, date) {
+      return rows.map((row) => ({
+        title: row.title,
+        startDateTime: `${date}T${row.time}`,
+        endDateTime: `${date}T${row.time}`,
+        sortOrder: row.sortOrder,
+        description: row.description,
+      }));
+    }
+
+    async function syncAdminProgram(eventId, rows, date) {
+      const existingProgramResp = await fetch(`${API_BASE}/events/${eventId}/program`);
+      const existingProgram = existingProgramResp.ok ? await existingProgramResp.json() : [];
+      for (const item of existingProgram) {
+        await fetch(`${API_BASE}/admin/program/${item.id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${auth.token}` },
+        });
+      }
+      const programItems = buildProgramItemsFromRows(rows, date);
+      for (const programItem of programItems) {
+        await fetch(`${API_BASE}/admin/events/${eventId}/program`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
+          body: JSON.stringify(programItem),
+        });
+      }
     }
 
     function renderOrdersTable(orders) {
@@ -1611,7 +1724,7 @@
         await loadAdminData();
       }));
 
-      eventsTable.querySelectorAll('[data-edit]').forEach((btn) => btn.addEventListener('click', () => {
+      eventsTable.querySelectorAll('[data-edit]').forEach((btn) => btn.addEventListener('click', async () => {
         const event = events.find((ev) => String(ev.id) === btn.dataset.edit);
         document.getElementById('eventId').value = event.id;
         document.getElementById('eventTitleInput').value = event.title;
@@ -1622,7 +1735,14 @@
         document.getElementById('eventTimeInput').value = start.slice(11, 16);
         document.getElementById('eventImageInput').value = event.imageUrl || '';
         document.getElementById('eventDescriptionInput').value = event.description || '';
-        scheduleInput.value = '';
+        try {
+          const programResp = await fetch(`${API_BASE}/events/${event.id}/program`);
+          const program = programResp.ok ? await programResp.json() : [];
+          adminProgramRows.innerHTML = (program || []).map((item) => `<div class="row g-2 program-row"><div class="col-md-4"><input class="form-control admin-program-title" value="${(item.title || "").replace(/"/g, "&quot;")}" required /></div><div class="col-md-5"><input class="form-control admin-program-description" value="${(item.description || "").replace(/"/g, "&quot;")}" required /></div><div class="col-md-2"><input class="form-control admin-program-time" type="time" value="${String(item.startDateTime || "").slice(11, 16)}" required /></div><div class="col-md-1 d-grid"><button class="btn btn-outline-danger remove-program-row ticket-add-btn ms-auto" type="button">−</button></div></div>`).join('');
+          adminProgramRows.querySelectorAll('.remove-program-row').forEach((b) => b.addEventListener('click', () => b.closest('.program-row')?.remove()));
+        } catch {
+          adminProgramRows.innerHTML = '';
+        }
       }));
 
       eventsTable.querySelectorAll('[data-cancel]').forEach((btn) => btn.addEventListener('click', async () => {
@@ -1659,6 +1779,8 @@
       const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` }, body: JSON.stringify(payload) });
       if (!response.ok) return alert('Не удалось сохранить событие.');
       const saved = await response.json();
+      const programRows = collectProgramRows(adminProgramRows, { title: '.admin-program-title', description: '.admin-program-description', time: '.admin-program-time' });
+      await syncAdminProgram(saved.id, programRows, date);
       if (!eventId) {
         const tickets = collectTicketRows(adminTicketRows, {
           name: '.admin-ticket-type',
